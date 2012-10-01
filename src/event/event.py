@@ -7,7 +7,7 @@ import time
 import logging
 class Event(object):
 
-    def __init__(self,date=time.ctime(), message = "", additional = dict()):
+    def __init__(self, message = "", date=time.ctime(),additional = dict()):
         self.message = message
         self.date = date
         
@@ -25,8 +25,6 @@ class Event(object):
             return self.message
         if name == "date":
             return self.date
-        if name == "source":
-            return self.source
         if name == "correlationGroup":
             return self.correlationGroup
         if name == "eventTag":
