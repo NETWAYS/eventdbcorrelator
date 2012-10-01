@@ -1,0 +1,9 @@
+# Example chain
+
+# Every chain requires an identifier field:
+[MyChain1]
+in: @pipe
+matcher: When message is "hi" and severity greater 5
+to_0: @aggregator1['set']
+to_nset[0]_1: @dbpersister['save']
+to_fail[1]_2: @spoolpersister['save'] 

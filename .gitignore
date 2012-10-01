@@ -1,0 +1,7 @@
+.DC_STORE
+.*.swp
+**/*.swp
+*.out
+*.pyc
+**/*.pyc
+**/.*
