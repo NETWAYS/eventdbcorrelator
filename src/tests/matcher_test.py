@@ -26,7 +26,7 @@ class MatcherTestCase(unittest.TestCase):
         testEvent = Event("I AM A non matching Testmessage")
         assert curMatcher.matches(testEvent) == False
 
-        curMatcher = Matcher("(message starts with 'i am a testmessage') or message ends with 'test123'")
+        curMatcher = Matcher("(message starts with 'i am a testmessage') OR message ends with 'test123'")
         
         testEvent = Event("I AM A non matching Testmessage")
         assert curMatcher.matches(testEvent) == False
@@ -118,6 +118,25 @@ class MatcherTestCase(unittest.TestCase):
         curMatcher = Matcher("source NOT IN ('snmp','j2ee')")
         assert curMatcher.matches(testEvent) == False
 
+    def test_ip_operators(self):
+        testEvent = Event("blobb",time.ctime(),{
+            "address": '192.168.67.3',
+            
+        })
+        
+        curMatcher = Matcher("address IN NETWORK '192.168.0.0/16'")
+        assert curMatcher.matches(testEvent) == True
+        
+        curMatcher = Matcher("address NOT IN NETWORK '192.168.1.0/24'")
+        assert curMatcher.matches(testEvent) == True
+        
+        curMatcher = Matcher("address IN NETWORK '192.168.1.0/24'")
+        assert curMatcher.matches(testEvent) == False
+        
+        curMatcher = Matcher("address IN IP RANGE '192.168.1.0-192.169.1.1'")
+        assert curMatcher.matches(testEvent) == True
+
+        
     def test_mixed(self):
         testEvent = Event("[LINK DOWN] eth0 on localhost is down.",time.ctime(),{
             "severity" : 7,
@@ -126,4 +145,34 @@ class MatcherTestCase(unittest.TestCase):
             "program" : "NetworkManager"
         })
         
-        #curMatcher = Matcher("message RE")
+        curMatcher = Matcher("message REGEXP '(?P<INTERFACE>eth\d+) on (?P<HOST>\w+ is down)' OR (host IS 'localhost' AND facility > 5) ")
+        assert curMatcher.matches(testEvent)
+        
+        curMatcher = Matcher("message REGEXP '(?P<INTERFACE>eth[1-9]) on (?P<HOST>\w+ is down)' OR (host IS 'localhost' AND facility > 5) ")
+        assert curMatcher.matches(testEvent) == False
+        
+        curMatcher = Matcher("message REGEXP '(?P<INTERFACE>eth[1-9]) on (?P<HOST>\w+ is down)' OR (host IS 'localhost' AND facility < 5) ")
+        assert curMatcher.matches(testEvent) == True        
+        
+    def test_performance(self):
+
+        curMatcher = Matcher("message REGEXP '(?P<INTERFACE>eth\d+) on (?P<HOST>\w+ is down)' OR (host IS 'localhost' AND facility > 5) AND (address IN NETWORK '192.168.170.0/26' OR address IN IP RANGE '192.168.100.0-192.168.120.255')")
+        EVENT_HARDLIMIT_PER_EVENT=0.0002
+        COUNT = 20000
+        
+        import random
+        events = []
+        for i in range(0,COUNT):
+            events.append(Event("[LINK DOWN] et.",time.ctime(),{
+                "severity" : random.randint(0,10),
+                "address" : "192.168.%i.%i" % (random.randint(0,255),random.randint(0,255)),
+                "facility" : random.randint(0,10),
+                "host" : ["localhost","sv-mail","sv-app","ts-1","ts-2"][random.randint(0,4)],
+                "program" : ["NetworkManager","watchdog","kernel","syslog"][random.randint(0,3)]
+            }))
+    
+        now = time.time()
+        for event in events:
+            curMatcher.matches(event)
+        duration = time.time() - now
+        assert duration/COUNT <= EVENT_HARDLIMIT_PER_EVENT

@@ -1,7 +1,8 @@
 
 import re
 import logging 
-
+import socket
+import ip_address
 
 class Matcher(object):
     def __init__(self,definition):
@@ -27,8 +28,7 @@ class Matcher(object):
             self.stringTokens[token] = string
             self.workingString = self.workingString.replace(string,token)
             tokenNr = tokenNr + 1
-    
-    
+
     def matches(self, event):
         return self.tree.test(event)
     
@@ -37,11 +37,13 @@ class Matcher(object):
 CONJUNCTIONS = ["AND","OR","AND NOT","OR NOT"]
 EXPRESSION_STRING_OPERATORS = ['IS NOT','CONTAINS','REGEXP','DOES NOT CONTAIN','STARTS WITH','ENDS WITH','IS']
 EXPRESSION_SET_OPERATORS = ['NOT IN','IN']
+EXPRESSION_IP_OPERATORS = ['IN IP RANGE','NOT IN IP RANGE','NOT IN NETWORK','IN NETWORK']
 EXPRESSION_NUMERIC_OPERATORS = ['>=','<=','>','!=','<','=']
 
-EXPRESSION_OPERATORS = EXPRESSION_STRING_OPERATORS+EXPRESSION_NUMERIC_OPERATORS+EXPRESSION_SET_OPERATORS
+EXPRESSION_OPERATORS = EXPRESSION_IP_OPERATORS+EXPRESSION_STRING_OPERATORS+EXPRESSION_NUMERIC_OPERATORS+EXPRESSION_SET_OPERATORS
 
-
+ 
+    
 class MatcherTree(object):
     
     def __init__(self,queryString,tokens):
@@ -55,15 +57,15 @@ class MatcherTree(object):
         
         
     def _prepare_regexp(self):
-        self.conjunctionSplitter = re.compile("("+"|".join(CONJUNCTIONS)+")",re.IGNORECASE)
-        self.operatorSplitter = re.compile("("+"|".join(EXPRESSION_OPERATORS)+")",re.IGNORECASE)
+        self.conjunctionSplitter = re.compile(" ("+"|".join(CONJUNCTIONS)+") ",re.IGNORECASE)
+        self.operatorSplitter = re.compile(" ("+"|".join(EXPRESSION_OPERATORS)+") ",re.IGNORECASE)
     
     
     def is_expression(self,node):
         return node["root"] in EXPRESSION_OPERATORS
     
     def is_conjunction(self,node):
-        return node["root"] in CONJUNCTIONS
+        return node["root"].strip() in CONJUNCTIONS
     
     def _compile_expression(self,node):
         if node["root"] in EXPRESSION_STRING_OPERATORS:
@@ -72,12 +74,18 @@ class MatcherTree(object):
             node["compiled"] = self._compile_numeric_expression(node)
         if node["root"] in EXPRESSION_SET_OPERATORS:
             node["compiled"] = self._compile_set_expression(node)
+        if node["root"] in EXPRESSION_IP_OPERATORS:
+            node["compiled"] = self._compile_network_expression(node)
+        if not "compiled" in node:
+            node["compiled"] = " False "
         return node
     
     def _compile_string_expression(self,node):
         value = ""
         if node["right"] in self.tokens:
-            value = self.tokens[node["right"]].lower()
+            value = self.tokens[node["right"]]
+            if not node["root"] == "REGEXP":
+                value = value.lower()
         else:
             value = "event[\"%s\"].lower()" % node["right"]
         field = "event[\"%s\"].lower()" % node["left"]
@@ -94,10 +102,39 @@ class MatcherTree(object):
         if operator == "ENDS WITH":
             return "%s.endswith(%s)" % (field,value)
         if operator == "REGEXP":
-            return "re.search(%s,%s) != None" % (value,field)
+            return "re.search(%s,%s,re.IGNORECASE) != None" % (value,field)
         
-        return "False"
+        return "False" 
     
+    def _compile_network_expression(self,node):
+        value = ""
+        if node["right"] in self.tokens:
+            value = self.tokens[node["right"]]
+            if not node["root"] == "REGEXP":
+                value = value.lower()
+        else:
+            value = "event[\"%s\"].lower()" % node["right"]
+        field = "event[\"%s\"].lower()" % node["left"]
+        
+        operator = node["root"]
+        if operator in ["IN NETWORK","NOT IN NETWORK"]:
+            if operator.startswith("NOT"):
+                expected = "False"
+            else:
+                expected = "True"
+            return "ip_address.IPAddress(%s).in_network(%s) == %s " % (field,value,expected)
+            
+        
+        if operator in ["IN IP RANGE","NOT IN IP RANGE"]:
+            if operator.startswith("NOT"):
+                expected = "False"
+            else:
+                expected = "True"
+            value = value.split("-")
+            
+            return "ip_address.IPAddress(%s).in_range('%s','%s') == %s " % (field,value[0].strip("'\""),value[1].strip("'\""),expected)
+            
+        return False
         
     def _compile_numeric_expression(self,node):
         value = ""
@@ -153,8 +190,13 @@ class MatcherTree(object):
             return False
 
     def _build_python_expression(self,node):
-        node["compiled"] = "%s %s %s" % (node["left"]["compiled"],node["root"].lower(),node["right"]["compiled"])
+        try:
+            node["compiled"] = "%s %s %s" % (node["left"]["compiled"],node["root"].lower(),node["right"]["compiled"])
+        except KeyError,e:
+            logging.error("Could not compile tree %s" % self.rawTree)
+            node["compiled"] = "False"
         return node
+        
 
         
     def traverse(self,matcherFn=lambda tnode:True,handler=lambda tnode:tnode,node=None,bottomUp=False):
@@ -163,22 +205,21 @@ class MatcherTree(object):
         
         # Bottom up parsing
         if self.is_conjunction(node) and bottomUp:
-            self.traverse(matcherFn,handler,node["left"])
-            self.traverse(matcherFn,handler,node["right"])
+            self.traverse(matcherFn,handler,node["left"],bottomUp)
+            self.traverse(matcherFn,handler,node["right"],bottomUp)
         
         if matcherFn(node):
             node = handler(node)
         
         # Top down parsing
         if self.is_conjunction(node) and not bottomUp:
-            self.traverse(matcherFn,handler,node["left"])
-            self.traverse(matcherFn,handler,node["right"])
+            self.traverse(matcherFn,handler,node["left"],bottomUp)
+            self.traverse(matcherFn,handler,node["right"],bottomUp)
 
     
 
     def _get_query_node(self,curString):
         groups = self._get_conjunction_groups(curString)
-
         if len(groups) == 1:
             field,operator,value = self._get_expression(groups[0])
             return {
@@ -187,9 +228,9 @@ class MatcherTree(object):
                 "right": value.strip()
             }
         if len(groups) > 3: # More than one conjunction at a level, create omitted parenthesis
-            groups[2] = " ".join(groups[2:])
+            groups[2] = "   ".join(groups[2:])
         return {
-            "root" : groups[1].upper(),
+            "root" : groups[1].strip(),
             "left" : self._get_query_node(groups[0]),
             "right": self._get_query_node(groups[2])
         }
@@ -200,7 +241,7 @@ class MatcherTree(object):
         groups = []
         str = ""
         for i in range(0,len(splitted)):
-            str += splitted[i]
+            str += " "+splitted[i]
             if str.count("(") == str.count(")"):
                 str = str.strip();
                 if str[0] == "(":
@@ -215,7 +256,7 @@ class MatcherTree(object):
     
     def _get_expression(self,exp):
         splitted = self.operatorSplitter.split(exp)
-
+        
         if len(splitted) != 3:
             raise "Invalid expression %s " % exp
 

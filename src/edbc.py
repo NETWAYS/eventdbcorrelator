@@ -8,6 +8,8 @@ from config import *;
 
 import logging
 import controller
+import socket
+import sys
 
 class Edbc(object):
     def __daemonize(self):    
@@ -17,6 +19,9 @@ class Edbc(object):
         logging.basicConfig(level=logging.DEBUG)
 
     def __init__(self):
+        if not socket.has_ipv6:
+            print >> sys.stderr, 'WARNING: Your python version does not have IPv6 support enabled!'
+            
         self.config = DaemonConfiguration()
         if self.config["foreground"]:
             self.__daemonize()
