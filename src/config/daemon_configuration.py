@@ -39,7 +39,7 @@ class DaemonConfiguration(object):
         
     def __read_sub_configs(self):
         for cfg in listdir(self.options.import_dir):
-            if cfg[-3:] == "cfg":
+            if cfg[-3:] == "cfg" and cfg[0] != ".":
                 self.config.readfp(open(self.options.import_dir+"/"+cfg))
                
     def get_instance_definitions(self):

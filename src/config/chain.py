@@ -8,8 +8,7 @@ __all__=['ChainFactory']
 class Chain(object):
     
     def setup(self,id, config):
-        self.id = id
-        
+        self.id =  id       
         if config["matcher"] == "all" :
             self.matcher = None
         else:

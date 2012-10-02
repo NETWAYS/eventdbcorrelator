@@ -43,4 +43,3 @@ class StringTransformer(object):
             logging.warn(e)
         
         
-        
