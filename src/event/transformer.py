@@ -37,7 +37,7 @@ class StringTransformer(object):
             if not "MESSAGE" in matchdict:
                 matchdict["MESSAGE"] = self.defaultMessage
 
-            event = Event(matchdict["DATE"],matchdict["MESSAGE"],matchdict)
+            event = Event(matchdict["MESSAGE"],matchdict["DATE"],matchdict)
             return event
         except Exception, e:
             logging.warn(e)

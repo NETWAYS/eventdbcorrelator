@@ -7,18 +7,18 @@ from datasource.filter import Filter, FilterGroup
 
 class  FilterTestCase(unittest.TestCase):
     def setUp(self):
-        self.testEvent1 = Event("pipe","this is a test message",{
+        self.testEvent1 = Event("this is a test message",time.ctime(),{
             "severity": 5,
             "community": "public",
             "test": "value"
         })
-        self.testEvent2 = Event("pipe","additional test message",{
+        self.testEvent2 = Event("additional test message",time.ctime(),{
             "severity": 1,
             "attribute" : 'value2',
             "community": "private",
             "test": "value2"
         })
-        self.testEvent3 = Event("snmp","NOTIFY switch sw1242-sd down",{
+        self.testEvent3 = Event("NOTIFY switch sw1242-sd down",time.ctime(),{
             "severity": 9,
             "manufacturer" : 'linksys',
             "community": "public",

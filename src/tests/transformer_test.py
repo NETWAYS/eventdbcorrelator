@@ -45,7 +45,6 @@ class RSyslogTransformerTestCase(unittest.TestCase):
             logging.debug("RSyslog test: %s " % messageEventPair[0])
             event = transformer.transform(messageEventPair[0])
             for key in messageEventPair[1]:
-                
                 assert event != None
                 assert event[key] == messageEventPair[1][key]
 
