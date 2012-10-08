@@ -5,7 +5,9 @@ import time
 import logging
 from event import StringTransformer
 
+
 class RSyslogTransformerTestCase(unittest.TestCase):
+
     def setUp(self):
         self.FORMAT = "^(?P<DATE>[a-zA-Z]{2,3} \d\d \d\d:\d\d:\d\d) (?P<HOST>[^ ]+)( (?P<PROGRAM>[^:]+):)? (?P<MESSAGE>.*)$"
         self.LOG_MESSAGES = "./tests/logtest.syslog"
@@ -36,7 +38,8 @@ class RSyslogTransformerTestCase(unittest.TestCase):
                 "MESSAGE" : "[179599.999522] type=1701 audit(1348733325.650:64): auid=4294967295 uid=1000 gid=1000 ses=4294967295 pid=26544 comm=\"chrome\" reason=\"seccomp\" sig=0 syscall=39 compat=0 ip=0x7fd83f0bc6d9 code=0x50001"
             }),
         ]
-    def testRSyslogTransformer(self):
+        
+    def test_rsyslog_transformer(self):
         transformer = StringTransformer()
         transformer.setup("test",{
             "format": self.FORMAT
@@ -48,7 +51,7 @@ class RSyslogTransformerTestCase(unittest.TestCase):
                 assert event != None
                 assert event[key] == messageEventPair[1][key]
 
-    def testRSyslogPerformance(self):
+    def test_rsyslog_performance(self):
         transformer = StringTransformer()
         transformer.setup("test",{
             "format": self.FORMAT

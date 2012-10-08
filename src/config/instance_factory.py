@@ -1,13 +1,21 @@
-# To change this template, choose Tools | Templates
-# and open the template in the editor.
 from receptors import *
 from persisters import *
 from processors import *
-#from config import Chain
 from datasource import *
 import logging 
 
+'''
+Factory and Registry class that can register object instances and 
+matches instance references (@id in config files)
+
+@author Jannis Mo§hammer <jannis.mosshammer@netways.de>
+'''
 class InstanceFactory(object):
+
+    """
+    Initialize with the base edbc.cfg file as a starting point.
+    The section global will be ignored here.
+    """
     def __init__(self,config):
         self.config = config
         
@@ -21,11 +29,22 @@ class InstanceFactory(object):
             
         logging.debug("Registered %i instances" % len (self.instances["all"]))
 
+    """
+    Registers an object cfgObject with the identifier id. 
+    the cfgObject is expected to have a class attribute, which will be registered and 
+    used for instance creation.
+    
+    If factoryFn is given, this will be called (class is 
+    only being registered here and not used for instance creation), otherwise 
+    %class%.setup(id,cfgObject) is called.
+    
+    """
     def register(self,id,cfgObject,factoryFn = None):
         logging.debug(cfgObject)
         # type myType and class myClass will be called MyTypeMyClass()
-        
         r = None
+        if not cfgObject["class"] in self.instances:
+            self.register_class(cfgObject["class"])
         if factoryFn == None:
             # Default factory using the setup method
             instanceCls = cfgObject["class"].capitalize()
@@ -36,19 +55,31 @@ class InstanceFactory(object):
             # Pass instance creation to factory function
             r = factoryFn(id,cfgObject)
 
-        if not cfgObject["class"] in self.instances:
-            self.register_class(cfgObject["class"])
+        
+            
 
         self.instances[cfgObject["class"]][id] = r    
         self.instances["all"][id] = r        
         
+
     def register_class(self,classname):
+        classname = classname.strip()
         self.instances[classname] = {}
+        
         # register class methods so they are available with get%CLASS%(id)
         getter = lambda id: self.instances[classname][(id,id[1:])[id[0] == '@']]
         getter.__name__ = "get"+classname.capitalize()
         setattr(self,getter.__name__,getter)
         
+        # register getAll%Class%Instances method
+        getter = lambda : self.instances[classname]
+        logging.debug("Registering %s " % ("getAll"+classname.capitalize()+"Instances"))
+        getter.__name__ = "getAll"+classname.capitalize()+"Instances"
+        setattr(self,getter.__name__,getter)
+        
+    """
+        Returns the object instance that can be found under the id "id"
+    """
     def __getitem__(self,id):
         if id[0] == '@':
             id = id[1:]

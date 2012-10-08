@@ -157,7 +157,7 @@ class MatcherTestCase(unittest.TestCase):
     def test_performance(self):
 
         curMatcher = Matcher("message REGEXP '(?P<INTERFACE>eth\d+) on (?P<HOST>\w+ is down)' OR (host IS 'localhost' AND facility > 5) AND (address IN NETWORK '192.168.170.0/26' OR address IN IP RANGE '192.168.100.0-192.168.120.255')")
-        EVENT_HARDLIMIT_PER_EVENT=0.0002
+        EVENT_HARDLIMIT_PER_EVENT=0.0003
         COUNT = 20000
         
         import random
@@ -175,4 +175,8 @@ class MatcherTestCase(unittest.TestCase):
         for event in events:
             curMatcher.matches(event)
         duration = time.time() - now
-        assert duration/COUNT <= EVENT_HARDLIMIT_PER_EVENT
+        try:
+            assert duration/COUNT <= EVENT_HARDLIMIT_PER_EVENT
+        except AssertionError, e:
+            logging.debug("Performance test failed, request took %f seconds, limit was %f " % (duration/COUNT,EVENT_HARDLIMIT_PER_EVENT))
+            raise e

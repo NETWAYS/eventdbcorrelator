@@ -1,13 +1,12 @@
-import abstract_datasource
+
 import MySQLdb
-import logging
 import db_transformer
 from event import *
 
 LOCATION_SETUP_SCHEME = "./database/mysql_create.sql"
 LOCATION_TEARDOWN_SCHEME="./database/mysql_teardown.sql"
 
-class MysqlDatasource(abstract_datasource.AbstractDatasource):
+class MysqlDatasource(object):
     def setup(self,id,config):
         self.id = id
         self.host = config["host"]

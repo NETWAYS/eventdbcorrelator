@@ -14,7 +14,7 @@ class PipeReceptorTestCase(unittest.TestCase):
         self.TEST_EVENTS = './tests/logtest.syslog'
         self.TESTPATH = '/tmp/test.pipe'
 
-    def testPipeSetup(self):
+    def test_pipe_setup(self):
         pr = PipeReceptor()
         pr.setup("test",{
             "path": self.TESTPATH,
@@ -34,7 +34,7 @@ class PipeReceptorTestCase(unittest.TestCase):
     
     
 
-    def testPipeRead(self):
+    def test_pipe_read(self):
         pr = PipeReceptor()
         pr.setup("test",{
             "path": self.TESTPATH,
@@ -58,7 +58,41 @@ class PipeReceptorTestCase(unittest.TestCase):
         assert queueString == teststring
     
     
-    def testPipePerformance(self):
+    
+    def test_pipe_multi_read(self):
+        pr = PipeReceptor()
+        pr.setup("test",{
+            "path": self.TESTPATH,
+            "transformer": TransformMock()
+        })
+        queue1 = Queue.Queue()
+        queue2 = Queue.Queue()
+        queue3 = Queue.Queue()
+        queue4 = Queue.Queue()
+        pr.start([queue1,queue2])
+        pr.register_queue(queue3)
+        pr.register_queue(queue4)
+        
+        assert os.path.exists(self.TESTPATH) == True
+        pipeFd = os.open(self.TESTPATH,os.O_WRONLY)
+        pr.unregister_queue(queue4)
+        teststring = "Hello this is a teststring"
+        os.write(pipeFd,teststring+"\n")
+        os.write(pipeFd,teststring+"\n")
+        queueString = ""
+        try:
+            queueString1 = queue1.get(True,2)
+            queueString2 = queue2.get(True,2)
+            queueString3 = queue3.get(True,2)
+        except:
+            pass
+        pr.stop()
+        assert queue4.empty()
+        assert queueString1 == queueString2 == queueString3 == teststring
+    
+    
+    
+    def test_pipe_performance(self):
         pr = PipeReceptor()
         pr.setup("test",{
             "path": self.TESTPATH,
@@ -93,7 +127,7 @@ class PipeReceptorTestCase(unittest.TestCase):
             testlog.close()
             pr.stop()
             
-    def testPipeReopen(self):
+    def test_pipe_reopen(self):
         pr = PipeReceptor()
         pr.setup("test",{
             "path": self.TESTPATH,

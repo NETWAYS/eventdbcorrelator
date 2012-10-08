@@ -3,5 +3,4 @@
 
 from daemon_configuration import *
 from config import *
-from chain import *
 from instance_factory import *

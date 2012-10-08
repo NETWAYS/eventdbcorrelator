@@ -1,11 +1,11 @@
 # To change this template, choose Tools | Templates
 # and open the template in the editor.
 from abstract_receptor import AbstractReceptor;
-from event import StringTransformer
 import logging
 import os
 import pwd
 import select
+import Queue
 
 class PipeReceptor(AbstractReceptor):
     
@@ -32,12 +32,17 @@ class PipeReceptor(AbstractReceptor):
                     self.config[key] = config[key]
         
         self.pipe = None
+        self.queues = []
         self.__setup_pipe()
     
     
     
-    def start(self,queue,cb=None):
-        self.queue = queue
+    def start(self,queue=[],cb=None):
+        if isinstance(queue, (list, tuple)):
+            self.queues = queue
+        else:
+            self.queues = [queue]
+        
         if cb != None:
             self.callback = cb
             
@@ -46,6 +51,12 @@ class PipeReceptor(AbstractReceptor):
             return self.run()
         return super(PipeReceptor,self).start()
     
+    
+    def register_queue(self,queue):
+        self.queues.append(queue)
+    
+    def unregister_queue(self,queue):
+        self.queues.remove(queue)
     
     def __get_messages_from_raw_stream(self,dataPacket):
         if len(dataPacket) == 0:
@@ -85,8 +96,9 @@ class PipeReceptor(AbstractReceptor):
                     if message == "": 
                         continue
                     transformed = tr.transform(message)
-                    if self.queue != None:
-                        self.queue.put(transformed)    
+                    if self.queues:
+                        for queue in self.queues:
+                            queue.put(transformed)    
                     if self.callback != None:
                         self.callback(self,transformed)
                    
@@ -118,7 +130,7 @@ class PipeReceptor(AbstractReceptor):
 
         finally:
             logging.debug("Finished PipeReceptor %s", self.id)
-        
+    
     def __setup_pipe(self):
         #logging.debug("Setting up PipeReceptor with %s" % self.config)
         if os.path.exists(self.config["path"]):
