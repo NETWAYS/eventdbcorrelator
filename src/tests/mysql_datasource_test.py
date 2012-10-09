@@ -29,16 +29,17 @@ class DBTransformerMock(object):
 # Your database requires read, write, create amd drop permissions for the user given here.
 # 
 SETUP_DB = {
-    "host" : 'localhost',
+    "host" : "localhost",
     "port" : 3306,
-    "user" : 'testcases',
-    "password" : 'testcases',
-    "database" : 'test_eventdb',
-    'transform' : DBTransformerMock()
+    "user" : "testcases",
+    "password" : "testcases",
+    "database" : "test_eventdb",
+    "transform" : DBTransformerMock()
 }
 
 
 class MysqlDatasourceTest(unittest.TestCase):
+
 
     def setUp(self):
         self.source = MysqlDatasource()
@@ -70,6 +71,7 @@ class MysqlDatasourceTest(unittest.TestCase):
 
         finally:
             self.source.test_teardown_db()
+
 
     '''
     Tests Create, Read, Update and Delete operations on this datasource.
@@ -109,20 +111,25 @@ class MysqlDatasourceTest(unittest.TestCase):
         finally:
             self.source.test_teardown_db()
   
+  
     def test_message_overflow(self):
-        message = "test123456789"
-        for i in range(0,10):
-            message = message + message;
+        try :
+            self.source.test_setup_db()
             
-        self.source.test_setup_db()
-        ev = Event(message=message,additional={
-            "host_address": ip_address.IPAddress("192.168.178.56"),
-            "program" : "test_program"
-        })
-        self.source.insert(ev)
-        # Read
-        ev_from_db = self.source.get_event_by_id(ev["id"])
-        assert ev_from_db.message == message[0:4096] # assume data being truncated
+            message = "test123456789"
+            for i in range(0,10):
+                message = message + message;
+
+            ev = Event(message=message,additional={
+                "host_address": ip_address.IPAddress("192.168.178.56"),
+                "program" : "test_program"
+            })
+            self.source.insert(ev)
+            
+            ev_from_db = self.source.get_event_by_id(ev["id"])
+            assert ev_from_db.message == message[0:4096] # assume data being truncated
+        finally:
+            self.source.test_teardown_db() 
         
     def tearDown(self):
         try: 

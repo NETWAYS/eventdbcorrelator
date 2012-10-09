@@ -7,19 +7,21 @@ import time
 import logging
 from ip_address import IPAddress
 
+
 class Event(object):
 
     def __init__(self, message = "", date=time.ctime(),additional = dict(),record=None):
         self.data = dict();
-        self.correlationGroup = None
-        self.eventTag = None
         if record != None:
             self.from_record(record)
             return
         
         self.message = message
+        self.alternative_message = message
         self.date = date
-        
+        self.active = True
+        self.group_id = None
+        self.group_leader = None
         for val in additional: 
             self.data[val.lower()] = additional[val];
     
@@ -28,15 +30,21 @@ class Event(object):
         if name == "message":
             self.message = value
             return
+        if name == "alternative_message":
+            self.alternative_message = value
+            return
         if name == "date":
             self.date = value
             return
-        if name == "correlationGroup":
-            self.correlationGroup = value
+        if name == "group_id":
+            self.group_id = value
             return
-        if name == "eventTag":
-            self.eventTag = value
+        if name == "group_leader":
+            self.group_leader = value
             return
+        if name == "active":
+            self.active = value
+            return 
         
         self.data[name] = value
         return None
@@ -45,12 +53,17 @@ class Event(object):
         name = name.lower()
         if name == "message":
             return self.message
+        if name == "alternative_message":
+            return self.alternative_message
+            return
         if name == "date":
             return self.date
-        if name == "correlationGroup":
-            return self.correlationGroup
-        if name == "eventTag":
-            return self.eventTag
+        if name == "group_id":
+            return self.group_id
+        if name == "group_leader":
+            return self.group_leader
+        if name == "active":
+            return self.active
         if name in self.data:
             return self.data[name]
         return None
@@ -65,9 +78,13 @@ class Event(object):
             if self.data[i] != event[i]:
                 return False
         return True
-            
+
+    
+    def in_active_group(self):
+        return self.group_leader != None
     
     def from_record(self,record):
+        
         keys = record["keys"]
         data = record["data"]
         for i in range(0,len(keys)):
@@ -75,5 +92,4 @@ class Event(object):
             
             if keys[i] == 'host_address':
                 self["host_address"] = IPAddress(self["host_address"],binary=True)
-        
-        
+       

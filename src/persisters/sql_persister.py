@@ -19,17 +19,14 @@ class SqlPersister(AbstractPersister):
             return "not_available"
             
         success = false
-        if event["db_primary_id"] != None:
+        if event["id"] != None:
             success = self.updateEvent(event)
         else:
-            if event["is_phantom"] == True:
-                success = self.removeEvent(event)
-            else: 
-                success = self.datasource.insertEvent(event)
+            success = self.datasource.insertEvent(event)
                 
         if success:
-            return "ok"
+            return "OK"
         else:
-            return "fail"
+            return "FAIL"
 
     

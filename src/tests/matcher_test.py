@@ -9,6 +9,7 @@ from event import *
 
 
 class MatcherTestCase(unittest.TestCase):
+    
     def test_simple_message(self):
         curMatcher = Matcher("(message is 'i am a testmessage')")
 
@@ -40,7 +41,14 @@ class MatcherTestCase(unittest.TestCase):
         curMatcher = Matcher("(message REGEXP 'Test\w+ [test]+123$' )")
         assert curMatcher.matches(testEvent) == True
 
+    def test_matcher_memory(self):
+        testEvent = Event("test123 AM A Testmessage test123")
 
+        curMatcher = Matcher("(message REGEXP '(?P<Group1>.*) AM A Testmessage' )")
+        assert curMatcher.matches(testEvent) == True
+        assert curMatcher["Group1"] == "test123"
+   
+        
     def test_simple_message_negate(self):
         curMatcher = Matcher("(message is not 'i am a testmessage')")
         testEvent = Event("I AM A Testmessage")

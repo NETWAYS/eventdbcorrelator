@@ -2,7 +2,11 @@
 class DBTransformer(object):
     
     def transform(self,event):
-        return self["transform_%s" % event["source"].lower](event)
+        if event["source"] == "snmp":
+            return self.transform_snmp(event)
+        if event["source"] == "syslog":
+            return self.transform_syslog(event)
+        
     
     def transform_snmp(self,event):
         return {
@@ -13,7 +17,7 @@ class DBTransformer(object):
             "priority" : 1,
             "program" : event["program"],
             "message" : event["message"],
-            "ack"     : event["acked"],
+            "ack"     : event["ack"],
             "created" : event["created"],
             "modified": event["modified"]
         }

@@ -1,3 +1,0 @@
-
-class MemoryDatasource(object):
-    pass

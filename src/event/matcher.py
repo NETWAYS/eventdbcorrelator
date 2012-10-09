@@ -1,9 +1,23 @@
 import re
 from matcher_utils import *
+
+
 class TrueMatcher(object):
+    def get_match_groups(self):
+        return {}
+    
     def matches(self,event):
         return True
+
+
+class FalseMatcher(object):
+    def get_match_groups(self):
+        return {}
     
+    def matches(self,event):
+        return False
+ 
+        
 class Matcher(object):
     def __init__(self,definition):
         self.stringTokens = {}
@@ -28,7 +42,17 @@ class Matcher(object):
             self.stringTokens[token] = string
             self.workingString = self.workingString.replace(string,token)
             tokenNr = tokenNr + 1
-
+    
+    def __getitem__(self,id):
+        if id in self.tree.regex_groups:
+            return self.tree.regex_groups[id]
+        return None
+    
+    def get_match_groups(self):
+        return self.tree.regex_groups
+    
+    
     def matches(self, event):
         return self.tree.test(event)
+        
     
