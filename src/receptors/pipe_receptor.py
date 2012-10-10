@@ -88,7 +88,6 @@ class PipeReceptor(AbstractReceptor):
                 dataPacket = os.read(pipe,buffersize)
                 if len(dataPacket) == 0:
                     self.__reopen_pipe()
-                    logging.debug("Got packet, reopen")
                     continue
                 messages = self.__get_messages_from_raw_stream(dataPacket)
                 

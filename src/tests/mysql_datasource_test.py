@@ -1,11 +1,11 @@
 import unittest
 from datasource import MysqlDatasource
 import logging
-
+import time
 import MySQLdb
+
 from event.event import Event
 from event import ip_address
-from time import time
 
 
 class DBTransformerMock(object):
@@ -131,6 +131,81 @@ class MysqlDatasourceTest(unittest.TestCase):
         finally:
             self.source.test_teardown_db() 
         
+    def test_group_implicit_insertion(self):
+        try:
+            self.source.test_setup_db()
+            ev = Event(message="test",additional={
+                "host_address": ip_address.IPAddress("192.168.178.56"),
+                "program" : "test_program",
+
+                "priority" : 0,
+                "facility" : 0,
+                "active" : 1,
+                "group_active" : True
+            })
+            ev.group_leader = -1
+            ev.group_id = "test"
+            self.source.insert(ev)
+            leader = self.source.get_group_leader("test")
+            assert leader != (None,None)
+            assert leader[0] == ev["id"]
+            lastmod = leader[1]
+            time.sleep(1)
+            
+            # test moddate
+            ev2 = Event(message="test",additional={
+                "host_address": ip_address.IPAddress("192.168.178.56"),
+                "program" : "test_program",
+                "priority" : 0,
+                "facility" : 0,
+                "active" : 1,
+                "group_active" : True
+            })
+            ev2.group_leader = ev["id"]
+            ev2.group_id = "test"
+            self.source.insert(ev2)
+            
+            leader = self.source.get_group_leader("test")
+            assert leader != (None,None)
+            assert leader[0] == ev["id"]
+            assert lastmod != leader[1]
+            
+        finally:
+            self.source.test_teardown_db()
+    
+    def test_group_persistence(self):
+        try:
+            self.source.test_setup_db()
+            ev = Event(message="test",additional={
+                "host_address": ip_address.IPAddress("192.168.178.56"),
+                "program" : "test_program",
+
+                "priority" : 0,
+                "facility" : 0,
+                "active" : 1,
+                "group_active" : True
+            })
+            ev.group_leader = -1
+            ev.group_id = "test\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+            self.source.insert(ev)
+            
+            leader = self.source.get_group_leader("test\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
+            assert leader != (None,None)
+            assert leader[0] == ev["id"]
+            
+            self.source.close()
+            
+            self.source = MysqlDatasource()
+            self.source.setup("test",SETUP_DB)
+            self.source.connect()
+                        
+            leader = self.source.get_group_leader("test\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
+            assert leader != (None,None)
+            assert leader[0] == ev["id"]            
+            
+        finally:
+            self.source.test_teardown_db()
+    
     def tearDown(self):
         try: 
             self.source.test_teardown_db()

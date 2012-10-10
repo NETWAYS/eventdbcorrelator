@@ -45,7 +45,6 @@ class RSyslogTransformerTestCase(unittest.TestCase):
             "format": self.FORMAT
         })
         for messageEventPair in self.rsyslog:
-            logging.debug("RSyslog test: %s " % messageEventPair[0])
             event = transformer.transform(messageEventPair[0])
             for key in messageEventPair[1]:
                 assert event != None
@@ -70,7 +69,6 @@ class RSyslogTransformerTestCase(unittest.TestCase):
                     raise e
             required = time.time()-start
             avg = required/linectr
-            logging.debug("Required %s s for %i events (%i s/event)",required,linectr,avg)
             assert required < self.MAX_TIME_PER_EVENT*linectr
             
         finally:

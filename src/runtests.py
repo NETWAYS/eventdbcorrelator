@@ -7,15 +7,18 @@ import logging
 
 def suite():
     suite = unittest.TestSuite()
-
-    #suite.addTests(unittest.TestLoader().loadTestsFromTestCase(PipeReceptorTestCase))
-    #suite.addTests(unittest.TestLoader().loadTestsFromTestCase(RSyslogTransformerTestCase))
-    #suite.addTests(unittest.TestLoader().loadTestsFromTestCase(IPAddressTestCase))
-    #suite.addTests(unittest.TestLoader().loadTestsFromTestCase(MatcherTestCase))
-    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(MysqlDatasourceTest))
-    #suite.addTests(unittest.TestLoader().loadTestsFromTestCase(ChainTestCase))
-    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(AggregatorTestCase))
     
+    # Unit tests
+#    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(PipeReceptorTestCase))
+#    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(RSyslogTransformerTestCase))
+#    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(IPAddressTestCase))
+#    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(MatcherTestCase))
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(MysqlDatasourceTest))
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(SpoolDatasourceTest))
+#    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(ChainTestCase))
+#    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(AggregatorTestCase))
+    
+    # Integration tests
     suite.addTests(unittest.TestLoader().loadTestsFromTestCase(AggregatorMysqlTest))
     return suite
 

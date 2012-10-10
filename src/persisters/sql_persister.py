@@ -8,16 +8,9 @@ class SqlPersister(AbstractPersister):
     def setup(self,id,config):
         self.id = id
         self.datasource = config["datasource"]
-        if "spool" in config:
-            self.spool = config["spool"]
-        else:
-            self.spool = None
+       
             
     def process(self,event):
-        if not self.datasource.available() and self.spool:
-            self.spool.persist(event)
-            return "not_available"
-            
         success = false
         if event["id"] != None:
             success = self.updateEvent(event)

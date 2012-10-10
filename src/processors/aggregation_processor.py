@@ -55,16 +55,17 @@ class AggregationProcessor(AbstractProcessor):
         
         self.set_aggregation_group_id(event,matchgroups)
         (group,lastmod) =  self.datasource.get_group_leader(event["group_id"])
-        
+
         if group and time.time()-lastmod >= self.config["maxDelay"]:
-            logging.debug("Cleared group %s " % group)
-            self.datasource.deactivate_group(group)
+            logging.debug("Cleared group %s " % event["group_id"])
+            self.datasource.deactivate_group(event["group_id"])
             group = None
         
         if group and self.clear_matcher.matches(event):
+            group_id = event["group_id"]
             event["group_id"] = None
             event["group_leader"] = None
-            self.datasource.deactivate_group(group)
+            self.datasource.deactivate_group(group_id)
             group = None
             return "CLEAR"
 
@@ -123,8 +124,6 @@ class AggregationProcessor(AbstractProcessor):
         
     def set_aggregation_group_id(self,event,matchgroups):
         id = str(self.id)
-        logging.debug("Config %s " % self.config)
-        logging.debug("Fields for id: %s " % self.use_fields_for_id)
         for field in self.use_fields_for_id:
             field = field.strip()
             id = id + str(event[field])

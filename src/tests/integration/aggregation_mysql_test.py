@@ -1,9 +1,32 @@
 import unittest
-from datasource import MysqlDatasource, DBTransformer, GROUP_NOT_EMPTY_FLAG
+import threading
+
+from datasource import MysqlDatasource, DBTransformer, SpoolDatasource
 from event.event import *
 from event import ip_address
 from processors import AggregationProcessor
-from tests.mysql_datasource_test import SETUP_DB, DBTransformerMock
+from tests.mysql_datasource_test import SETUP_DB
+MAX_TIME_PER_EVENT=0.001
+
+class TestAggregationInsertionThread(threading.Thread):
+    def setup(self,aggregator,count,evCfg,db):
+        self.aggregator = aggregator
+        self.events = []
+        self.db = db
+        for i in range(0,count):
+            self.events.append(Event(message="test "+str(i),additional=evCfg))
+    
+    def run(self):
+        self.burst_events()
+        
+        
+    def burst_events(self):
+        for i in self.events:
+            self.aggregator.process(i)
+            self.db.insert(i)
+        
+        
+        
 
 class AggregatorMysqlTest(unittest.TestCase):
     
@@ -15,6 +38,7 @@ class AggregatorMysqlTest(unittest.TestCase):
         # Try tearing down the database in case a previous run ran wihtou cleanup
         try: 
             self.source.test_teardown_db()
+            self.source.close(True)
         except:
             pass
 
@@ -62,6 +86,7 @@ class AggregatorMysqlTest(unittest.TestCase):
             
         finally:
             self.source.test_teardown_db()
+            self.source.close(True)
             
             
     
@@ -110,6 +135,7 @@ class AggregatorMysqlTest(unittest.TestCase):
             
         finally:
             self.source.test_teardown_db()
+            self.source.close(True)
             
     
     
@@ -142,8 +168,6 @@ class AggregatorMysqlTest(unittest.TestCase):
             self.source.insert(event1)
             assert aggregator.process(event2) == "AGGR"
             self.source.insert(event2)
-
-
             
             assert aggregator.process(event3) == "CLEAR" 
             self.source.insert(event3)
@@ -155,6 +179,48 @@ class AggregatorMysqlTest(unittest.TestCase):
             assert event3.group_leader == None
             assert event4.group_leader == -1
             
+        finally:
+            self.source.test_teardown_db()
+            self.source.close(True)
+            
+
+    def test_aggregation_group_performance(self):
+        try: 
+            self.source.test_setup_db()
+            aggregator = AggregationProcessor()
+
+            aggregator.setup("test",{
+                "matcherfield": "test .*",
+                "datasource"  : self.source,
+                "clear"       : "message STARTS WITH 'clear'" 
+            })
+            eventThreads = []
+            NR_OF_THREADS=10
+            NR_OF_EVENTS=10
+            for i in range(0,NR_OF_THREADS):
+                thread = TestAggregationInsertionThread()
+                thread.setup(aggregator,NR_OF_EVENTS,{
+                    "program"       : "testcase",
+                    "host_name"     : "localhost",
+                    "host_address"  : ip_address.IPAddress("127.0.0.1"),
+                    "source"        : 'snmp',
+                    "facility"      : 5,
+                    "priority"      : 0,
+                    "ack"           : 0
+                },self.source)
+                eventThreads.append(thread)
+
+            start = time.time()
+
+            for i in eventThreads:
+                i.start()
+
+            for i in eventThreads:
+                i.join()
+
+            end = time.time()
+            assert (end-start)/(NR_OF_THREADS*NR_OF_EVENTS) <= MAX_TIME_PER_EVENT
             
         finally:
             self.source.test_teardown_db()
+            self.source.close(True)
