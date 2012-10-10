@@ -20,6 +20,7 @@ def suite():
     
     # Integration tests
     suite.addTests(unittest.TestLoader().loadTestsFromTestCase(AggregatorMysqlTest))
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(MySQLDataSourceSpoolTest))
     return suite
 
 if __name__ == "__main__":

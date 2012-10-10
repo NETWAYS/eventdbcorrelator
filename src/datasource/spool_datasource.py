@@ -68,7 +68,14 @@ class SpoolDatasource(object):
             
             self.spool_handle.write(item_str+"\n")
         self.spool_handle.flush()
-        
+    
+    def flush(self):
+        try:
+            self.lock.acquire()
+            self._flush_buffer_to_file()
+        finally:
+            self.lock.release()
+    
     def get_spool_from_file(self):
         if not self.spool_handle:
             return []
@@ -104,3 +111,6 @@ class SpoolDatasource(object):
         finally:
             self.buffer.clear()
             self.lock.release()
+    
+    def fetchall(self):
+        return ()

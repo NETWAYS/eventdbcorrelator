@@ -84,27 +84,29 @@ class SpoolDatasourceTest(unittest.TestCase):
                 pos = pos+1
                 
     def test_spool_file_get_content(self):
-        ds = SpoolDatasource()
-        ds.setup("test",{
-            "buffer_size" : 10,
-            "spool_dir" : TMP_DIR,
-            "spool_filename" : SPOOL_NAME            
-        })
-        cursor = ds.cursor()
-        for i in range(0,100):
-            cursor.execute(i,"test\ntest\n.\n")
-        ds.close()
-        result = ds.get_spooled()
+        try:
+            ds = SpoolDatasource()
+            ds.setup("test",{
+                "buffer_size" : 10,
+                "spool_dir" : TMP_DIR,
+                "spool_filename" : SPOOL_NAME            
+            })
+            cursor = ds.cursor()
+            for i in range(0,100):
+                cursor.execute(i,"test\ntest\n.\n")
+            ds.close()
+            result = ds.get_spooled()
 
-        assert len(result) == 100
-        pos = 0
-        for i in result:
-            assert i[0] == pos
-            assert i[1] == "test\ntest\n.\n"
-            pos = pos+1
-        result = ds.get_spooled()
-        assert len(result) == 0
-
-
+            assert len(result) == 100
+            pos = 0
+            for i in result:
+                assert i[0] == pos
+                assert i[1] == "test\ntest\n.\n"
+                pos = pos+1
+            result = ds.get_spooled()
+            assert len(result) == 0
+        finally: 
+            self.clear_temp_files()
+            
     def tearDown(self):
         self.clear_temp_files()

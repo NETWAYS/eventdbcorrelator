@@ -1,6 +1,8 @@
 
 import MySQLdb
+import MySQLdb.cursors
 import Queue
+import traceback
 import threading
 import db_transformer
 import time
@@ -93,6 +95,11 @@ class MysqlDatasource(object):
         self.password = config["password"]
         self.database = config["database"]
 
+        if "cursor_class" in config:
+            self.cursor_class = config["cursor_class"]
+        else:
+            self.cursor_class = MySQLdb.cursors.Cursor
+
         if "spool" in config:
             self.spool = config["spool"]
         else:
@@ -115,6 +122,7 @@ class MysqlDatasource(object):
         self.available_connections = []
         self.connections = Queue.Queue()
         self.lock = threading.Lock()
+        self.check_spool = True
         self.connect()
         try:
             
@@ -182,7 +190,7 @@ class MysqlDatasource(object):
         
         conn = self.acquire_connection()
         try: 
-            cursor = conn.cursor()
+            cursor = self.cursor_class(conn)
 
             query = "INSERT INTO "+self.table+" (id, host_name,host_address,type,facility,priority,program,message,alternative_message,ack,created,modified,group_active,group_id,group_leader) VALUES (%(id)s,%(host_name)s,%(host_address)s,%(type)s,%(facility)s,%(priority)s,%(program)s,%(message)s,%(alternative_message)s,%(ack)s,NOW(),NOW(),%(group_active)s,%(group_id)s,%(group_leader)s);"
             
@@ -243,9 +251,21 @@ class MysqlDatasource(object):
         try:
             if not cursor_given:
                 conn = self.acquire_connection()
-                cursor = conn.cursor()
+                cursor = self.cursor_class(conn)
+            try:
+                cursor.execute(query,args)
+                if self.spool and conn == self.spool:
+                    self.check_spool = True
+                
+            except MySQLdb.OperationalError, e:
+                if conn == self.spool:
+                    raise
+                self.check_spool = True
+                self.spool.execute(query,args)
+                
+                logging.warn("Query failed: %s" % e)
+                return None 
             
-            cursor.execute(query,args)
             if not noResult:
                 result = cursor.fetchall()
                 return result
@@ -285,17 +305,31 @@ class MysqlDatasource(object):
             conn = self.acquire_connection()
             if not noFlush:
                 self.group_cache.flush_to_db(conn,self.table)
+            if not noFlush and self.spool:
+                self.spool.flush()
         finally:
             conn.close()
             
     def execute_spooled(self,c):
         if not self.spool:
             return
-        ctr = 0
-        for i in self.spool.get_spooled():
-            ctr = ctr+1
-            c.execute(i[0],i[1])
-        logging.debug("Insert %i events from spool" % ctr)
+        
+        
+        try:
+            ctr = 0
+            cursor = self.cursor_class(c)
+            for i in self.spool.get_spooled():
+                ctr = ctr+1
+                logging.debug("Executing spooled query: %s , (args=%s) " %(i[0],i[1]))
+                cursor.execute(i[0],i[1])
+            cursor.close()
+            c.commit()
+            self.check_spool = False
+        except Exception, e:
+            logging.error("Writing spooled entries failed : %s",traceback.format_exc())
+        
+        
+        
     def get_new_connection(self):
         try:
             c = MySQLdb.Connection(
@@ -305,10 +339,7 @@ class MysqlDatasource(object):
                 passwd=self.password,
                 db=self.database
             )
-            try:
-                self.execute_spooled(c)
-            except e:
-                pass
+            
                 
             return c
         except MySQLdb.OperationalError,oe:
@@ -331,17 +362,20 @@ class MysqlDatasource(object):
         finally:
             self.lock.release()
             
-    def acquire_connection(self):
+    def acquire_connection(self,noSpool=False):
         try:
             conn = self.connections.get(True,3)
             if not conn.open:
                 conn = self.get_new_connection()
+            
+            if self.check_spool and not noSpool:
+                self.execute_spooled(conn)
             return conn
-        except Queue.Empty, e:
+        except:
             if self.spool:
                 return self.spool
             else:
-                return None
+                raise 
         
     
     def release_connection(self,conn):

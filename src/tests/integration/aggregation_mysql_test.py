@@ -1,7 +1,7 @@
 import unittest
 import threading
 
-from datasource import MysqlDatasource, DBTransformer, SpoolDatasource
+from datasource import MysqlDatasource, DBTransformer
 from event.event import *
 from event import ip_address
 from processors import AggregationProcessor
