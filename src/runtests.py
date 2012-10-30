@@ -5,22 +5,30 @@ from tests.integration import *
 import unittest
 import logging
 
+UNITTESTS = [
+#    InstanceFactoryTest,
+#    PipeReceptorTestCase,
+#    RSyslogTransformerTestCase,
+#    IPAddressTestCase,
+#    MatcherTestCase,
+#    MysqlDatasourceTest,
+#    SpoolDatasourceTest,
+#    ChainTestCase,
+#    AggregatorTestCase
+    CommandProcessorTest
+]
+
+
 def suite():
     suite = unittest.TestSuite()
     
     # Unit tests
-#    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(PipeReceptorTestCase))
-#    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(RSyslogTransformerTestCase))
-#    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(IPAddressTestCase))
-#    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(MatcherTestCase))
-    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(MysqlDatasourceTest))
-    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(SpoolDatasourceTest))
-#    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(ChainTestCase))
-#    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(AggregatorTestCase))
+    for utest in UNITTESTS:
+        suite.addTests(unittest.TestLoader().loadTestsFromTestCase(utest))
     
     # Integration tests
-    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(AggregatorMysqlTest))
-    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(MySQLDataSourceSpoolTest))
+#    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(AggregatorMysqlTest))
+#    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(MySQLDataSourceSpoolTest))
     return suite
 
 if __name__ == "__main__":

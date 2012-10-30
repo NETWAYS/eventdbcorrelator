@@ -12,13 +12,15 @@ class Event(object):
 
     def __init__(self, message = "", date=time.ctime(),additional = dict(),record=None):
         self.data = dict();
+        self["host_address"] = IPAddress("127.0.0.1")
+        self["host_name"] = "unknown"
         if record != None:
             self.from_record(record)
             return
         
         self.message = message
         self.alternative_message = message
-        self.date = date
+        self.data["created"] = date
         self.active = True
         self.group_id = None
         self.group_leader = None
@@ -92,4 +94,7 @@ class Event(object):
             
             if keys[i] == 'host_address':
                 self["host_address"] = IPAddress(self["host_address"],binary=True)
-       
+    
+    def free(self):
+        del self.data
+        del self

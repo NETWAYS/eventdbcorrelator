@@ -29,7 +29,7 @@ class DBTransformerMock(object):
 # Your database requires read, write, create amd drop permissions for the user given here.
 # 
 SETUP_DB = {
-    "host" : "localhost",
+    "host" : "127.0.0.1",
     "port" : 3306,
     "user" : "testcases",
     "password" : "testcases",
@@ -85,8 +85,8 @@ class MysqlDatasourceTest(unittest.TestCase):
         })
         try:
             # Create
-            id = self.source.insert(ev)
-            assert ev["id"] == id
+            assert self.source.insert(ev) == "OK"
+            assert ev["id"]
             
             # Read
             ev_from_db = self.source.get_event_by_id(ev["id"])
@@ -173,6 +173,38 @@ class MysqlDatasourceTest(unittest.TestCase):
         finally:
             self.source.test_teardown_db()
     
+    
+    def test_id_generation(self):
+        try:
+            self.source.test_setup_db()
+            ev = Event(message="test",additional={
+                "host_address": ip_address.IPAddress("192.168.178.56"),
+                "program" : "test_program",
+
+                "priority" : 0,
+                "facility" : 0,
+                "active" : 1,
+                "group_active" : True
+            })
+            assert self.source.last_id == 0
+            self.source.insert(ev)
+            self.source.insert(ev)
+            self.source.insert(ev)
+            self.source.insert(ev)
+            self.source.insert(ev)
+
+            assert self.source.last_id == 5
+            
+            self.source.close()
+            self.source = MysqlDatasource()
+            self.source.setup("test",SETUP_DB)
+            
+            assert self.source.last_id == 5
+            self.source.insert(ev)
+            assert self.source.last_id == 6            
+        finally:
+            self.source.test_teardown_db()
+        
     def test_group_persistence(self):
         try:
             self.source.test_setup_db()
@@ -205,7 +237,8 @@ class MysqlDatasourceTest(unittest.TestCase):
             
         finally:
             self.source.test_teardown_db()
-    
+        
+
     def tearDown(self):
         try: 
             self.source.test_teardown_db()

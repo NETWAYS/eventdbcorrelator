@@ -1,3 +1,4 @@
+from instance_factory_test import *
 from pipereceptor_test import *
 from transformer_test import *
 from matcher_test import *
@@ -6,3 +7,4 @@ from spool_datasource_test import *
 from mysql_datasource_test import *
 from chain_test import *
 from aggregator_test import *
+from command_processor_test import *

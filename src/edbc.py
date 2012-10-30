@@ -10,13 +10,14 @@ import logging
 import controller
 import socket
 import sys
+import objgraph
 
 class Edbc(object):
     def __daemonize(self):    
         pass;
     
     def __setupLogging(self):
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level=logging.WARN)
 
     def __init__(self):
         if not socket.has_ipv6:
@@ -35,4 +36,3 @@ class Edbc(object):
             
 if __name__ == "__main__":
     Edbc();
-    

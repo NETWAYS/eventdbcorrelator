@@ -21,6 +21,7 @@ class PipeReceptor(AbstractReceptor):
             "bufferSize" : 2048,
             "format" : None
         }
+        
         self.runFlags = os.O_RDONLY|os.O_NONBLOCK
         for key in config.keys():
             if key == 'owner':
@@ -30,7 +31,10 @@ class PipeReceptor(AbstractReceptor):
                     config[key] = pwd.getpwnam(config[key]).pw_gid
                 else:
                     self.config[key] = config[key]
-        
+        if "source_type" in self.config:
+            self.source = self.config["source_type"]
+        else:
+            self.source = "syslog"
         self.pipe = None
         self.queues = []
         self.__setup_pipe()
@@ -80,6 +84,7 @@ class PipeReceptor(AbstractReceptor):
         buffersize = self.config["bufferSize"]
         pipe = None
         self.lastPart = ""
+        transformed = None
         while self.running:
             inPipes,pout,pex = select.select([self.pipe],[],[],3)
 
@@ -95,7 +100,9 @@ class PipeReceptor(AbstractReceptor):
                     if message == "": 
                         continue
                     transformed = tr.transform(message)
-                    if self.queues:
+                    
+                    if self.queues and transformed:
+                        transformed["source"] = self.source
                         for queue in self.queues:
                             queue.put(transformed)    
                     if self.callback != None:

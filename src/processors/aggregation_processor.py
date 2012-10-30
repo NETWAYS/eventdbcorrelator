@@ -10,14 +10,12 @@ import re
 import logging
 import time
 
-from abstract_processor import AbstractProcessor
 from event import matcher
-
 
 DB_TYPE_AGGREGATION_GROUP = 1
 
 
-class AggregationProcessor(AbstractProcessor):
+class AggregationProcessor(object):
     
     
     def setup(self,id,config = {}):
@@ -111,13 +109,13 @@ class AggregationProcessor(AbstractProcessor):
     
     def create_aggregation_message(self,event,matchgroups):
         msg = self.config["aggregateMessage"]
-        tokens = re.findall("#\w+",msg)
+        tokens = re.findall("[$#]\w+",msg)
         for token in tokens:
             if token[0] == '#':
-                msg = msg.replace(token,event[token[1:]])
+                msg = msg.replace(token,str(event[token[1:]]))
                 continue
             if token[0] == '$':
-                msg = msg.replace(token,matchgroups[token[1:]])
+                msg = msg.replace(token,str(matchgroups[token[1:]]))
                 continue
         return msg
         

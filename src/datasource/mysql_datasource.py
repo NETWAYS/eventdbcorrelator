@@ -125,11 +125,10 @@ class MysqlDatasource(object):
         self.check_spool = True
         self.connect()
         try:
-            
             self.fetch_active_groups()
             self.fetch_last_id()
-            
-        except:
+        except Exception,e:
+            logging.warn("DB setup failed: %s (maybe the database is not set up correctly ?)" % e)
             pass
 
 
@@ -190,24 +189,30 @@ class MysqlDatasource(object):
         
         conn = self.acquire_connection()
         try: 
-            cursor = self.cursor_class(conn)
+            try: # Python 2.4 doesn't allow try: except: finally: together
+                cursor = self.cursor_class(conn)
 
-            query = "INSERT INTO "+self.table+" (id, host_name,host_address,type,facility,priority,program,message,alternative_message,ack,created,modified,group_active,group_id,group_leader) VALUES (%(id)s,%(host_name)s,%(host_address)s,%(type)s,%(facility)s,%(priority)s,%(program)s,%(message)s,%(alternative_message)s,%(ack)s,NOW(),NOW(),%(group_active)s,%(group_id)s,%(group_leader)s);"
+                query = "INSERT INTO "+self.table+" (id, host_name,host_address,type,facility,priority,program,message,alternative_message,ack,created,modified,group_active,group_id,group_leader) VALUES (%(id)s,%(host_name)s,%(host_address)s,%(type)s,%(facility)s,%(priority)s,%(program)s,%(message)s,%(alternative_message)s,%(ack)s,NOW(),NOW(),%(group_active)s,%(group_id)s,%(group_leader)s);"
             
-            self.execute(query,self.get_event_params(event),noResult=True,cursor=cursor)
+                self.execute(query,self.get_event_params(event),noResult=True,cursor=cursor)
             
-            if event.group_leader and event.group_leader > -1:
-                self.update_group_modtime(event.group_id)
-            else:
-                self.group_cache.add({
-                    "active" : 1,
-                    "group_leader" : event["id"],
-                    "group_id" : event.group_id,
-                    "dirty" : True
-                });
-            cursor.close()
-            conn.commit()
-            return event["id"]
+                if event.group_leader and event.group_leader > -1:
+                    self.update_group_modtime(event.group_id)
+                else:
+                    self.group_cache.add({
+                        "active" : 1,
+                        "group_leader" : event["id"],
+                        "group_id" : event.group_id,
+                        "dirty" : True
+                    });
+                cursor.close()
+                conn.commit()
+                if  conn == self.spool:
+                    return "SPOOL"
+                return "OK"
+            except Exception:
+                logging.error("Insert failed : %s" % traceback.format_exc())            
+                return "FAIL"
         finally:
             self.release_connection(conn)
     
@@ -216,6 +221,8 @@ class MysqlDatasource(object):
         event["id"] = self.next_id()
         
         params = self.out.transform(event)
+        if not params:
+            raise "Invalid event : %s " % event.data
         params["id"] = event["id"]
         params["group_leader"] = event.group_leader
         params["group_id"] = event.group_id
@@ -249,7 +256,7 @@ class MysqlDatasource(object):
         cursor_given = cursor != None
         conn = None
         try:
-            if not cursor_given:
+            if not cursor:
                 conn = self.acquire_connection()
                 cursor = self.cursor_class(conn)
             try:
@@ -261,10 +268,11 @@ class MysqlDatasource(object):
                 if conn == self.spool:
                     raise
                 self.check_spool = True
-                self.spool.execute(query,args)
+                if self.spool:
+                    self.spool.execute(query,args)
                 
                 logging.warn("Query failed: %s" % e)
-                return None 
+                return ()
             
             if not noResult:
                 result = cursor.fetchall()
@@ -320,7 +328,6 @@ class MysqlDatasource(object):
             cursor = self.cursor_class(c)
             for i in self.spool.get_spooled():
                 ctr = ctr+1
-                logging.debug("Executing spooled query: %s , (args=%s) " %(i[0],i[1]))
                 cursor.execute(i[0],i[1])
             cursor.close()
             c.commit()
@@ -348,7 +355,7 @@ class MysqlDatasource(object):
             
    
     def fetch_last_id(self):
-        res = self.execute("SELECT id FROM event ORDER BY id LIMIT 1")
+        res = self.execute("SELECT id FROM event ORDER BY id DESC LIMIT 1")
         if len(res) < 1:
             self.last_id = 0
             return

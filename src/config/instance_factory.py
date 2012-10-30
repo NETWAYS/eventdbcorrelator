@@ -8,7 +8,7 @@ import logging
 Factory and Registry class that can register object instances and 
 matches instance references (@id in config files)
 
-@author Jannis Mo§hammer <jannis.mosshammer@netways.de>
+@author Jannis Mosshammer <jannis.mosshammer@netways.de>
 '''
 class InstanceFactory(object):
 
@@ -18,7 +18,7 @@ class InstanceFactory(object):
     """
     def __init__(self,config):
         self.config = config
-        
+        self.deferred = {}
         instanceDefs = self.config.get_instance_definitions()
         self.instances = { "all": {} }
         for id in instanceDefs:
@@ -29,6 +29,12 @@ class InstanceFactory(object):
             
         logging.debug("Registered %i instances" % len (self.instances["all"]))
 
+
+    def defer_registration(self,required,args):
+        if not required in self.deferred:
+            self.deferred[required] = []
+        self.deferred[required].append(args)
+        
     """
     Registers an object cfgObject with the identifier id. 
     the cfgObject is expected to have a class attribute, which will be registered and 
@@ -40,27 +46,57 @@ class InstanceFactory(object):
     
     """
     def register(self,id,cfgObject,factoryFn = None):
-        logging.debug(cfgObject)
         # type myType and class myClass will be called MyTypeMyClass()
+        required = self.resolve_references(cfgObject)
+        if required != None:
+            self.defer_registration(required,(id,cfgObject,factoryFn))
+            return False
+        
         r = None
         if not cfgObject["class"] in self.instances:
             self.register_class(cfgObject["class"])
+        
         if factoryFn == None:
             # Default factory using the setup method
             instanceCls = cfgObject["class"].capitalize()
             configname = cfgObject["type"].capitalize()+instanceCls
             r = globals()[configname]()
+            
             r.setup(id,cfgObject)
         else:
             # Pass instance creation to factory function
             r = factoryFn(id,cfgObject)
 
-        
-            
-
         self.instances[cfgObject["class"]][id] = r    
-        self.instances["all"][id] = r        
+        self.instances["all"][id] = r 
+        self.handle_unresolved(id)
+        return True
         
+    def handle_unresolved(self,id):
+            
+        if "@"+id in self.deferred:
+
+            unmatched = []
+            while self.deferred["@"+id]:
+                item = self.deferred["@"+id].pop()
+                if not self.register(item[0],item[1],item[2]):
+                    unmatched.append(item)
+            if unmatched:
+                self.deferred["@"+id] = unmatched
+            else:
+                del self.deferred["@"+id]
+            
+    def has_unmatched_dependencies(self):
+        logging.debug(self.deferred)
+        return len(self.deferred) > 0
+
+    def resolve_references(self,cfgobject):
+        for i in cfgobject:
+            if cfgobject[i].startswith('@'):
+                resolved = self.__getitem__(cfgobject[i])
+                if not resolved:
+                    return cfgobject[i]
+                cfgobject[i] = resolved
 
     def register_class(self,classname):
         classname = classname.strip()

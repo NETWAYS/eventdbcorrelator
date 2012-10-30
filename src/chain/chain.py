@@ -20,8 +20,6 @@ class Chain(threading.Thread):
         self.id =  id
         
         
-        if config["instances"]:
-            self.instances = config["instances"]
         if not "matcher" in config or config["matcher"] == "all":
             self.matcher = matcher.TrueMatcher()
         else:
@@ -61,7 +59,7 @@ class Chain(threading.Thread):
             logging.warn(("Chain '%s' has no input defined and is independent. You should add an in: ... directive " % self.id) +
                             "to the config. This chain will be ignored." )
             return
-        self.input = self.instances[self.config["in"]]
+        self.input = self.config["in"]
         if not self.input:
             raise Exception("Input %s does not exist" % self.config["in"])
         
@@ -74,7 +72,7 @@ class Chain(threading.Thread):
             if i != AFTER_DIRECTIVE and i != NOT_AFTER_DIRECTIVE:
                 continue
             self.isIndependent = False
-            dependentChain = self.instances[self.config[i]]
+            dependentChain = self.config[i]
             if not dependentChain:
                 raise Exception("chain dependency %s:%s can't be resolved in chain %s " % (i,self.config[i],self.id))
             if i == AFTER_DIRECTIVE:
@@ -91,10 +89,10 @@ class Chain(threading.Thread):
         self.event_chain.sort(lambda x, y: x["pos"]-y["pos"])
         
 
-    def register_processor(self,type,targetId):
+    def register_processor(self,type,target):
         type = type.split("_")
         pos = int(type[-1])
-        target = self.instances[targetId]
+        
         if not target:
             raise Exception("Chain target %s does not exist " % targetId)
         
@@ -108,6 +106,7 @@ class Chain(threading.Thread):
             processor_obj["conditions"].append(self.get_condition_object(condition,pos))
         
         self.event_chain.append(processor_obj)
+        logging.debug("Event chain for %s : %s" %(self.id,self.event_chain))
     
     def get_condition_object(self,condition,basePos):
         condition_pos = re.match("(?P<COND_POS>\d+)\[(?P<COND_RETURN>\w+)\]",condition)
@@ -169,6 +168,8 @@ class Chain(threading.Thread):
         if self.on_match_chains:
             for chain in self.on_match_chains:
                 chain.on_event_recv(ev)
+        else:
+            ev.free()
     
     def process_event(self,ev):
         returnValues = {}

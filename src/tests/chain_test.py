@@ -48,43 +48,26 @@ class ChainTestCase(unittest.TestCase):
         self.testProcessorMock = TestProcessorMock()
         
         self.CHAIN_NO_CONDITION_SINGLE_OUT = {
-            "in": "@mockIn",
-            "to_1": "@mockOut",
-            "instances": {
-               "@mockIn": self.inMock,
-               "@mockOut" : self.outMock
-            }
+            "in": self.inMock,
+            "to_1": self.outMock
         }
         
         self.CHAIN_NO_CONDITION_MULTI_OUT = {
-            "in": "@mockIn",
-            "to_1": "@mockOut",
-            "to_2": "@mockOut",
-            "instances": {
-               "@mockIn": self.inMock,
-               "@mockOut" : self.outMock
-            }
+            "in": self.inMock,
+            "to_1": self.outMock,
+            "to_2": self.outMock
         }
         
         self.CHAIN_SINGLE_CONDITION_SINGLE_OUT = {
-            "in": "@mockIn",
-            "to_1": "@testProcessor",
-            "to_1[OK]_2": "@mockOut",
-            "instances": {
-                "@testProcessor" : self.testProcessorMock,
-                "@mockIn": self.inMock,
-                "@mockOut" : self.outMock
-            }
+            "in": self.inMock,
+            "to_1": self.testProcessorMock,
+            "to_1[OK]_2": self.outMock
         }
         
         self.CHAIN_MSG_MATCHER_SINGLE_OUT = {
-            "in": "@mockIn",
+            "in": self.inMock,
             "matcher" : "message IS 'test'",
-            "to_1": "@mockOut",
-            "instances": {
-               "@mockIn": self.inMock,
-               "@mockOut" : self.outMock
-            }
+            "to_1": self.outMock
         }
         
     
@@ -114,8 +97,9 @@ class ChainTestCase(unittest.TestCase):
         
 
     def test_multi_write_no_condition(self):
+        test_chain = self._get_test_chain(self.CHAIN_NO_CONDITION_MULTI_OUT)
+
         try:
-            test_chain = self._get_test_chain(self.CHAIN_NO_CONDITION_MULTI_OUT)
             test_chain.start()
 
             test_chain.input.fire_event("Test")
@@ -150,23 +134,15 @@ class ChainTestCase(unittest.TestCase):
             out3 = ChainOutMock()
             dependentChain1 = Chain()
             dependentChain1.setup("test2",{
-                "after": "@chain1",
-                "to_1": "@mockOut",
-                "instances": {
-                    "@chain1" : test_chain,
-                    "@mockOut" : out2
-                }
+                "after": test_chain,
+                "to_1": out2
             })
             dependentChain1.setup_event_path()
             
             dependentChain2 = Chain()
             dependentChain2.setup("test2",{
-                "not_after": "@chain1",
-                "to_1": "@mockOut",
-                "instances": {
-                    "@chain1" : test_chain,
-                    "@mockOut" : out3
-                }
+                "not_after": test_chain,
+                "to_1": out3
             })
             dependentChain2.setup_event_path()
             

@@ -24,22 +24,26 @@ class Controller:
         for id in self.instances["receptor"]:
             receptor = self.instances["receptor"][id]
             if receptor.config["format"] != None:
-                receptor.config["transformer"] = self.instances.getTransformer(receptor.config["format"])
+                receptor.config["transformer"] = receptor.config["format"]
             receptor.start()
             self.threads.append(receptor)
         
     def __read_chain_definitions(self):
         self.chainFactory = ChainFactory()
-        chains = self.chainFactory.read_config_file(self.config["chain_dir"],self.instances)
+        self.chainFactory.read_config_file(self.config["chain_dir"],self.instances)
         
         
         
     def __lay_back_and_wait(self):
         try:
+            if self.instances.has_unmatched_dependencies():
+                logging.warn("Unmatched dependencies found : %s",self.instances.deferred)
             while True:
                 for thread in self.threads:
                     thread.join(5)        
-        except:
+        except Exception, e:
+            logging.debug(e)
+        else:
             pass
         logging.debug("Attempting shutdown...")
 

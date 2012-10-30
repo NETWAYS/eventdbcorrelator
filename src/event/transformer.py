@@ -12,6 +12,12 @@ class StringTransformer(object):
             self.defaultMessage = config["defaultMessage"]
         else:
             self.defaultMessage = "No message given"
+        self.fixed = {}
+        if "fixed" in config:
+            fixed = config["fixed"].split(",")
+            for keyval in fixed:
+                keyval = keyval.split("=")
+                self.fixed[keyval[0].lower()] = keyval[1]
         self.dateFormat = "%b %d %H:%M:%S"
     
     def set_current_year(self,st):
@@ -25,7 +31,8 @@ class StringTransformer(object):
                 return None
 
             matchdict = matches.groupdict()
-
+            for i in self.fixed:
+                matchdict[i] = self.fixed[i]
             if not "DATE" in matchdict:
                 matchdict["DATE"] = time.ctime()
             else:
@@ -36,7 +43,7 @@ class StringTransformer(object):
 
             if not "MESSAGE" in matchdict:
                 matchdict["MESSAGE"] = self.defaultMessage
-
+                
             event = Event(matchdict["MESSAGE"],matchdict["DATE"],matchdict)
             return event
         except Exception, e:
