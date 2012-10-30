@@ -42,7 +42,13 @@ class CommandProcessor(object):
             groups = self.matcher.get_match_groups()
             msg = self.create_notification_message(event,groups)
             msg = "[%i] %s" % (time.time(),msg)
-            self.send_to_pipe(msg)
+            
+            try:
+                self.send_to_pipe(msg)
+                return "OK"
+            except:
+                return "FAIL"
+            
         finally:
             self.lock.release()
     
@@ -53,6 +59,7 @@ class CommandProcessor(object):
             os.close(pipe)
         except Exception, e:
             logging.error("Could not send command %s to pipe : %s" % (msg,e))
+            raise e
     
     def create_notification_message(self,event,matchgroups):
         msg = self.format

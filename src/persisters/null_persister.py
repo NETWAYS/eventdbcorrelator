@@ -2,13 +2,12 @@
 Pseudo persister that forfeits the event 
 '''
 
-from abstract_persister import AbstractPersister
 
-class NullPersister(AbstractPersister):
+class NullPersister(object):
     def setup(self,id,config):
         self.id = id
     
     def persist(self,event):
-        pass
+        return "OK"
 
     

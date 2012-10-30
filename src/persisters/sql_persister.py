@@ -1,10 +1,6 @@
-'''
-Pseudo persister that forfeits the event 
-'''
 import logging
-from abstract_persister import AbstractPersister
 
-class SqlPersister(AbstractPersister):
+class SqlPersister(object):
     def setup(self,id,config):
         self.id = id
         
