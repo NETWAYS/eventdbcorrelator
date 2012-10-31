@@ -168,8 +168,7 @@ class Chain(threading.Thread):
         if self.on_match_chains:
             for chain in self.on_match_chains:
                 chain.on_event_recv(ev)
-        else:
-            ev.free()
+
     
     def process_event(self,ev):
         returnValues = {}
@@ -185,10 +184,10 @@ class Chain(threading.Thread):
                     break
             if not matches:
                 continue
-                
+            
             value = processor_obj["target"].process(ev)
             returnValues[processor_obj["pos"]] = value
-    
+        
     def stop(self):
         try:
             self.input.unregister_queue(self.inQueue)

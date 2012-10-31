@@ -1,6 +1,7 @@
 # Helper class to transform strings, arrays, etc to EVent objects
 import re
 import logging
+import os
 import time
 from event import *
 
@@ -13,6 +14,7 @@ class StringTransformer(object):
         else:
             self.defaultMessage = "No message given"
         self.fixed = {}
+        
         if "fixed" in config:
             fixed = config["fixed"].split(",")
             for keyval in fixed:
@@ -43,10 +45,11 @@ class StringTransformer(object):
 
             if not "MESSAGE" in matchdict:
                 matchdict["MESSAGE"] = self.defaultMessage
-                
+            
             event = Event(matchdict["MESSAGE"],matchdict["DATE"],matchdict)
             return event
         except Exception, e:
             logging.warn(e)
         
-        
+    
+    

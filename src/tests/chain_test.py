@@ -25,7 +25,8 @@ class ChainInMock(object):
         self.queues.append(queue)
     
     def unregister_queue(self,queue):
-        self.queues.remove(queue)
+        if queue in self.queues:
+            self.queues.remove(queue)
     
     def fire_event(self,event):
         for queue in self.queues:
@@ -153,6 +154,7 @@ class ChainTestCase(unittest.TestCase):
             
             time.sleep(0.01) # We're working with threads, so this might take a delay
             assert len(self.outMock.events) == len(out2.events) == 1
+            logging.debug(out3.events)
             assert len(out3.events) == 1
             assert self.outMock.events[0] == out2.events[0] == {"message":"Test"}
             assert out3.events[0] == {"message":"Not matching"}

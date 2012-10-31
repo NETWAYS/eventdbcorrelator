@@ -45,11 +45,11 @@ class InstanceFactory(object):
     %class%.setup(id,cfgObject) is called.
     
     """
-    def register(self,id,cfgObject,factoryFn = None):
+    def register(self,instance_id,cfgObject,factoryFn = None):
         # type myType and class myClass will be called MyTypeMyClass()
         required = self.resolve_references(cfgObject)
         if required != None:
-            self.defer_registration(required,(id,cfgObject,factoryFn))
+            self.defer_registration(required,(instance_id,cfgObject,factoryFn))
             return False
         
         r = None
@@ -60,16 +60,20 @@ class InstanceFactory(object):
             # Default factory using the setup method
             instanceCls = cfgObject["class"].capitalize()
             configname = cfgObject["type"].capitalize()+instanceCls
-            r = globals()[configname]()
+            if not configname in globals():
+                logging.error("Couldn't find %s, %s won't work." % (configname,instance_id))
+                return False
             
-            r.setup(id,cfgObject)
+            r = globals()[configname]()
+            logging.debug("Instance of %s : %s (instance_id=%i)" % (instance_id,r,id(r)))
+            r.setup(instance_id,cfgObject)
         else:
             # Pass instance creation to factory function
-            r = factoryFn(id,cfgObject)
+            r = factoryFn(instance_id,cfgObject)
 
-        self.instances[cfgObject["class"]][id] = r    
-        self.instances["all"][id] = r 
-        self.handle_unresolved(id)
+        self.instances[cfgObject["class"]][instance_id] = r    
+        self.instances["all"][instance_id] = r 
+        self.handle_unresolved(instance_id)
         return True
         
     def handle_unresolved(self,id):

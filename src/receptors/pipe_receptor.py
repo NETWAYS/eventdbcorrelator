@@ -6,6 +6,7 @@ import os
 import pwd
 import select
 import Queue
+from event import Event
 
 class PipeReceptor(AbstractReceptor):
     
@@ -17,7 +18,7 @@ class PipeReceptor(AbstractReceptor):
             "mod": 0666,
             "owner": os.getuid(),
             "group": os.getgid(),
-            "path" : "/tmp/edbc.pipe",
+            "path" : "/var/tmp/edbc.pipe",
             "bufferSize" : 2048,
             "format" : None
         }
@@ -37,11 +38,13 @@ class PipeReceptor(AbstractReceptor):
             self.source = "syslog"
         self.pipe = None
         self.queues = []
-        self.__setup_pipe()
+        self.setup_pipe()
     
     
     
     def start(self,queue=[],cb=None):
+        if not queue:
+            queue = []
         if isinstance(queue, (list, tuple)):
             self.queues = queue
         else:
@@ -56,11 +59,14 @@ class PipeReceptor(AbstractReceptor):
         return super(PipeReceptor,self).start()
     
     
-    def register_queue(self,queue):
+    def register_queue(self,queue):        
         self.queues.append(queue)
     
+    
     def unregister_queue(self,queue):
-        self.queues.remove(queue)
+        if queue in self.queues:
+            self.queues.remove(queue)
+    
     
     def __get_messages_from_raw_stream(self,dataPacket):
         if len(dataPacket) == 0:
@@ -100,9 +106,10 @@ class PipeReceptor(AbstractReceptor):
                     if message == "": 
                         continue
                     transformed = tr.transform(message)
-                    
+                        
                     if self.queues and transformed:
-                        transformed["source"] = self.source
+                        if isinstance(transformed,Event):
+                            transformed["source"] = self.source
                         for queue in self.queues:
                             queue.put(transformed)    
                     if self.callback != None:
@@ -135,16 +142,16 @@ class PipeReceptor(AbstractReceptor):
             self.running = False
 
         finally:
-            logging.debug("Finished PipeReceptor %s", self.id)
+            logging.debug("Finished Receptor %s", self.id)
     
-    def __setup_pipe(self):
+    def setup_pipe(self):
         #logging.debug("Setting up PipeReceptor with %s" % self.config)
         if os.path.exists(self.config["path"]):
             os.remove(self.config["path"])
         
         os.mkfifo(self.config["path"],int(self.config["mod"]))
         os.chown(self.config["path"],self.config["owner"],self.config["group"])
-        
+        os.chmod(self.config["path"],self.config["mod"])
         
     def __clean(self):
         try: 
@@ -160,7 +167,7 @@ class PipeReceptor(AbstractReceptor):
     
     def stop(self):
         try:
-            logging.debug("Stopping PipeReceptor %s " % self.id )
+            logging.debug("Stopping Receptor %s " % self.id )
             if self.running == True:
                 if os.path.exists(self.config["path"]):
                     fd = os.open(self.config["path"],os.O_WRONLY)

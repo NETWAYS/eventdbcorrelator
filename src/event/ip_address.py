@@ -88,6 +88,8 @@ class IPAddress(object):
         return self.addr[nr]
     
     def __eq__(self,ipaddr):
+        if isinstance(ipaddr,str):
+            ipaddr = IPAddress(ipaddr)
         for i in range(0,len(self.addr)):
             if ipaddr.addr[i] != self.addr[i]:
                 return False

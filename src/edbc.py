@@ -17,7 +17,7 @@ class Edbc(object):
         pass;
     
     def __setupLogging(self):
-        logging.basicConfig(level=logging.WARN)
+        logging.basicConfig(level=logging.DEBUG)
 
     def __init__(self):
         if not socket.has_ipv6:

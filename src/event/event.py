@@ -47,7 +47,12 @@ class Event(object):
         if name == "active":
             self.active = value
             return 
-        
+        if name == "host_address" and isinstance(value,str):
+            try:
+                value = IPAddress(value)
+            except Exception,e:
+                logging.debug("Invalid ip: %s" % value)
+            
         self.data[name] = value
         return None
     
@@ -86,15 +91,15 @@ class Event(object):
         return self.group_leader != None
     
     def from_record(self,record):
-        
+              
         keys = record["keys"]
         data = record["data"]
         for i in range(0,len(keys)):
-            self[keys[i]] = data[i]
-            
+
             if keys[i] == 'host_address':
-                self["host_address"] = IPAddress(self["host_address"],binary=True)
-    
+                self["host_address"] = IPAddress(data[i],binary=True)
+            else:
+                self[keys[i]] = data[i]
     def free(self):
         del self.data
-        del self
+        
