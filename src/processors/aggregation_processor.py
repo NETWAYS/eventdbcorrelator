@@ -21,15 +21,16 @@ class AggregationProcessor(object):
     def setup(self,id,config = {}):
         self.id = id
         self.config = {
-            "maxDelay": 600,             # DEFAULT: Break aggregation when 
+            "maxdelay": 600,             # DEFAULT: Break aggregation when 
                                          # 10 minutes have passed without matching event
             "maxCount": -1,              # DEFAULT: No limit in how many events can be aggregated
             "datasource": None,
-            "aggregateMessage": "Got : #message results"
+            "aggregatemessage": "GROUP: #message ($_COUNT events)"
         }
         
         for i in config:
             self.config[i] = config[i]
+        logging.debug("Config for id %s -> %s" % (id,self.config))
         self.validate()
         self.lock = threading.Lock()
         self.datasource = self.config["datasource"]
@@ -54,12 +55,12 @@ class AggregationProcessor(object):
         self.set_aggregation_group_id(event,matchgroups)
         (group,lastmod) =  self.datasource.get_group_leader(event["group_id"])
 
-        if group and time.time()-lastmod >= self.config["maxDelay"]:
+        if group and time.time()-lastmod >= self.config["maxdelay"]:
             logging.debug("Cleared group %s " % event["group_id"])
             self.datasource.deactivate_group(event["group_id"])
             group = None
         
-        if group and self.clear_matcher.matches(event):
+        if self.clear_matcher.matches(event):
             group_id = event["group_id"]
             event["group_id"] = None
             event["group_leader"] = None
@@ -107,13 +108,13 @@ class AggregationProcessor(object):
  
     
     def create_aggregation_message(self,event,matchgroups):
-        msg = self.config["aggregateMessage"]
+        msg = self.config["aggregatemessage"]
         tokens = re.findall("[$#]\w+",msg)
         for token in tokens:
             if token[0] == '#':
                 msg = msg.replace(token,str(event[token[1:]]))
                 continue
-            if token[0] == '$':
+            if token[0] == '$' and token in matchgroups:            
                 msg = msg.replace(token,str(matchgroups[token[1:]]))
                 continue
         return msg

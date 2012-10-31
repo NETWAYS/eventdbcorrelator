@@ -1,7 +1,15 @@
 # Example chain
 
 # Every chain requires an identifier field:
-[MyChain1]
+
+[SimplePersisterChain_SYSLOG]
 in: @pipe
-matcher: When message is "hi" and severity > 5
-to_1: @mysql
+#to_0: @aggregate_switches
+to_1: @aggregate_test
+to_2:@mysqldb
+
+[SimplePersisterChain_SNMP]
+in: @snmp
+#to_0: @debug_logger
+to_1: @mysqldb
+

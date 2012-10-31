@@ -30,6 +30,8 @@ class Chain(threading.Thread):
         '''
         self.on_match_chains = []
         self.on_not_match_chains = []
+
+
         
     
     def setup_event_path(self):
@@ -49,6 +51,8 @@ class Chain(threading.Thread):
         except Exception, e:
             logging.error("Chain %s could not be setup: %s." % (self.id, e))
             self.ready = False
+
+
             
     '''
     Fetches the receptor from the instance list and registers this chains input
@@ -65,6 +69,8 @@ class Chain(threading.Thread):
         
         self.inQueue = Queue.Queue()
         self.input.register_queue(self.inQueue)
+
+
     
     def setup_dependencies(self):
         self.isIndependent = True
@@ -80,6 +86,7 @@ class Chain(threading.Thread):
             if i == NOT_AFTER_DIRECTIVE:
                 dependentChain.register_chain_on_not_match(self)
 
+
             
     def setup_processors(self):
         for i in self.config:
@@ -88,6 +95,7 @@ class Chain(threading.Thread):
         # sort by position, so the chain elements can be run sequentially 
         self.event_chain.sort(lambda x, y: x["pos"]-y["pos"])
         
+
 
     def register_processor(self,type,target):
         type = type.split("_")
@@ -107,11 +115,13 @@ class Chain(threading.Thread):
         
         self.event_chain.append(processor_obj)
         logging.debug("Event chain for %s : %s" %(self.id,self.event_chain))
+
+
     
     def get_condition_object(self,condition,basePos):
         condition_pos = re.match("(?P<COND_POS>\d+)\[(?P<COND_RETURN>\w+)\]",condition)
         if not condition_pos:
-            raise Expection("Error in chain condition: %s couldn't be parsed (format is NR[CONDITION]" % condition)
+            raise Exception("Error in chain condition: %s couldn't be parsed (format is NR[CONDITION]" % condition)
         cdict = condition_pos.groupdict()
         if int(cdict["COND_POS"]) >= basePos:
             raise Exception("Logic error in chain %s: condition %s tests for future events",self.id,condition)

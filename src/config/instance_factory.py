@@ -34,7 +34,13 @@ class InstanceFactory(object):
         if not required in self.deferred:
             self.deferred[required] = []
         self.deferred[required].append(args)
-        
+       
+    def apply_template(self,cfgObject):    
+        parent = self.__getitem__(cfgObject["template"])
+        for i in parent.base_config:
+            if not i in cfgObject:
+                cfgObject[i] = parent.base_config[i]
+
     """
     Registers an object cfgObject with the identifier id. 
     the cfgObject is expected to have a class attribute, which will be registered and 
@@ -53,6 +59,14 @@ class InstanceFactory(object):
             return False
         
         r = None
+        
+        if "template" in cfgObject:
+            if not cfgObject["template"] in self.instances["all"]:
+                self.defer_registration(required,(instance_id,cfgObject,factoryFn))
+                return False
+            else:
+                self.apply_template(cfgObject)
+            
         if not cfgObject["class"] in self.instances:
             self.register_class(cfgObject["class"])
         
@@ -65,12 +79,14 @@ class InstanceFactory(object):
                 return False
             
             r = globals()[configname]()
+            
             logging.debug("Instance of %s : %s (instance_id=%i)" % (instance_id,r,id(r)))
             r.setup(instance_id,cfgObject)
         else:
             # Pass instance creation to factory function
             r = factoryFn(instance_id,cfgObject)
-
+        
+        r.base_config = cfgObject
         self.instances[cfgObject["class"]][instance_id] = r    
         self.instances["all"][instance_id] = r 
         self.handle_unresolved(instance_id)

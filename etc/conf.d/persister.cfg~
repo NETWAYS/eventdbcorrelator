@@ -1,0 +1,19 @@
+[none]
+class: persister
+type: null
+
+[mysql]
+class: 		datasource
+type:		mysql
+host: 		localhost
+port: 		3306
+table: 		event
+database:	eventdb
+user:		eventdb
+password: 	eventdb
+
+[mysqldb]
+class: 		persister
+type: 		sql
+datasource:	@mysql
+

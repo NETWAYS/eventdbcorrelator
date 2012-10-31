@@ -13,7 +13,7 @@ UNITTESTS = [
 #    RSyslogTransformerTestCase,
 #    IPAddressTestCase,
 #    MatcherTestCase,
-    MysqlDatasourceTest,
+#    MysqlDatasourceTest,
 #    SpoolDatasourceTest,
 #    ChainTestCase,
 #    AggregatorTestCase,
@@ -30,7 +30,7 @@ def suite():
     
     # Integration tests
     suite.addTests(unittest.TestLoader().loadTestsFromTestCase(AggregatorMysqlTest))
-    #suite.addTests(unittest.TestLoader().loadTestsFromTestCase(MySQLDataSourceSpoolTest))
+#    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(MySQLDataSourceSpoolTest))
     return suite
 
 if __name__ == "__main__":

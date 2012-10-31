@@ -170,7 +170,14 @@ class AggregatorMysqlTest(unittest.TestCase):
             assert aggregator.process(event1) == "NEW" 
             self.source.insert(event1)
             assert aggregator.process(event2) == "AGGR"
-            
+            self.source.insert(event2)
+            self.source.insert(event2)
+            self.source.insert(event2)
+            self.source.insert(event2)
+            self.source.insert(event2)
+            self.source.insert(event2)
+            self.source.insert(event2)
+            self.source.insert(event2)
             self.source.insert(event2)
             
             assert aggregator.process(event3) == "CLEAR" 
@@ -185,10 +192,13 @@ class AggregatorMysqlTest(unittest.TestCase):
             assert event4.group_leader == -1
              
             time.sleep(1.5)    
-            dbResult = self.source.execute("SELECT group_active FROM %s WHERE id = %s" % (self.source.table,event1["id"]))
+            dbResult = self.source.execute("SELECT group_active, group_count FROM %s WHERE id = %s" % (self.source.table,event1["id"]))
             assert dbResult != None
-           
+
+            # Group should be active=0
             assert dbResult[0][0] == 0
+            # Group should be 10 items big
+            assert dbResult[0][1] == 10
 
         finally:
             self.source.test_teardown_db()
@@ -207,7 +217,7 @@ class AggregatorMysqlTest(unittest.TestCase):
             })
             eventThreads = []
             NR_OF_THREADS=10
-            NR_OF_EVENTS=100
+            NR_OF_EVENTS=200
             for i in range(0,NR_OF_THREADS):
                 thread = TestAggregationInsertionThread()
                 thread.setup(aggregator,NR_OF_EVENTS,{

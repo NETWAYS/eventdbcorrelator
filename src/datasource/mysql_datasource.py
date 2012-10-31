@@ -23,7 +23,7 @@ class MysqlGroupCache(object):
         if not "group_active" in group:
             group["group_active"] = 1
         if not "modified" in group:
-            self.update_time(group["group_id"])
+            self.add_new_member(group["group_id"])
         
         
     def clear(self,group_id):
@@ -34,12 +34,15 @@ class MysqlGroupCache(object):
         finally:
             self.lock.release()
     
-    def update_time(self,groupId):
+    def add_new_member(self,groupId):
         self.lock.acquire()
         try:
             if not groupId in self.groups:
                 return
-            
+            if not "group_count" in self.groups[groupId]:
+                self.groups[groupId]["group_count"] = 0
+        
+            self.groups[groupId]["group_count"] = self.groups[groupId]["group_count"]+1
             self.groups[groupId]["modified"] = time.localtime()
             self.groups[groupId]["dirty"] = True
         finally:
@@ -73,7 +76,7 @@ class MysqlGroupCache(object):
     def flush_deprecated_to_db(self,cursor,table):
         for group in self.deprecated_groups:
             group["modified_ts"] = time.mktime(group["modified"])
-            cursor.execute("UPDATE "+table+" SET group_active=%(group_active)s, modified=FROM_UNIXTIME(%(modified_ts)s) WHERE id=%(group_leader)s OR group_leader=%(group_leader)s",group)
+            cursor.execute("UPDATE "+table+" SET group_active=%(group_active)s, modified=FROM_UNIXTIME(%(modified_ts)s), group_count=%(group_count)s WHERE id=%(group_leader)s OR group_leader=%(group_leader)s",group)
         self.deprecated_groups = [] 
         
 
@@ -88,7 +91,7 @@ class MysqlGroupCache(object):
                 if not group["dirty"]:
                     continue
                 group["modified_ts"] = time.mktime(group["modified"])
-                cursor.execute("UPDATE "+table+" SET group_active=%(group_active)s, modified=FROM_UNIXTIME(%(modified_ts)s) WHERE id=%(group_leader)s",group)
+                cursor.execute("UPDATE "+table+" SET group_active=%(group_active)s, modified=FROM_UNIXTIME(%(modified_ts)s), group_count=%(group_count)s WHERE id=%(group_leader)s",group)
                 group["dirty"] = False
                 if not group["group_active"]:
                     self.clear(groupId)
@@ -171,15 +174,16 @@ class MysqlDatasource(object):
         
     def fetch_active_groups(self):
         self.group_cache = MysqlGroupCache()
-        groups = self.execute("SELECT group_active,id,group_id,modified FROM "+self.table+"  WHERE group_active = 1 AND group_leader = -1");
+        groups = self.execute("SELECT group_active,id,group_id,group_count,modified FROM "+self.table+"  WHERE group_count AND group_active = 1 AND group_leader = -1");
 
         for group in groups:
-            
+                
             groupDesc = {
                 "group_active" : group[0],
                 "group_leader" : group[1],
                 "group_id" : group[2],
-                "modified": group[3].timetuple()
+                "group_count" : int(group[3]),
+                "modified": group[4].timetuple()
             }
             self.group_cache.add(groupDesc)
         
@@ -222,7 +226,7 @@ class MysqlDatasource(object):
                 self.execute(query,self.get_event_params(event),noResult=True,cursor=cursor)
             
                 if event.group_leader and event.group_leader > -1:
-                    self.update_group_modtime(event.group_id)
+                    self.increase_group_count(event.group_id)
                 else:
                     self.group_cache.add({
                         "active" : 1,
@@ -230,6 +234,8 @@ class MysqlDatasource(object):
                         "group_id" : event.group_id,
                         "dirty" : True
                     });
+                    self.flush()
+                    
                 cursor.close()
                 conn.commit()
                 if  conn == self.spool:
@@ -257,8 +263,8 @@ class MysqlDatasource(object):
         return params
     
     
-    def update_group_modtime(self,group_id):
-        self.group_cache.update_time(group_id)
+    def increase_group_count(self,group_id):
+        self.group_cache.add_new_member(group_id)
         self.flush()
      
     
@@ -308,7 +314,7 @@ class MysqlDatasource(object):
                 self.release_connection(conn)
                 
                 
-    def get_event_by_id(self,event_id):	
+    def get_event_by_id(self,event_id):    
         eventfields = ("id","host_name","host_address","type","facility","priority","program","message","alternative_message","ack","created","modified","group_id","group_leader","group_active")
         event = self.execute("SELECT %s FROM event WHERE id = %i AND active = 1 " % (",".join(eventfields),int(event_id)))
         if len(event) < 1:

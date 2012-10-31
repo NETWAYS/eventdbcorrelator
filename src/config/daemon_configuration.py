@@ -50,6 +50,7 @@ class DaemonConfiguration(object):
     
     def __get_section_as_dict(self,section):
         dict = {}
+
         for i in self.config.options(section):
             dict[i] = self.config.get(section,i)
         return dict

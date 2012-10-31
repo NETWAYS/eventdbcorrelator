@@ -2,6 +2,7 @@
 # and open the template in the editor.
 from event import *
 from chain import ChainFactory
+import signal
 import logging
 
 class Controller:
@@ -28,6 +29,7 @@ class Controller:
             receptor.start()
             self.threads.append(receptor)
         
+        
     def __read_chain_definitions(self):
         self.chainFactory = ChainFactory()
         self.chainFactory.read_config_file(self.config["chain_dir"],self.instances)
@@ -35,7 +37,10 @@ class Controller:
         
         
     def __lay_back_and_wait(self):
+        signal.signal(signal.SIGQUIT, self.shutdown)
+        signal.signal(signal.SIGINT, self.shutdown)
         try:
+            
             if self.instances.has_unmatched_dependencies():
                 logging.warn("Unmatched dependencies found : %s",self.instances.deferred)
             while True:
