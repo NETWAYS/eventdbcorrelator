@@ -1,0 +1,21 @@
+
+EventDB Correlator
+******************
+
+Contents:
+
+
+What is EDBC?
+=============
+
+STUB
+
+
+Indices and tables
+******************
+
+* *Index*
+
+* *Module Index*
+
+* *Search Page*

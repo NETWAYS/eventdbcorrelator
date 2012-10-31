@@ -1,0 +1,64 @@
+###############################################################################
+# This is an example config that hopefully helps you to set up your own rules
+# 
+# You should also refer to the documentation, as this is only a short guide
+#
+###############################################################################
+
+
+
+############################################################################### 
+# This is a simple chain that reads from the receptor 'pipe' (defined in the 
+# receptors.cfg) and writes into your mysql database.
+# 
+# '@your_id' is always resolved to instances defined in your conf.d directory.
+# 
+###############################################################################
+
+[SimplePersisterChain_SYSLOG]
+
+##############################################################################
+# The 'in' directive defines where this chain gathers it's data from.
+##############################################################################
+in: @pipe 
+
+##############################################################################
+# A processor target is always defined by to_ following the position of 
+# the processor (lower number->earlier processing).
+#
+# So if you uncomment this line, the 'aggregate_switches' processor will process
+# your event before it is passed to the database
+##############################################################################
+#to_0: @aggregate_switches 
+
+
+##############################################################################
+# Processor can also depend on previous processors, like shown here. 
+# The 'aggregate_test' processor will only be called if the aggregate_switches
+# returned 'PASS' (which means, it didn't match). 
+# 
+# Refer to the documentation for processors and their return codes
+##############################################################################
+#to_0[PASS]_1: @aggregate_test
+
+
+##############################################################################
+#
+# Finally, write to the persister mysqldb. Note that this *MUST* be a persister,
+# not a datasource (like aggregators need them). Refer to the documentation for
+# more information
+##############################################################################
+to_2:@mysqldb
+
+
+
+##############################################################################
+# Complete listing:
+##############################################################################
+
+
+#[SimplePersisterChain_SYSLOG]
+#in: @pipe 
+#to_0: @aggregate_switches 
+#to_0[PASS]_1: @aggregate_test
+#to_2:@mysqldb

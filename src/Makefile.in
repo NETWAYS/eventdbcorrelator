@@ -1,0 +1,19 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+BIN_USER=@bin_user@
+BIN_GROUP=@bin_group@
+
+INSTALL=@INSTALL@
+INSTALL_OPTS=-o $(BIN_USER) -g $(BIN_GROUP)
+
+install: installdirs
+	@files=`find . -mindepth 1 -type f -name "[^.]*" ! -name "*.in" ! -name "Makefile*" `;\
+	for file in $$files; do \
+		$(INSTALL) -m 644 $(INSTALL_OPTS) "$$file" $(prefix)/lib/"$$file";\
+	done
+
+installdirs:
+	@dirs=`find . -type d`; \
+	for dir in $$dirs; do \
+		$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/lib/"$$dir";\
+	done	

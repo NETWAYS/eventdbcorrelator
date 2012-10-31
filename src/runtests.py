@@ -6,18 +6,18 @@ import unittest
 import logging
 
 UNITTESTS = [
-#    InstanceFactoryTest,
-#    PipeReceptorTestCase,
-#    SNMPReceptorTest,
-#    SNMPTransformerTest,
-#    RSyslogTransformerTestCase,
-#    IPAddressTestCase,
-#    MatcherTestCase,
-#    MysqlDatasourceTest,
-#    SpoolDatasourceTest,
-#    ChainTestCase,
-#    AggregatorTestCase,
-#    CommandProcessorTest
+    InstanceFactoryTest,
+    PipeReceptorTestCase,
+    SNMPReceptorTest,
+    SNMPTransformerTest,
+    RSyslogTransformerTestCase,
+    IPAddressTestCase,
+    MatcherTestCase,
+    MysqlDatasourceTest,
+    SpoolDatasourceTest,
+    ChainTestCase,
+    AggregatorTestCase,
+    CommandProcessorTest
 ]
 
 
@@ -30,7 +30,7 @@ def suite():
     
     # Integration tests
     suite.addTests(unittest.TestLoader().loadTestsFromTestCase(AggregatorMysqlTest))
-#    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(MySQLDataSourceSpoolTest))
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(MySQLDataSourceSpoolTest))
     return suite
 
 if __name__ == "__main__":

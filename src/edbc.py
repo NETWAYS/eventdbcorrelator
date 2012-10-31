@@ -1,9 +1,5 @@
 #!/usr/bin/python
 
-
-__author__="moja"
-__date__ ="$Sep 24, 2012 5:45:19 PM$"
-
 from config import *;
 
 import logging

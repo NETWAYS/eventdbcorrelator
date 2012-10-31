@@ -1,0 +1,3 @@
+#!/bin/sh
+PYTHONPATH=@prefix@
+python @prefix@/lib/edbc.py

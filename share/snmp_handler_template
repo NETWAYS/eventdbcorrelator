@@ -1,0 +1,17 @@
+#!/bin/sh
+
+read host
+read ip
+vars=
+
+while read oid val
+do
+  if [ "$vars" = "" ]
+  then
+    vars="$oid = $val"
+  else
+    vars="$vars ; $oid = $val"
+  fi
+done
+
+echo 'HOST:$host;IP:$ip;UPTIME:VARS:$vars \n' >> %(PIPE)s

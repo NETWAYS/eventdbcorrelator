@@ -270,7 +270,7 @@ class MysqlDatasourceTest(unittest.TestCase):
             ev.group_leader = -1
             ev.group_id = "test\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
             self.source.insert(ev)
-            assert self.source.flush_pending == False
+            assert self.source.flush_pending == True 
             
             self.source.flush()
             assert self.source.flush_pending == True

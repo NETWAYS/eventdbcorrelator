@@ -85,8 +85,10 @@ class InstanceFactory(object):
         else:
             # Pass instance creation to factory function
             r = factoryFn(instance_id,cfgObject)
-        
-        r.base_config = cfgObject
+        try: 
+            r.base_config = cfgObject
+        except:
+            pass
         self.instances[cfgObject["class"]][instance_id] = r    
         self.instances["all"][instance_id] = r 
         self.handle_unresolved(instance_id)

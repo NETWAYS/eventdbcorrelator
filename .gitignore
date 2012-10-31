@@ -5,3 +5,10 @@
 *.pyc
 **/*.pyc
 **/.*
+.*
+Makefile
+**/Makefile
+etc/edbc.cfg
+etc/conf.d/database.cfg
+src/config/config.py
+bin/edbc.py
