@@ -13,7 +13,8 @@ LOCATION_TEARDOWN_SCHEME="./database/mysql_teardown.sql"
 
 class MysqlGroupCache(object):
     def __init__(self):
-        self.lock = threading.Lock() 
+        self.lock = threading.Lock()
+        self.deprecated_groups = []
         self.groups = {}
         
     def add(self,group):
@@ -53,23 +54,35 @@ class MysqlGroupCache(object):
 
             self.groups[groupId]["group_active"] = 0
             self.groups[groupId]["dirty"] = True
+            self.deprecated_groups.append(self.groups[groupId])
+            del self.groups[groupId]
         finally:
             self.lock.release()
         
+
     def get(self,groupId):
         try:
             self.lock.acquire()
-
             if groupId in self.groups and self.groups[groupId]["group_active"] == 1:
                 return self.groups[groupId]
             return None
         finally:
             self.lock.release()
+       
+ 
+    def flush_deprecated_to_db(self,cursor,table):
+        for group in self.deprecated_groups:
+            group["modified_ts"] = time.mktime(group["modified"])
+            cursor.execute("UPDATE "+table+" SET group_active=%(group_active)s, modified=FROM_UNIXTIME(%(modified_ts)s) WHERE id=%(group_leader)s OR group_leader=%(group_leader)s",group)
+        self.deprecated_groups = [] 
         
+
     def flush_to_db(self,conn,table):
         try:
             cursor = conn.cursor()
             self.lock.acquire()
+            self.flush_deprecated_to_db(cursor,table)  
+
             for groupId in self.groups:
                 group = self.groups[groupId]
                 if not group["dirty"]:
@@ -95,6 +108,18 @@ class MysqlDatasource(object):
         self.password = config["password"]
         self.database = config["database"]
 
+        if "flush_interval" in config:
+            self.flush_interval = float(config["flush_interval"])
+        else:
+            self.flush_interval = 100.0
+
+        if "noFlush" in config:
+            self.no_async_flush = True
+        else:
+            self.no_async_flush = False
+
+        self.flush_pending = False
+        self.flush_lock = threading.Lock()
         if "cursor_class" in config:
             self.cursor_class = config["cursor_class"]
         else:
@@ -234,13 +259,8 @@ class MysqlDatasource(object):
     
     def update_group_modtime(self,group_id):
         self.group_cache.update_time(group_id)
-    
-    
-    def update_event_id(self,event,cursor):
-        query = "SELECT LAST_INSERT_ID() FROM "+self.table+";"
-        result = self.execute(query,cursor=cursor)
-        event["id"] = result[0][0]
-    
+        self.flush()
+     
     
     def remove(self,event):
         query = "UPDATE %s SET active=0 WHERE id = %i" % (self.table,event["id"])
@@ -295,7 +315,7 @@ class MysqlDatasource(object):
             return None
         return Event(record={"data": event[0],"keys":eventfields})
         
-    
+ 
     def get_group_leader(self,group_id):
         group = self.group_cache.get(group_id)
         
@@ -305,12 +325,19 @@ class MysqlDatasource(object):
     
     
     def deactivate_group(self,groupId):
-        self.group_cache.deactivate(groupId)
-        
+        try:
+            conn = self.acquire_connection()
+            self.group_cache.deactivate(groupId)
+            self.flush()
+        finally:
+            self.release_connection(conn)
     
     def close(self,noFlush=False):
         try:
             conn = self.acquire_connection()
+            if self.flush_pending:
+                self.timer.cancel()
+                  
             if not noFlush:
                 self.group_cache.flush_to_db(conn,self.table)
             if not noFlush and self.spool:
@@ -383,9 +410,32 @@ class MysqlDatasource(object):
                 return self.spool
             else:
                 raise 
+
+    def _flush(self):
         
+        try: 
+            conn = self.acquire_connection()
+            self.group_cache.flush_to_db(conn,self.table)
+        finally:
+            self.release_connection(conn)
+            self.flush_pending = False
+
+
+    def flush(self):
+        if self.no_async_flush or self.flush_pending or not self.flush_lock.acquire(False):
+            return
+        try:
+            self.timer = threading.Timer(self.flush_interval/1000,self._flush)
+            self.timer.start()
+            self.flush_pending = True
+        
+        finally:
+            self.flush_lock.release()
+
     
     def release_connection(self,conn):
         if not conn.open:
             conn = self.get_new_connection()
         self.connections.put(conn)
+
+

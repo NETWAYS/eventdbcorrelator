@@ -5,7 +5,9 @@ from datasource import MysqlDatasource, DBTransformer
 from event.event import *
 from event import ip_address
 from processors import AggregationProcessor
-from tests.mysql_datasource_test import SETUP_DB
+from tests.mysql_datasource_test import SETUP_DB_FLUSHING
+
+SETUP_DB = SETUP_DB_FLUSHING
 MAX_TIME_PER_EVENT=0.001
 
 class TestAggregationInsertionThread(threading.Thread):
@@ -141,7 +143,8 @@ class AggregatorMysqlTest(unittest.TestCase):
     
     def test_aggregation_group_clear_message(self):
         try:
-            self.source.test_setup_db()
+            self.source.test_setup_db() 
+            self.source.flush_interval = 1000 
             aggregator = AggregationProcessor()
 
             aggregator.setup("test",{
@@ -167,10 +170,12 @@ class AggregatorMysqlTest(unittest.TestCase):
             assert aggregator.process(event1) == "NEW" 
             self.source.insert(event1)
             assert aggregator.process(event2) == "AGGR"
+            
             self.source.insert(event2)
             
             assert aggregator.process(event3) == "CLEAR" 
             self.source.insert(event3)
+    
             assert aggregator.process(event4) == "NEW"
             self.source.insert(event4)
             
@@ -178,7 +183,13 @@ class AggregatorMysqlTest(unittest.TestCase):
             assert event2.group_leader == event1["id"]
             assert event3.group_leader == None
             assert event4.group_leader == -1
-            
+             
+            time.sleep(1.5)    
+            dbResult = self.source.execute("SELECT group_active FROM %s WHERE id = %s" % (self.source.table,event1["id"]))
+            assert dbResult != None
+           
+            assert dbResult[0][0] == 0
+
         finally:
             self.source.test_teardown_db()
             self.source.close(True)
@@ -196,7 +207,7 @@ class AggregatorMysqlTest(unittest.TestCase):
             })
             eventThreads = []
             NR_OF_THREADS=10
-            NR_OF_EVENTS=10
+            NR_OF_EVENTS=100
             for i in range(0,NR_OF_THREADS):
                 thread = TestAggregationInsertionThread()
                 thread.setup(aggregator,NR_OF_EVENTS,{
@@ -224,3 +235,6 @@ class AggregatorMysqlTest(unittest.TestCase):
         finally:
             self.source.test_teardown_db()
             self.source.close(True)
+
+
+	

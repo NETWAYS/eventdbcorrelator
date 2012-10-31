@@ -94,7 +94,7 @@ class Chain(threading.Thread):
         pos = int(type[-1])
         
         if not target:
-            raise Exception("Chain target %s does not exist " % targetId)
+            raise Exception("Chain target %s does not exist " % target)
         
         processor_obj = {
             "pos"        :  pos,

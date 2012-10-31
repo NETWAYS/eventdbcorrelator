@@ -5,7 +5,6 @@
 from optparse import OptionParser
 from os import path, listdir
 import ConfigParser
-
 from config import DEFAULT_CONFIG_PATH
 
 class DaemonConfiguration(object):
@@ -18,9 +17,10 @@ class DaemonConfiguration(object):
         parser = OptionParser()
         parser.add_option("-c","--config",dest="config_file", help="use FILE as configuration",metavar="FILE",default=DEFAULT_CONFIG_PATH)
         parser.add_option("-C","--chains",dest="chain_dir", help="dir to search for event chains",default=None)
-        parser.add_option("-f","--foreground",dest="foreground",action="store_true",default="False",help="run in foreground (useful for debugging")
+        parser.add_option("-f","--foreground",dest="foreground",action="store_true",default=False,help="run in foreground (useful for debugging")
+        parser.add_option("-l","--log",default=None,dest="log",help="Log file")
         (self.options, args) = parser.parse_args()
-        
+
     def parse_config_file(self): 
         if not path.exists(self.options.config_file):
             raise Exception('Config file '+self.options.config_file+" not found!")
@@ -56,5 +56,6 @@ class DaemonConfiguration(object):
     
     def __getitem__(self,name):
         return self.options.__dict__[name]
+
     
     

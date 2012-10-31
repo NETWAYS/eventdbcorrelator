@@ -34,9 +34,19 @@ SETUP_DB = {
     "user" : "testcases",
     "password" : "testcases",
     "database" : "test_eventdb",
-    "transform" : DBTransformerMock()
+    "transform" : DBTransformerMock(),
+    "noFlush" : True
 }
 
+SETUP_DB_FLUSHING = {
+    "host" : "127.0.0.1",
+    "port" : 3306,
+    "user" : "testcases",
+    "password" : "testcases",
+    "database" : "test_eventdb",
+    "transform" : DBTransformerMock(),
+    "flush_interval": 1000
+}
 
 class MysqlDatasourceTest(unittest.TestCase):
 
@@ -169,6 +179,7 @@ class MysqlDatasourceTest(unittest.TestCase):
             assert leader != (None,None)
             assert leader[0] == ev["id"]
             assert lastmod != leader[1]
+            assert self.source.connections.qsize() == self.source.poolsize
             
         finally:
             self.source.test_teardown_db()
@@ -202,6 +213,7 @@ class MysqlDatasourceTest(unittest.TestCase):
             assert self.source.last_id == 5
             self.source.insert(ev)
             assert self.source.last_id == 6            
+            assert self.source.connections.qsize() == self.source.poolsize
         finally:
             self.source.test_teardown_db()
         
@@ -234,10 +246,40 @@ class MysqlDatasourceTest(unittest.TestCase):
             leader = self.source.get_group_leader("test\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
             assert leader != (None,None)
             assert leader[0] == ev["id"]            
+            assert self.source.connections.qsize() == self.source.poolsize
             
         finally:
             self.source.test_teardown_db()
         
+
+
+    def test_async_flush(self):
+        try:
+            self.source.test_setup_db()
+            self.source.no_async_flush = False
+            self.source.flush_interval = 500.0
+            ev = Event(message="test",additional={
+                "host_address": ip_address.IPAddress("192.168.178.56"),
+                "program" : "test_program",
+
+                "priority" : 0,
+                "facility" : 0,
+                "active" : 1,
+                "group_active" : True
+            })
+            ev.group_leader = -1
+            ev.group_id = "test\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+            self.source.insert(ev)
+            assert self.source.flush_pending == False
+            
+            self.source.flush()
+            assert self.source.flush_pending == True
+            time.sleep(1)
+            assert self.source.flush_pending == False
+            assert self.source.connections.qsize() == self.source.poolsize
+        finally:
+            self.source.test_teardown_db()
+
 
     def tearDown(self):
         try: 

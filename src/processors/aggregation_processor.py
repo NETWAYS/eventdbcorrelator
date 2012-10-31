@@ -93,11 +93,10 @@ class AggregationProcessor(object):
         self.matcher = None
         if "matcher" in self.config:
             self.matcher = matcher.Matcher(self.config["matcher"])
-        
+        else:
+            self.matcher = matcher.TrueMatcher()
         self.use_fields_for_id = []
         if "matcherfield" in self.config:
-            if not self.matcher:
-                self.matcher = matcher.TrueMatcher()
             self.use_fields_for_id = self.config["matcherfield"].split(",")
         
         if "clear" in self.config:

@@ -46,7 +46,7 @@ class PyCompiler(object):
             return "%s %s %s" % (field,{"IS":"==","IS NOT": "!="}[operator],value)
         
         if operator in ["CONTAINS","DOES NOT CONTAIN"]:
-            return "%s.find(%s) %s -1" (field,value,{"CONTAINS":">","DOES NOT CONTAIN":"=="})
+            return "%s.find(%s) %s -1" % (field,value,{"CONTAINS":">","DOES NOT CONTAIN":"=="}[operator])
         if operator  == "STARTS WITH":
             return "%s.startswith(%s)" % (field,value)
         if operator == "ENDS WITH":

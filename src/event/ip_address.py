@@ -84,8 +84,10 @@ class IPAddress(object):
                 return False
         return True
         
+    
     def __getitem__(self,nr):
         return self.addr[nr]
+    
     
     def __eq__(self,ipaddr):
         if isinstance(ipaddr,str):
