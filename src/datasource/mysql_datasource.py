@@ -150,6 +150,8 @@ class MysqlDatasource(object):
         self.available_connections = []
         self.connections = Queue.Queue()
         self.lock = threading.Lock()
+        self.flushlock = threading.Lock()
+        self.exec_buffer = []
         self.check_spool = True
         self.connect()
         try:
@@ -312,8 +314,15 @@ class MysqlDatasource(object):
             if conn:
                 conn.commit()
                 self.release_connection(conn)
-                
-                
+    
+    def execute_after_flush(self,query,args = ()):
+        try:
+            self.flushlock.acquire()
+            self.exec_buffer.append((query,args))
+        finally:
+            self.flushlock.release()
+            self.flush()
+        
     def get_event_by_id(self,event_id):    
         eventfields = ("id","host_name","host_address","type","facility","priority","program","message","alternative_message","ack","created","modified","group_id","group_leader","group_active")
         event = self.execute("SELECT %s FROM event WHERE id = %i AND active = 1 " % (",".join(eventfields),int(event_id)))
@@ -417,17 +426,30 @@ class MysqlDatasource(object):
             else:
                 raise 
 
+    def flush_exec_queue(self,conn):
+        try:
+            self.flushlock.acquire()
+            cursor = self.cursor_class(conn)
+            for (query,args) in self.exec_buffer:
+                self.execute(query,args,noResult=True,cursor=cursor)
+            cursor.close()
+            conn.commit()
+        finally:
+            self.flushlock.release()
+
     def _flush(self):
-        
         try: 
             conn = self.acquire_connection()
             self.group_cache.flush_to_db(conn,self.table)
+            self.flush_exec_queue(conn)
         finally:
             self.release_connection(conn)
             self.flush_pending = False
+        
 
 
     def flush(self):
+
         if self.no_async_flush or self.flush_pending or not self.flush_lock.acquire(False):
             return
         try:

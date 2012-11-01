@@ -62,6 +62,8 @@ class MysqlDatasourceTest(unittest.TestCase):
         
     
     def test_execute(self):
+        logging.debug("exec")
+
         self.source.test_setup_db()
         try:
             result1 = self.source.execute("SELECT 'test',1,1.2,0xff from dual")
@@ -88,6 +90,8 @@ class MysqlDatasourceTest(unittest.TestCase):
     Not really an atomic test, but should do the job
     '''
     def test_crud(self):
+        logging.debug("crud")
+
         self.source.test_setup_db()
         ev = Event(message="testmessage",additional={
             "host_address": ip_address.IPAddress("192.168.178.56"),
@@ -123,6 +127,7 @@ class MysqlDatasourceTest(unittest.TestCase):
   
   
     def test_message_overflow(self):
+        logging.debug("overflow")
         try :
             self.source.test_setup_db()
             
@@ -142,6 +147,7 @@ class MysqlDatasourceTest(unittest.TestCase):
             self.source.test_teardown_db() 
         
     def test_group_implicit_insertion(self):
+        logging.debug("implicit_insert")
         try:
             self.source.test_setup_db()
             ev = Event(message="test",additional={
@@ -186,6 +192,7 @@ class MysqlDatasourceTest(unittest.TestCase):
     
     
     def test_id_generation(self):
+        logging.debug("id_gen")
         try:
             self.source.test_setup_db()
             ev = Event(message="test",additional={
@@ -218,6 +225,7 @@ class MysqlDatasourceTest(unittest.TestCase):
             self.source.test_teardown_db()
         
     def test_group_persistence(self):
+        logging.debug("group_persistence")
         try:
             self.source.test_setup_db()
             ev = Event(message="test",additional={
@@ -254,6 +262,7 @@ class MysqlDatasourceTest(unittest.TestCase):
 
 
     def test_async_flush(self):
+        logging.debug("async_flush")
         try:
             self.source.test_setup_db()
             self.source.no_async_flush = False

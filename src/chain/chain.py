@@ -189,7 +189,7 @@ class Chain(threading.Thread):
                 if not dependent_pos in returnValues:
                     matches = False
                     break
-                if returnValues[dependent_pos] != condition["value"]:
+                if returnValues[dependent_pos].lower() != condition["value"]:
                     matches = False
                     break
             if not matches:

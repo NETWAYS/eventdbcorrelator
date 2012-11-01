@@ -59,11 +59,13 @@ class AggregationProcessor(object):
             logging.debug("Cleared group %s " % event["group_id"])
             self.datasource.deactivate_group(event["group_id"])
             group = None
+
         
         if self.clear_matcher.matches(event):
             group_id = event["group_id"]
+            event["clear_group_leader"] = group
+            event["clear_group_id"] = group_id
             event["group_id"] = None
-            event["group_leader"] = None
             self.datasource.deactivate_group(group_id)
             group = None
             return "CLEAR"

@@ -99,7 +99,7 @@ class AggregatorMysqlTest(unittest.TestCase):
 
             aggregator.setup("test",{
                 "matcherfield": "message",
-                "maxDelay"    : 1,
+                "maxdelay"    : 1,
                 "datasource"  : self.source
             })
             cfg = {

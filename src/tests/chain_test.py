@@ -167,19 +167,19 @@ class ChainTestCase(unittest.TestCase):
         try:
             test_chain = self._get_test_chain(self.CHAIN_SINGLE_CONDITION_SINGLE_OUT)
             test_chain.start()
-            self.testProcessorMock.setStatus("OK")
+            self.testProcessorMock.setStatus("ok")
             
             test_chain.input.fire_event("Test")
             time.sleep(0.01) # We're working with threads, so this might take a delay
             assert len(self.outMock.events) == 1
             assert self.outMock.events[0] == "Test"
             
-            self.testProcessorMock.setStatus("FAIL")
+            self.testProcessorMock.setStatus("fail")
             test_chain.input.fire_event("Test")
             time.sleep(0.01) # We're working with threads, so this might take a delay
             assert len(self.outMock.events) == 1
 
-            self.testProcessorMock.setStatus("OK")
+            self.testProcessorMock.setStatus("fail")
             test_chain.input.fire_event("Test2")
             time.sleep(0.01) # We're working with threads, so this might take a delay
             assert len(self.outMock.events) == 2
