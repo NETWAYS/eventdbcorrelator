@@ -1,5 +1,4 @@
 from receptors import *
-from persisters import *
 from processors import *
 from datasource import *
 import logging 
