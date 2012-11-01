@@ -8,7 +8,7 @@ INSTALL_OPTS=-o $(BIN_USER) -g $(BIN_GROUP)
 
 install: installdirs
 	cd ./src && make install; 
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./share/snmp_handler_template $(prefix)/snmp_handler_template
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./share/snmp_handler_template $(prefix)/libexec/snmp_handler_template
 	$(INSTALL) -m 755 $(INSTALL_OPTS) ./bin/edbc $(prefix)/bin/edbc
 	make install-base-config
  
@@ -18,14 +18,14 @@ installdirs:
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/bin
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/var
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/etc
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/libexec
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/etc/chains
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/etc/conf.d
 
 install-base-config:
 	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/edbc.cfg $(prefix)/etc/edbc.cfg
 	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/database.cfg $(prefix)/etc/conf.d/database.cfg
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/persister.cfg $(prefix)/etc/conf.d/persister.cfg
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/processors.cfg $(prefix)/etc/conf.d/processors.cfg
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/base_processors.cfg $(prefix)/etc/conf.d/base_processors.cfg
 	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/receptors.cfg $(prefix)/etc/conf.d/receptors.cfg
 	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/chains/example.chain $(prefix)/etc/chains/example.chain
 		
