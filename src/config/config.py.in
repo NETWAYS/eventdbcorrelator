@@ -1,0 +1,6 @@
+#
+# Default constants
+#
+
+DEFAULT_CONFIG_PATH="@prefix@/etc/edbc.cfg"
+DEFAULT_CHAIN_PATH="@prefix@/etc/chains/"
