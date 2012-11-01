@@ -37,7 +37,6 @@ class ModifierProcessor(object):
     def process(self,event):
         if not self.matcher.matches(event):
             return "PASS"
-        logging.debug("processing ...")
         if self.target == "event":
             return self.process_event(event)
         if self.target == "group" and event["group_id"] or event["clear_group_id"]:
@@ -65,6 +64,6 @@ class ModifierProcessor(object):
             glue = ","
         group_id = event["group_id"] or event["clear_group_id"]
         group_leader = event["group_leader"] or event["clear_group_leader"]
-        query = query + " WHERE (group_id = '%s' AND group_leader = '%s') OR id='%s' " % (group_id,group_leader,group_leader)
-        self.datasource.execute_after_flush(query)
+        query = query + " WHERE (group_id = %s AND group_leader = %s) OR id=%s " 
+        self.datasource.execute_after_flush(query,(group_id,group_leader,group_leader))
         return "OK"

@@ -21,7 +21,7 @@ class AggregationProcessor(object):
     def setup(self,id,config = {}):
         self.id = id
         self.config = {
-            "maxdelay": 600,             # DEFAULT: Break aggregation when 
+            "maxdelay": 3600*24,             # DEFAULT: Break aggregation when 
                                          # 10 minutes have passed without matching event
             "maxCount": -1,              # DEFAULT: No limit in how many events can be aggregated
             "datasource": None,
@@ -116,7 +116,7 @@ class AggregationProcessor(object):
             if token[0] == '#':
                 msg = msg.replace(token,str(event[token[1:]]))
                 continue
-            if token[0] == '$' and token in matchgroups:            
+            if token[0] == '$' and token[1:] in matchgroups:     
                 msg = msg.replace(token,str(matchgroups[token[1:]]))
                 continue
         return msg

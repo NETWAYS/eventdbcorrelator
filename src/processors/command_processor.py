@@ -32,13 +32,13 @@ class CommandProcessor(object):
         
     def process(self,event):
         if not self.format or not self.pipe:
-            return
+            return "PASS"
         
         groups = {}
         try:
             self.lock.acquire()
             if not self.matcher.matches(event):
-                return
+                return "PASS"
             groups = self.matcher.get_match_groups()
             msg = self.create_notification_message(event,groups)
             msg = "[%i] %s" % (time.time(),msg)

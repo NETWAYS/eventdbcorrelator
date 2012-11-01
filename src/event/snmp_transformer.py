@@ -40,14 +40,57 @@ FIELD_NAME_REPLACEMENTS = {
     
 }
 
+DEFAULT_PRIO_MAP = {
+   'emer'  :  0,
+   'aler'  :  1,
+   'crit'  :  2,
+   'majo'  :  2,
+   'erro'  :  3,
+   'warn'  :  4,
+   'noti'  :  5,
+   'mino'  :  5,
+   'ok'    :  5,
+   'info'  :  6,
+   'norm'  :  6,
+   'debu'  :  7
+}
+
 class SnmpTransformer(object):
+
+
     def setup(self,instance_id,config):
         self.id = instance_id
-        if not config["mib_dir"]:
+        if not "mib_dir" in  config:
             raise "mib_dir directive is missing in %i, this should point to the directory of your snmpttconvertmib files"
+
+
+        if "trap_format" in config:
+                self.trap_format= config["trap_format"]
+        else: 
+                self.trap_format= "HOST:(?P<HOST>.*);IP:(?P<IP>.*);VARS:(?P<VARS>.*)"
         self.mib_dir = config["mib_dir"]
         self.ip_regexp = re.compile("\[(.*)\]")
+        self.trap_matcher = re.compile(self.trap_format)
+        
+        self.fixed = {}
+        
+        if "fixed" in config:
+            fixed = config["fixed"].split(",")
+            for keyval in fixed:
+                keyval = keyval.split("=")
+                self.fixed[keyval[0].lower()] = keyval[1]
+
+        self.priorities = {}
+        if "prioritymap" in config:
+            prios = config["prioritymap"].split(",")
+            for sevprio in prios:
+                (severity,priority) = keyval.split("=")
+                self.priorities[severity] = priority
+        else:
+                self.priorities = DEFAULT_PRIO_MAP
+        
         self.parse_mibs()
+
     
     def parse_mibs(self):
         if not os.path.exists(self.mib_dir):
@@ -63,6 +106,7 @@ class SnmpTransformer(object):
         logging.debug("%s registered %i mibs " % (self.id,len(self.registered_mibs)))
         if len(self.registered_mibs) < 1:
             logging.warn("Warning: %s couldn't find any event definitions registered underneath %s, no events will be persisted" % (self.id, self.mib_dir,))
+
     
     def parse_event_line(self,line,mib):
         groups = re.match("EVENT (?P<EVENT_NAME>[^ ]+) (?P<OID>[0-9\.\*]+) \"(?P<CATEGORY>[\w ]+)\" (?P<EVENT_SEVERITY>\w+)",line)
@@ -72,7 +116,16 @@ class SnmpTransformer(object):
             mib["oid"] = groups["OID"]
             mib["category"] = groups["CATEGORY"]
             mib["severity"] = groups["EVENT_SEVERITY"]
-    
+            mib["priority"] = self.get_priority_for(mib["severity"]) 
+   
+
+    def get_priority_for(self,severity):
+        severity = severity.lower()
+        for key in self.priorities:
+             if severity[0:len(key)] == key.lower():
+                  return self.priorities[key]
+        return None
+
     def parse_format_line(self,line,mib):
         groups = re.match("FORMAT (?P<FORMAT>.*)",line)
         if groups:
@@ -106,12 +159,15 @@ class SnmpTransformer(object):
     
     
     def transform(self,string):
-        groups = re.match("HOST:(?P<HOST>.*);IP:(?P<IP>.*);VARS:(?P<VARS>.*)",string)
+        groups = self.trap_matcher.match(string)
         if not groups:
             return None
         event = Event()
         groups = groups.groupdict()
         
+        for i in self.fixed:
+            event[i] = self.fixed[i]
+
         event["host_name"] = groups["HOST"]
         if groups["IP"].startswith("UDP") or groups["IP"].startswith("TCP"):
             event["host_address"] = self.ip_regexp.search(groups["IP"]).group(1)
@@ -134,7 +190,7 @@ class SnmpTransformer(object):
         mib = self.get_mib_for(meta["oid"])
         if not mib:
             return None
-        
+        event["priority"] = mib["priority"]
         event["created"] = time.time
         event["message"] = self.get_formatted_message(meta,variables,mib)
         return event
@@ -166,11 +222,10 @@ class SnmpTransformer(object):
         return mibformat
         
     def get_mib_for(self,oid):
-
         for mib in self.registered_mibs:
             if re.match("^%s$" % mib["oid"],oid):
                 return mib
         
         return None
-        
-        
+    
+    

@@ -17,13 +17,12 @@ class Edbc(object):
                 sys.exit(0)
         else:
             sys.exit(0)
-            
 
     def __setupLogging(self):
         if self.config["log"]:
-            logging.basicConfig(level=logging.DEBUG,filename=self.config["log"])
+            logging.basicConfig(level=logging.INFO,filename=self.config["log"])
         else:
-            logging.basicConfig(level=logging.DEBUG)
+            logging.basicConfig(level=logging.INFO)
     def __init__(self):
         if not socket.has_ipv6:
             print >> sys.stderr, 'WARNING: Your python version does not have IPv6 support enabled!'

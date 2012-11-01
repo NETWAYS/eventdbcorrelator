@@ -1,0 +1,999 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>EventDB Correlator 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="index.html#document-about" />
+    <link rel="top" title="None" href="index.html#document-index" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li><a href="index.html#document-index">EventDB Correlator 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="eventdb-correlator">
+<h1>EventDB Correlator<a class="headerlink" href="#eventdb-correlator" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<span id="document-about"></span><div class="section" id="what-is-edbc">
+<span id="about-label"></span><h2>What is EDBC?<a class="headerlink" href="#what-is-edbc" title="Permalink to this headline">¶</a></h2>
+<p>EDBC (EventDB Correlator) is an agent for <cite>EventDB &lt;https://www.netways.org/projects/eventdb/wiki&gt;</cite>, our tool for integrating passive monitoring (like snmp, syslog or mail events) into icinga (or similar) monioring enviromnents.
+EDBC offers a lot of features that are required to cover advanced monitoring use cases:</p>
+<ul class="simple">
+<li>Pipe based event collection with the possibility to define your own input formats</li>
+<li>Basic support for acting as a snmp_agent by parsing and using SNMPTT mib files</li>
+<li>Aggregation of events based on advanced matcher patterns</li>
+<li>Clearance of aggregations via clear matchers or by timeout</li>
+<li>Extensible and easy to understand event processor mechanismn for writing your own processors</li>
+</ul>
+<div class="section" id="basic-concept">
+<h3>Basic concept<a class="headerlink" href="#basic-concept" title="Permalink to this headline">¶</a></h3>
+<p>EDBC consists of three elements:</p>
+<ul class="simple">
+<li>Receptors : These are the inputs of edbc. For example, the PipeReceptor creates a pipe and listens for events on this pipe</li>
+<li>Processors: Processors take your events and perform logic on them. For example a AggregationProcessor takes your event, looks if it fits into a definition of an aggregation group and adds them to existing groups (or creates a new one) if so. Or a DatabasePersister takes your event and writes it into a database.</li>
+<li>Chains: Chains glue Processors and receptors together. For example, a simple chain (as shown in the image below) takes an event from a pipe, directs it to the aggregationprocessor and - if the event clears an aggregation - calls a ModifierProcessor that triggers an acknowledgement.</li>
+</ul>
+<img alt="_images/chain_simple.png" src="_images/chain_simple.png" />
+<p>This is indeed a very simple example, you can create more complex chains, customize your messages or even create your own processors.</p>
+</div>
+</div>
+<span id="document-installation"></span><div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="prerequisites">
+<h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h3>
+<p>You only need a minimal python setup in order to use edbc:</p>
+<ul class="simple">
+<li>Python 2.4+ (no Python 3 support)</li>
+<li>MySQLdb</li>
+</ul>
+</div>
+<div class="section" id="installing-the-executables">
+<span id="configure-label"></span><h3>Installing the executables<a class="headerlink" href="#installing-the-executables" title="Permalink to this headline">¶</a></h3>
+<p>EDBC can be installed via make:</p>
+<div class="highlight-python"><pre>./configure --with-db-user=eventdb --with-db-pass=%YOUR DB PASSWORD&amp;
+make</pre>
+</div>
+<p>This installs EDBC under /usr/local/edbc. If you prefer a different path, use
+the &#8211;prefix option in configure.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For additional configuration options, call ./configure &#8211;help.</p>
+</div>
+</div>
+<div class="section" id="setting-up-the-database">
+<h3>Setting up the database<a class="headerlink" href="#setting-up-the-database" title="Permalink to this headline">¶</a></h3>
+<p>Currently, only MySQL is supported. You can find the .sql schema files under etc/schema. call:</p>
+<div class="highlight-python"><pre>mysql -u root -p
+mysql&gt; CREATE DATABASE eventdb;
+mysql&gt; CREATE USER eventdb IDENTFIED BY '%YOUR PASSWORD%';
+mysql&gt; GRANT SELECT, INSERT, UPDATE, DELETE OM eventdb.* TO eventdb;
+mysql&gt; FLUSH PRIVILEGES;
+mysql&gt; quit;
+
+cd etc/schema/mysql
+mysql -u root -p eventdb &lt; mysql_create.sql</pre>
+</div>
+<p>Your password should be the one defined in your configure call (see <a class="reference internal" href="index.html#configure-label"><em>Installing the executables</em></a>).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you change your database credentials afterwards, you can modify the etc/conf.d/database.cfg in your installation path.</p>
+</div>
+</div>
+</div>
+<span id="document-overview"></span><div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>This section provides a few information about how edbc is structured and a short overview of the configuration. Configuration topics are discussed in depth in :ref:Configuration.</p>
+<div class="section" id="file-layout">
+<h3>File layout<a class="headerlink" href="#file-layout" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><strong>bin/</strong>: Contains the edbc binary, which just calls lib/edbc.py</li>
+<li><strong>lib/</strong>: Contains the source code</li>
+<li><strong>libexec/</strong>: Contains executable templates, for example the snmp_handler</li>
+<li><strong>etc/</strong>: Configuration and chain files are defined here</li>
+</ul>
+</div>
+<div class="section" id="configuration-files">
+<h3>Configuration files<a class="headerlink" href="#configuration-files" title="Permalink to this headline">¶</a></h3>
+<p>There are two types of configuration files: *.cfg files and ^*.chain files</p>
+<div class="section" id="cfg-files">
+<h4>.cfg files<a class="headerlink" href="#cfg-files" title="Permalink to this headline">¶</a></h4>
+<p>*.cfg can be found underneath etc/conf.d (or another path if you modify your edbc.cfg file&#8217;s <em>configdir</em> directive. In this documentation we assume that configurations are under etc/conf.d) and define resources the chains can work with. These files are in the <a class="reference external" href="http://docs.python.org/2/library/configparser.html">ConfigParser Format</a> and therefore rather simple:</p>
+<ul class="simple">
+<li>[Brackets] define identifiers. These can later be referenced with &#64;, but this will be discussed in <a class="reference internal" href="index.html#configuration"><em>Configuration</em></a></li>
+<li>Values for components are just defined using a &#8220;Key: Value&#8221; Syntax</li>
+</ul>
+</div>
+<div class="section" id="chain-files">
+<h4>.chain files<a class="headerlink" href="#chain-files" title="Permalink to this headline">¶</a></h4>
+<p>Chain files define how your event will processed and consist at least of one &#8216;in&#8217; value and one &#8216;to_{nr}&#8217; value. the {nr} defines at which position a processer stands. See <a class="reference internal" href="index.html#configuration"><em>Configuration</em></a> for more details.</p>
+</div>
+<div class="section" id="important-files">
+<h4>Important files<a class="headerlink" href="#important-files" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><strong>etc/edbc.cfg</strong> contains the &#8216;global&#8217; section and defines, in which directories</li>
+<li>In a default setup, <strong>etc/conf.d/database.cfg</strong> contains the database credentials.</li>
+<li><strong>etc/conf.d/base_processors.cfg</strong> contains a few processors and examples for some use cases</li>
+</ul>
+</div>
+</div>
+</div>
+<span id="document-configuration"></span><div class="section" id="configuration">
+<span id="id1"></span><h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="basic-configuration-syntax">
+<span id="basecfg"></span><h3>Basic configuration syntax<a class="headerlink" href="#basic-configuration-syntax" title="Permalink to this headline">¶</a></h3>
+<p>A component always starts with the id of the object in brackets, followed by a set of key: value pairs.
+For example the database configuration found in your etc/conf.d/database.cfg looks like this:</p>
+<div class="highlight-python"><pre>[mysql]
+class:          datasource
+type:           mysql
+host:           localhost
+port:           3306
+table:          event
+database:       eventdb
+user:           eventdb
+password:       eventdb</pre>
+</div>
+<p>Let&#8217;s look at this configuration more in depth:</p>
+<ul>
+<li><p class="first">[mysql] only defines that this component has the id mysql - and can be referenced with &#64;mysql in other components (we&#8217;ll see this later)</p>
+</li>
+<li><dl class="first docutils">
+<dt>class: datasource defines the type of the component. Possible types are:</dt>
+<dd><ul class="first last simple">
+<li>datasource:   A component which can execute SQL commands and is able to persist data</li>
+<li>processor:    A generic processor that performs arbitary actions on an event</li>
+<li>receptor:     A component which is able to receive arbitary events and normalizes themfor further processing</li>
+<li>transformer:  A component that defines how the raw event data from a receptor is transformed to normalized events</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p class="first">type: Defines the concrete component type to use</p>
+</li>
+<li><p class="first">template: Optional definition of a parent configuration which is used as the base configuration for the new template. <em>class</em> and <em>type</em> can be omitted when using this definition</p>
+</li>
+</ul>
+<p>Any further settings are component specific.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you&#8217;re a developer and curious: The class/type definition is used to determine the class name of the objects: %type%_%class%</p>
+</div>
+</div>
+<div class="section" id="step-by-step-1-the-most-minimal-setup">
+<h3>Step by step: 1. The most minimal setup<a class="headerlink" href="#step-by-step-1-the-most-minimal-setup" title="Permalink to this headline">¶</a></h3>
+<p>In the first place, the configuration looks more complicated then it is, so let&#8217;s start by setting up a simple chain that just receives messages through a pipe and writes them to the EventDB database.</p>
+<p>The following image shows how our chaining will look like:</p>
+<img alt="_images/smallsteps_chain1.png" src="_images/smallsteps_chain1.png" />
+<div class="section" id="general-setup">
+<h4>1. General setup<a class="headerlink" href="#general-setup" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li>Make sure your etc/conf.d/database.cfg has the correct credentials set</li>
+<li>Create a file called example_config.cfg in your etc/conf.d/database.cfg. We&#8217;ll define every component we need here</li>
+</ul>
+</div>
+<div class="section" id="setting-up-a-receptor">
+<h4>2. Setting up a receptor<a class="headerlink" href="#setting-up-a-receptor" title="Permalink to this headline">¶</a></h4>
+<p>The first component we have to care for is the receptor. As we want our events to be received on a pipe, we use a <a class="reference internal" href="index.html#pipereceptor-ref"><em>Pipe Receptor (type:pipe)</em></a> that creates and listens at the pipe <em>/usr/local/var/edbc_example.pipe</em>. So let&#8217;s add it to our example_config.cfg and give it the id <em>example-pipe</em></p>
+<div class="highlight-python"><pre>[example-pipe]
+class: receptor
+type: pipe
+path: /usr/local/var/edbc_example.pipe</pre>
+</div>
+<p>One important thing is missing here: Only receptors must define how a <a class="reference internal" href="index.html#event-format"><em>EventDB Event</em></a> is created. In <a class="reference internal" href="index.html#basecfg"><em>Basic configuration syntax</em></a>, we already heard that components called <em>transformers</em> are responsible for this. In this case you want a <a class="reference internal" href="index.html#string-transformer-ref"><em>StringTransformer (type: string)</em></a> to format your message input, so we create one, called <em>simple-transformer</em></p>
+<div class="highlight-python"><pre>[simple-transformer]
+class: transformer
+type:  string
+format: (?P&lt;PRIORITY&gt;\d+) (?P&lt;FACILITY&gt;\d+) (?P&lt;MESSAGE&gt;.*)$
+fixed: program=example</pre>
+</div>
+<p>Here, two directives are important:
+* format: This is a python regular expression that maps parts of the message to event descriptors. A message with the format &#8216;5 4 A testmessage&#8217; would create an event with priority of 5, facility 4 and message text &#8216;A testmessage&#8217;
+* fixed: a comma separated key=value list defining event parameters that are constant. Here our event will always have the program &#8216;example&#8217;.
+.. note:: (?P&lt;NAME&gt;...) are named matching groups in python, see <a class="reference external" href="http://docs.python.org/2/library/re.html">Pythons re documentation</a> for additional information</p>
+<p>Now we only need to tell our receptor that it uses the simple-transformer for parsing events. This is done by adding a format property that contains the simple-transformer instance. Instances always have the prefix &#64;, so our example_config.cfg now looks like this:</p>
+<div class="highlight-python"><pre>[example-pipe]
+class: receptor
+type:  pipe
+path: /usr/local/var/edbc_example.pipe
+format: @simple-transformer
+
+
+[simple-transformer]
+class: transformer
+type:  string
+format: (?P&lt;PRIORITY&gt;\d+) (?P&lt;FACILITY&gt;\d+) (?P&lt;MESSAGE&gt;.*)$
+fixed: program=example</pre>
+</div>
+<p>That&#8217;s it, now we can proceed to the last step</p>
+</div>
+<div class="section" id="creating-a-chain">
+<h4>3. Creating a chain<a class="headerlink" href="#creating-a-chain" title="Permalink to this headline">¶</a></h4>
+<p>No we only have to create a simple chain that takes the events from our <em>example-pipe</em> Receptor and writes them to our database. For this, simple create a example_config.chain file under etc/chains/.</p>
+<p>We&#8217;ll call our chain <em>example-chain</em>, so like always, we&#8217;re starting with:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">example</span><span class="o">-</span><span class="n">chain</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Now we have to define the input of the chain by adding an <em>in</em> directive referencing the example-pipe instance:</p>
+<div class="highlight-python"><pre>[example-chain]
+in: @example-pipe</pre>
+</div>
+<p>And now, we add our only chain component, the datasource by adding a <em>to</em> directive pointing to our datasource:</p>
+<div class="highlight-python"><pre>[example-chain]
+in: @example-pipe
+to_1: @mysql</pre>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The number after to_ is mandatory and defines the position in the chain in which the processor is executed. We see later that we can also use the return code of a chain component as a condition for other chain components.</p>
+</div>
+</div>
+<div class="section" id="test-it">
+<h4>4. Test it<a class="headerlink" href="#test-it" title="Permalink to this headline">¶</a></h4>
+<p>Now we can start edbc:</p>
+<div class="highlight-python"><pre>/usr/local/edbc/bin/edbc</pre>
+</div>
+<p>If everything went fine, there should be a pipe at /usr/local/var/edbc_example.pipe.</p>
+<p>Let&#8217;s fire a test event to see if it works:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># echo &quot;5 4 testmessage&quot; &gt; /usr/local/var/edbc_example.pipe</span>
+</pre></div>
+</div>
+<p>We now should have an event in our database with priority 5, facility 4 and testmessage as the message:</p>
+<div class="highlight-python"><pre># mysql -u eventdb -p eventdb
+mysql&gt; SELECT facility,priority,message,program FROM event ORDER BY id desc limit 1;
++----------+----------+-------------+---------+
+| facility | priority | message     | program |
++----------+----------+-------------+---------+
+|        4 |        5 | testmessage | example |
++----------+----------+-------------+---------+
+1 row in set (0.00 sec)</pre>
+</div>
+</div>
+</div>
+<div class="section" id="step-by-step-2-adding-aggregators">
+<span id="aggregator-example"></span><h3>Step by step: 2. Adding aggregators<a class="headerlink" href="#step-by-step-2-adding-aggregators" title="Permalink to this headline">¶</a></h3>
+<p>Until now, there&#8217;s nothing special about our setup, we just accept events and write them to the database. We will now add some logic. Let&#8217;s say we want to take events with a message like &#8216;The server ... just went down. Errorcode xyz&#8217; and aggregate them if the server name and the errorcode is the same, so we have for example &#8216;Server mysql1-ad is down (Code : 1152) (10 Events) in our frontend. This can be accomplished with the aggregator processor, which we have to add to our chain.</p>
+<p>So our old chain:</p>
+<img alt="_images/smallsteps_chain1.png" src="_images/smallsteps_chain1.png" />
+<p>Will at the end of this chapter look like this:</p>
+<img alt="_images/smallsteps_chain2.png" src="_images/smallsteps_chain2.png" />
+<div class="section" id="define-the-aggregation-processor-component">
+<h4>1. Define the aggregation processor component<a class="headerlink" href="#define-the-aggregation-processor-component" title="Permalink to this headline">¶</a></h4>
+<p>First we will again look in our example_config.cfg and add an aggregation processor with the id example-aggregator:</p>
+<div class="highlight-python"><pre>[example-aggregator]
+class: processor
+type:  aggregator</pre>
+</div>
+<p>In order to recognize if a message should be aggregated, we have to define a matcher directive:</p>
+<div class="highlight-python"><pre>[example-aggregator]
+class: processor
+type:  aggregator
+matcher: message REGEXP 'The server (?P&lt;HOSTNAME&gt;\w+) just went down. Errorcode (?P&lt;CODE&gt;\d+)'</pre>
+</div>
+<p>The matched groups are, together with the id, used to create a group identifier. If an event starts a new aggregation group, it becomes a group leader. Every event with the same group identifier will be added to the aggregation group of the group leader.</p>
+<p>Now we want to add an aggregated message. This is the message that will be written to the group leaders <em>alternative_message</em> field in the database and can reference fields from the matcher:</p>
+<div class="highlight-python"><pre>[example-aggregator]
+class: processor
+type:  aggregation
+matcher: message REGEXP 'The server (?P&lt;HOSTNAME&gt;\w+) just went down. Errorcode (?P&lt;CODE&gt;\d+)'
+aggregateMessage: 'Server $HOSTNAME is down (Code : $CODE) ($_COUNT events)</pre>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">$NAME resolves to the matcher field called name, #XYZ resolves to the event property XYZ. So #message would resolve to the (group leaders) message, $_COUNT is just a hint for the eventdb frontend and will be replaced with the actual group count</p>
+</div>
+<p>Additionally, we need to tell our aggregator from which datasource it can gather group information, this is normally the database you&#8217;re writing to:</p>
+<div class="highlight-python"><pre>[example-aggregator]
+class: processor
+type:  aggregation
+matcher: message REGEXP 'The server (?P&lt;HOSTNAME&gt;\w+) just went down. Errorcode (?P&lt;CODE&gt;\d+)'
+aggregateMessage: Server $HOSTNAME is down (Code : $CODE) ($_COUNT events)
+datasource: @mysql</pre>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You can also add a maxDelay directive to the aggregator, so a new aggregation group will be created after maxDelay seconds passed without a matching event.</p>
+</div>
+</div>
+<div class="section" id="update-the-chain">
+<h4>2. Update the chain<a class="headerlink" href="#update-the-chain" title="Permalink to this headline">¶</a></h4>
+<p>Our chain now only needs the aggregator being added between the input and the database:</p>
+<div class="highlight-python"><pre>[example-chain]
+in: @example-pipe
+to_1: @example-aggregator
+to_2: @mysql</pre>
+</div>
+</div>
+<div class="section" id="id2">
+<h4>3. Test it<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h4>
+<p>To test it, we can write a few similar messages to the pipe, like:</p>
+<div class="highlight-python"><pre># echo '2 5 The server mysql just went down. Errorcode 1434' &gt;&gt; /usr/local/var/edbc_example.pipe
+# echo '2 5 The server mysql just went down. Errorcode 1434' &gt;&gt; /usr/local/var/edbc_example.pipe
+.,,
+# echo '2 5 The server mysql just went down. Errorcode 1434' &gt;&gt; /usr/local/var/edbc_example.pipe</pre>
+</div>
+<p>And a few messaages with a different errorcode:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># echo &#39;2 5 The server mysql just went down. Errorcode 1454&#39; &gt;&gt; /usr/local/var/edbc_example.pipe</span>
+<span class="o">...</span>
+<span class="c"># echo &#39;2 5 The server mysql just went down. Errorcode 1434&#39; &gt;&gt; /usr/local/var/edbc_example.pipe</span>
+<span class="c"># echo &#39;2 5 The server mysql just went down. Errorcode 1439&#39; &gt;&gt; /usr/local/var/edbc_example.pipe</span>
+</pre></div>
+</div>
+<p>In the frontend, this should result in a resultset like this:</p>
+<img alt="_images/ui1.png" src="_images/ui1.png" />
+</div>
+<div class="section" id="one-step-further-adding-a-clear-message">
+<span id="clear-message-example"></span><h4>4. One step further:  Adding a clear message<a class="headerlink" href="#one-step-further-adding-a-clear-message" title="Permalink to this headline">¶</a></h4>
+<p>Sometimes, you receive a clear message for previous events which tell you that the problem is fixed now. After receiveing such an event, continuing to summarize events doesn&#8217;t make sense, as new events belong to a new problem. To realize this, our aggregation processor can be extended with a clear field</p>
+<p>First we add the clear message:</p>
+<div class="highlight-python"><pre>[example-aggregator]
+class: processor
+type:  aggregation
+matcher: message REGEXP 'The server (?P&lt;HOSTNAME&gt;\w+) just went down. Errorcode (?P&lt;CODE&gt;\d+)'
+aggregateMessage: 'Server $HOSTNAME is down (Code : $CODE) ($_COUNT events)
+datasource: @mysql
+clear: message REGEXP 'Server \w+ is up again (Error \d+)'</pre>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This example won&#8217;t work! Read on.</p>
+</div>
+<p>There&#8217;s one thing you have to do now: As the matcher defines which group the event belongs to and the clear message should only clear this specific group, you have to add the clear message to the matcher (sounds complicated, but is simple):</p>
+<div class="highlight-python"><pre>[example-aggregator]
+class: processor
+type:  aggregation
+matcher: message REGEXP 'The server (?P&lt;HOSTNAME&gt;\w+) just went down. Errorcode (?P&lt;CODE&gt;\d+)' or message REGEXP 'Server (?P&lt;HOSTNAME&gt;\w+) is up again \(Error (?P&lt;CODE&gt;\d+)\)'
+
+aggregateMessage: Server $HOSTNAME is down (Code : $CODE) ($_COUNT events)
+datasource: @mysql
+clear: message REGEXP 'Server \w+ is up again \(Error \d+\)'</pre>
+</div>
+<p>Now the clear message will be processed by the aggregator and the group will be cleared:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># echo &#39;2 5 The server mysql1 just went down. Errorcode 1439&#39; &gt;&gt; /usr/local/var/edbc_example.pipe</span>
+<span class="o">...</span>
+<span class="c"># echo &#39;2 5 The server mysql1 just went down. Errorcode 1439&#39; &gt;&gt; /usr/local/var/edbc_example.pipe</span>
+
+<span class="c"># echo &#39;2 5 Server mysql1 is up again (Error 1439)&#39; &gt;&gt; /usr/local/var/edbc_example.pipe</span>
+
+<span class="c"># echo &#39;2 5 The server mysql1 just went down. Errorcode 1439&#39; &gt;&gt; /usr/local/var/edbc_example.pipe</span>
+<span class="c"># echo &#39;2 5 The server mysql1 just went down. Errorcode 1439&#39; &gt;&gt; /usr/local/var/edbc_example.pipe</span>
+<span class="c"># echo &#39;2 5 The server mysql1 just went down. Errorcode 1439&#39; &gt;&gt; /usr/local/var/edbc_example.pipe</span>
+</pre></div>
+</div>
+<p>The result in the fronten looks like this:</p>
+<img alt="_images/ui2.png" src="_images/ui2.png" />
+</div>
+</div>
+<div class="section" id="step-by-step-3-conditional-processing-autoacknowledge-events">
+<h3>Step by step: 3. Conditional processing - Autoacknowledge events<a class="headerlink" href="#step-by-step-3-conditional-processing-autoacknowledge-events" title="Permalink to this headline">¶</a></h3>
+<p>In the last part of this ste by step guide, we show how to execute processors only if a previous processor finished
+with a certain return code. A common use case of this is to acknowledge events after a clear event comes.</p>
+<p>Our chain will now get an additional component, called modification processor, that only processes the event if a group has been cleared.</p>
+<img alt="_images/smallsteps_chain3.png" src="_images/smallsteps_chain3.png" />
+<div class="section" id="defining-a-modification-processor">
+<span id="mod-processor"></span><h4>1. Defining a modification processor<a class="headerlink" href="#defining-a-modification-processor" title="Permalink to this headline">¶</a></h4>
+<p>We&#8217;ll continue where we left in step <a class="reference internal" href="index.html#clear-message-example"><em>4. One step further:  Adding a clear message</em></a>. When we clear our group, all previous &#8216;server down&#8217; events should be automatically acknowledged. For this, we need to define a <a class="reference internal" href="index.html#modifierprocessor-ref"><em>Modifier Process (type:modifier)</em></a> with the id &#8216;example-acknowledger&#8217; in our example-config.cfg:</p>
+<div class="highlight-python"><pre>[example-acknowledger]
+class: processor
+type: modifier</pre>
+</div>
+<p>A modifier can have two targets:</p>
+<ul class="simple">
+<li><em>group</em> defines that this modifier acts upon the whole group. If you use target: group you always need to add a datasource, too (like in the aggregator)</li>
+<li><em>event</em> defines that this modifier only defines the event that it currently processes.</li>
+</ul>
+<p>We want our whole group to be cleared, so we use target: group and add our mysql datasource:</p>
+<div class="highlight-python"><pre>[example-acknowledger]
+class: processor
+type: modifier
+target: group
+datasource: @mysql</pre>
+</div>
+<p>And now we define which modifications will be performed upon the group. This can be done with two directives:</p>
+<ul class="simple">
+<li>overwrites: is a key=value;key=value string that defines which fields will be overwritten (e.g. priority=1;facility=9 would overwrite the priority and the facility of the event)</li>
+<li>acknowledge: This is the same like ack=1 in the overwrite field and triggers an acknowledge of the whole group (or event, depending on your target setting)</li>
+</ul>
+<dl class="docutils">
+<dt>We only want to acknowledge our aggregated group, so we add a <em>acknowledge: true</em> setting::</dt>
+<dd>[example-acknowledger]
+class: processor
+type: modifier
+target: group
+datasource: &#64;mysql
+acknowledge: true</dd>
+</dl>
+<p>That&#8217;s it, our acknowledger is ready and we can update our chain</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">A default installation already has acknowledge_event and acknowledge_group processors defined that you can use, but we defined it here to see how it works</p>
+</div>
+</div>
+<div class="section" id="updating-the-chain">
+<h4>2. Updating the chain<a class="headerlink" href="#updating-the-chain" title="Permalink to this headline">¶</a></h4>
+<p>Let&#8217;s recall our chain:</p>
+<div class="highlight-python"><pre>[example-chain]
+in: @example-pipe
+to_1: @example-aggregator
+to_2: @mysql</pre>
+</div>
+<p>You see that every event is being processed by every event in our chain. We defined components by to_ followed by an arbitary number, while lower numbers are executed first. In order to direct our event only if a certain condition applies, we have to extend the syntax a bit: You can define a processor target with to_ followed by a set of conditions, followed by a number that determines the position.</p>
+<p>Conditions are in the syntax <em>%processor_number%</em>[<em>%return value%</em>]. Every processor returns a string like &#8216;OK&#8217;, &#8216;PASS&#8217;, etc.
+We&#8217;re interested in our aggregation processor, which returns one of the following values:</p>
+<ul class="simple">
+<li><strong>PASS</strong>: The matcher didn&#8217;t match the current event, it is not processed by the aggregator</li>
+<li><strong>AGGR</strong>: The event is added to an existing group</li>
+<li><strong>NEW</strong> : The event started a new aggregation group, future matching events will be added to this group</li>
+<li><strong>CLEAR</strong>: The &#8216;clear&#8217; matcher matched this event and cleared an aggregation group</li>
+</ul>
+<p>Our aggregator has the position 1 and we now want the event to be directed to the modification processor we created in <a class="reference internal" href="index.html#mod-processor"><em>1. Defining a modification processor</em></a> only if the aggregator return CLEAR. so our condition looks like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="mi">1</span><span class="p">[</span><span class="n">CLEAR</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Now we add our conditional processor to the example chain and end up with the following definition:</p>
+<div class="highlight-python"><pre>[example-chain]
+in:             @example-pipe
+to_1:           @example-aggregator
+to_1[CLEAR]_2:  @example-acknowledger
+to_3:           @mysql</pre>
+</div>
+</div>
+<div class="section" id="id3">
+<h4>3. Test it<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h4>
+<p>Using the same test as in the last section, our EventDB frontend looks like this:</p>
+<img alt="_images/ui3_ack.png" src="_images/ui3_ack.png" />
+<p>As you see, the group has been acknowledged after the clear event</p>
+</div>
+</div>
+</div>
+<span id="document-matcher"></span><div class="section" id="edbc-matcher-syntax">
+<span id="matcher-syn"></span><h2>EDBC Matcher syntax<a class="headerlink" href="#edbc-matcher-syntax" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="syntax-definition">
+<h3>Syntax definition<a class="headerlink" href="#syntax-definition" title="Permalink to this headline">¶</a></h3>
+<p>The syntax for matchers can be:</p>
+<div class="highlight-python"><pre>MATCHER: MATCHER_STMT | MATCHER CONJUNCTION MATCHER_STMT  | (MATCHER)
+
+MATCHER_STMT: STRING_MATCHER | NUMERIC_MATCHER | SET_MATCHER | IP_MATCHER
+STRING_MATCHER: #field STRING_OPERATOR STRING
+NUMERIC_MATCHER: #field NUMERIC_OPERATOR #NUMBER
+SET_MATCHER: #field SET_OPERATOR (SET)
+IP_MATCHER: #field IP_OPERATOR_DEFINITION
+
+STRING_OPERATOR: ['IS NOT','CONTAINS','REGEXP','DOES NOT CONTAIN','STARTS WITH','ENDS WITH','IS']
+SET_OPERATOR:    ['NOT IN','IN']
+NUMERIC_OPERATOR:['&gt;=','&lt;=','&gt;','!=','&lt;','=']
+
+IP_OPERATOR_DEFINITION: IN IP RANGE '#ip "-" #ip' | NOT IN IP RANGE '#ip "-" #ip' | IN NETWORK '#submask_or_cidr'| NOT IN NETWORK '#submask_or_cidr'
+SET = #value | SET, #value
+CONJUNCTION: ["OR","AND", CONJUNCTION " NOT" ]</pre>
+</div>
+</div>
+<div class="section" id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic">
+<li><p class="first"><strong>Simple message check</strong>:</p>
+<div class="highlight-python"><pre>message IS 'message to check'</pre>
+</div>
+</li>
+<li><p class="first"><strong>Simple message check with priority</strong>:</p>
+<div class="highlight-python"><pre>message IS 'message to check' AND priority &gt;= 4</pre>
+</div>
+</li>
+<li><p class="first"><strong>REGEXP check</strong>:</p>
+<div class="highlight-python"><pre>message REGEXP 'srv-[A-Za-z]\d+'</pre>
+</div>
+</li>
+<li><p class="first"><strong>Limit to network</strong>:</p>
+<div class="highlight-python"><pre>host_address IN NETWORK "192.168.0.0/24"</pre>
+</div>
+</li>
+<li><p class="first"><strong>Limit to ip range</strong>:</p>
+<div class="highlight-python"><pre>host_address IN IP RANGE "192.168.4.4-192.168.5.2"</pre>
+</div>
+</li>
+</ol>
+</div>
+<div class="section" id="pitfalls">
+<h3>Pitfalls<a class="headerlink" href="#pitfalls" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Operators and conjunctions <strong>must</strong> be uppercase in matchers</li>
+<li>Regexp and String matchers are case insensitive</li>
+<li>The only string operators supported on host_address are =, use the ip operators for advanced checks here</li>
+</ul>
+</div>
+</div>
+<span id="document-component_reference"></span><div class="section" id="component-reference">
+<h2>Component Reference<a class="headerlink" href="#component-reference" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="transformer-class-transformer">
+<span id="transformer-ref"></span><h3>Transformer <em>(class: transformer)</em><a class="headerlink" href="#transformer-class-transformer" title="Permalink to this headline">¶</a></h3>
+<p>Transformers take the raw event input (mostly strings) and convert them into normalized events</p>
+<div class="section" id="stringtransformer-type-string">
+<span id="string-transformer-ref"></span><h4>StringTransformer <em>(type: string)</em><a class="headerlink" href="#stringtransformer-type-string" title="Permalink to this headline">¶</a></h4>
+<p>String transformers take raw string input and convert them events using a regular expression or fixed settings</p>
+<ol class="arabic">
+<li><p class="first"><strong>Example</strong>:</p>
+<div class="highlight-python"><pre>[rsyslog_reader]
+class:transformer
+type:string
+format:^(?P&lt;CREATED&gt;[a-zA-Z]{2,3} \d\d \d\d:\d\d:\d\d) (?P&lt;HOST&gt;[^ ]+)( (?P&lt;PROGRAM&gt;[^:]+):)? (?P&lt;MESSAGE&gt;.*)$
+fixed: Priority=1,Facility=1</pre>
+</div>
+</li>
+<li><p class="first"><strong>Parameters</strong></p>
+<blockquote>
+<div><ul>
+<li><p class="first"><strong>defaultmessage</strong>: If no message is defined, this message (normally &#8216;No message given&#8217;) is used</p>
+</li>
+<li><dl class="first docutils">
+<dt><strong>format</strong>: A regular expression extracting the important event properties of an event with named matching groups. You can define any property you want, but persisted properties are per default:</dt>
+<dd><ul class="first last simple">
+<li>MESSAGE</li>
+<li>HOST</li>
+<li>HOST_ADDRESS</li>
+<li>PRIORITY</li>
+<li>FACILITY</li>
+<li>PROGRAM</li>
+<li>CREATED</li>
+<li>MODIFIED</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p class="first"><strong>fixed</strong>: A comma seperated key=value list defining which properties are set as constants</p>
+</li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+</div>
+<div class="section" id="snmptransformer-type-snmp">
+<span id="snmp-transformer-ref"></span><h4>SNMPTransformer <em>(type: snmp)</em><a class="headerlink" href="#snmptransformer-type-snmp" title="Permalink to this headline">¶</a></h4>
+<p>SNMP Transformer are able to read MIB files produced by <a class="reference external" href="http://snmptt.sourceforge.net/docs/snmpttconvertmib.shtml">snmpttconvertmib</a> and parse their EVENT and FORMAT directives. It expects snmptraps to be received with numerical OIDs.</p>
+<ol class="arabic">
+<li><p class="first"><strong>Example</strong>:</p>
+<div class="highlight-python"><pre>[snmp_reader]
+class: transformer
+type:  snmp
+mib_dir: /usr/share/snmptt/mibs
+fixed: Priority=3,Facility=5,program=snmp</pre>
+</div>
+</li>
+<li><p class="first"><strong>Parameters</strong></p>
+<blockquote>
+<div><ul>
+<li><p class="first"><strong>mib_dir</strong>: The directory to load the mib files snmpttconvertmib created. This is a required field</p>
+</li>
+<li><p class="first"><strong>trap_format</strong>: <strong>Only define this if you create a modified trap handler</strong> Define how to parse the string data received from the traphandler</p>
+</li>
+<li><dl class="first docutils">
+<dt><strong>prioritymap</strong>: Define a comma seperated severity=priority mapping. The event&#8217;s severity needn&#8217;t to match the whole string, if it only begins with the string defined in your map it will be mapped to the priority, too. Per default the map looks like this:</dt>
+<dd><ul class="first last simple">
+<li>emer = 0</li>
+<li>aler = 1</li>
+<li>crit = 2</li>
+<li>majo = 2</li>
+<li>erro = 3</li>
+<li>warn = 4</li>
+<li>noti = 5</li>
+<li>mino = 5</li>
+<li>ok   = 5</li>
+<li>info = 6</li>
+<li>norm = 6</li>
+<li>debu = 7</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p class="first"><strong>fixed</strong>: A comma seperated key=value list defining which properties are set as constants</p>
+</li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+</div>
+</div>
+<div class="section" id="receptors-class-receptor">
+<span id="receptors-ref"></span><h3>Receptors <em>(class:receptor)</em><a class="headerlink" href="#receptors-class-receptor" title="Permalink to this headline">¶</a></h3>
+<p>Receptors are the components that receive raw events and therefore the interface of edbc to the world. They are usually coupled with a <a class="reference internal" href="index.html#transformer-ref"><em>Transformer (class: transformer)</em></a> and at the start of every event chain.</p>
+<div class="section" id="pipe-receptor-type-pipe">
+<span id="pipereceptor-ref"></span><h4>Pipe Receptor <em>(type:pipe)</em><a class="headerlink" href="#pipe-receptor-type-pipe" title="Permalink to this headline">¶</a></h4>
+<p>A pipe receptor opens a pipe upon creation and receives events</p>
+<ol class="arabic">
+<li><p class="first"><strong>Example</strong>:</p>
+<div class="highlight-python"><pre>[pipe]
+class:receptor
+type:pipe
+path:/tmp/edbc.pipe
+format:@simple_pipe_in</pre>
+</div>
+</li>
+<li><p class="first"><strong>Parameters</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>mod</strong> : The permission mask which will be used for the created pipe (default: 0666)</li>
+<li><strong>owner</strong> : The owner of the pipe (default: The process owner)</li>
+<li><strong>group</strong> : The group of the pipe (default: The process owner&#8217;s group)</li>
+<li><strong>path</strong> : An existing, writable path to create the pipe at (default /usr/local/var/edbc.pipe)</li>
+<li><strong>bufferSize</strong> : The input buffer of this receptor (default 2KB)</li>
+<li><strong>format</strong> : (required) An <a class="reference internal" href="index.html#transformer-ref"><em>Transformer (class: transformer)</em></a> instance that will be used to format the raw event data to a normalized event</li>
+<li><strong>source_type</strong>: The source name given to the event (default: syslog)</li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+</div>
+<div class="section" id="snmp-receptor-type-snmp">
+<span id="snmpreceptor-ref"></span><h4>SNMP Receptor <em>(type:snmp)</em><a class="headerlink" href="#snmp-receptor-type-snmp" title="Permalink to this headline">¶</a></h4>
+<p>SNMP Receptors are basically pipe receptors which receive snmp traps from a snmp handler.</p>
+<img alt="_images/snmphandler.png" src="_images/snmphandler.png" />
+<p>The SNMP Receptors opens a pipe where it listens on and creates a bash script which can be set as a traphandler in your snmptrapd.conf. The bash script just forwards the trap in a string format to the pipe, which then transforms it to an event with an <a class="reference internal" href="index.html#snmp-transformer-ref"><em>SNMPTransformer (type: snmp)</em></a>.</p>
+<ol class="arabic">
+<li><p class="first"><strong>Example</strong>:</p>
+<div class="highlight-python"><pre>[snmp]
+class:receptor
+type:snmp
+handler:/usr/local/edbc/var/edbc_snmp_handler
+format:@snmp_reader</pre>
+</div>
+</li>
+<li><p class="first"><strong>Parameters</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>mod</strong> : The permission mask which will be used for the created pipe and snmp handler (default: 0774)</li>
+<li><strong>owner</strong> : The owner of the pipe and snmp trap handler (default: The process owner)</li>
+<li><strong>group</strong> : The group of the pipe and snmp trap handler (default: The process owner&#8217;s group)</li>
+<li><strong>path</strong> : An existing, writable path to create the pipe at (default /usr/local/var/edbc.pipe)</li>
+<li><strong>bufferSize</strong> : The input buffer of this receptor (default 2KB)</li>
+<li><strong>format</strong> : (required) An <a class="reference internal" href="index.html#transformer-ref"><em>Transformer (class: transformer)</em></a> instance that will be used to format the raw event data to a normalized event</li>
+<li><strong>source_type</strong>: The source name given to the event (default: snmp)</li>
+<li><strong>handler</strong> : The location to write the handler script to (default: /usr/local/var/edb_traphandler)</li>
+<li><strong>handler_tpl</strong> : The template to use for the handler (default : %INSTALL_PATH%/libexec/snmp_handler_template)</li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+</div>
+</div>
+<div class="section" id="processors-class-processor">
+<span id="processor-ref"></span><h3>Processors <em>(class:processor)</em>:<a class="headerlink" href="#processors-class-processor" title="Permalink to this headline">¶</a></h3>
+<p>Processors are components that perform arbitary actions on your events, like altering them, aggergating them or writing them to a database.</p>
+<div class="section" id="aggregation-processor-type-aggregation">
+<span id="aggregationprocessor-ref"></span><h4>Aggregation Processor <em>(type:aggregation)</em><a class="headerlink" href="#aggregation-processor-type-aggregation" title="Permalink to this headline">¶</a></h4>
+<p>Aggregators try to match events by using the <a class="reference internal" href="index.html#matcher-syn"><em>EDBC Matcher syntax</em></a> and groups them. The usage is described in detail under <a class="reference internal" href="index.html#aggregator-example"><em>Step by step: 2. Adding aggregators</em></a>.</p>
+<ol class="arabic">
+<li><p class="first"><strong>Example</strong>:</p>
+<div class="highlight-python"><pre>[example-aggregator]
+class: processor
+type:  aggregation
+matcher: message REGEXP 'The server (?P&lt;HOSTNAME&gt;\w+) just went down. Errorcode (?P&lt;CODE&gt;\d+)' OR  message REGEXP 'Server (?P&lt;HOSTNAME&gt;\w+) is up again \(Error (?P&lt;CODE&gt;\d+)\)'
+aggregateMessage: Server $HOSTNAME is down (Code : $CODE) ($_COUNT events)
+clear: message REGEXP 'Server \w+ is up again \(Error \d+\)'
+datasource: @mysql</pre>
+</div>
+</li>
+<li><p class="first"><strong>Parameters</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>matcher</strong>: An <a class="reference internal" href="index.html#matcher-syn"><em>EDBC Matcher syntax</em></a> defining every message (clear and aggregate message) that this aggregator processes. Matching groups are used to identify the group.</li>
+<li><strong>aggregatemessage</strong>: The message to use for the group. Can reference matcher groups by $NAME tokens and event properties by #PROPERTY tokens. $_COUNT is a special variable resolved by the frontend</li>
+<li><strong>clear</strong>: A <a class="reference internal" href="index.html#matcher-syn"><em>EDBC Matcher syntax</em></a> triggering a clear message. This is used <strong>after</strong> the matcher field is processed, so if the matcher doesn&#8217;t contain the clear message, this is never processed</li>
+<li><strong>datasource</strong>: A <a class="reference internal" href="index.html#datasource-ref"><em>Datasources (class:datasource)</em></a> that is required to process aggregation groups</li>
+<li><strong>maxdelay</strong>: The aggregation will be automatically cleared when a group does not get a new event for maxdelay seconds (default: 24 hours)</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Return codes</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>AGGR</strong>: Returned when an event is added to an <em>existing</em> aggregation group</li>
+<li><strong>NEW</strong> : Returned when an event creates a new aggregation group</li>
+<li><strong>CLEAR</strong>: Returned when an event clears an aggregation group because of the clear matcher (maxdelay doesn&#8217;t cause this)</li>
+<li><strong>PASS</strong> : Returned when the matcher doesn&#8217;t match the event</li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+</div>
+<div class="section" id="command-processor-type-command">
+<span id="commandprocessor-ref"></span><h4>Command Processor <em>(type:command)</em><a class="headerlink" href="#command-processor-type-command" title="Permalink to this headline">¶</a></h4>
+<p>This processor writes a &#8220;[TIME] MESSAGE&#8221; string into a defined pipe and can be used e.g. to trigger external commands in your monitoring environment.</p>
+<ol class="arabic">
+<li><p class="first"><strong>Example</strong>:</p>
+<div class="highlight-python"><pre>[example-command]
+class: processor
+type: command
+format: SCHEDULE_FORCED_HOST_CHECK;#HOST;#CREATED
+pipe: /usr/local/icinga-web/var/rw/icinga.cmd</pre>
+</div>
+</li>
+<li><p class="first"><strong>Parameters</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>matcher</strong>: A <a class="reference internal" href="index.html#matcher-syn"><em>EDBC Matcher syntax</em></a> that determines if the processor is called</li>
+<li><strong>format</strong> : The format of the message to fire, ($NAME is replaced with matcher tokens, #NAME with event fields)</li>
+<li><strong>pipe</strong>   : The pipe to write the message to</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Return codes</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>PASS</strong> : The matcher didn&#8217;t match the event or there was a setup error (no format or pipe)</li>
+<li><strong>OK</strong>   : Command has been send to the pipe</li>
+<li><strong>FAIL</strong> : The command couldn&#8217;t be send for some reason</li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+</div>
+<div class="section" id="modifier-process-type-modifier">
+<span id="modifierprocessor-ref"></span><h4>Modifier Process <em>(type:modifier)</em><a class="headerlink" href="#modifier-process-type-modifier" title="Permalink to this headline">¶</a></h4>
+<p>A processor that acts upon events or event groups and modifies their properties. See <a class="reference internal" href="index.html#mod-processor"><em>1. Defining a modification processor</em></a> for an in depth explanation</p>
+<ol class="arabic">
+<li><dl class="first docutils">
+<dt><strong>Example</strong>::</dt>
+<dd><p class="first last">[example-acknowledger]
+class: processor
+type: modifier
+target: group
+acknowledge: true
+datasource: &#64;mysql</p>
+</dd>
+</dl>
+</li>
+<li><p class="first"><strong>Parameters</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>matcher</strong>: A <a class="reference internal" href="index.html#matcher-syn"><em>EDBC Matcher syntax</em></a> that determines if the processor is called</li>
+<li><strong>overwrite</strong>: static overwrites in key1=value1;key2=value2;... format</li>
+<li><strong>acknowledge</strong>: Set to true if you want to acknowledge the event/group</li>
+<li><strong>target</strong>: group or event, defines if the modifier acts only on the event or the whole group</li>
+<li><strong>datasource</strong>: if target is group you must use define a datasource here</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Return codes</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>PASS</strong> : The matcher didn&#8217;t match the event</li>
+<li><strong>OK</strong>   : The event has been processed</li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+</div>
+</div>
+<div class="section" id="datasources-class-datasource">
+<span id="datasource-ref"></span><h3>Datasources <em>(class:datasource)</em><a class="headerlink" href="#datasources-class-datasource" title="Permalink to this headline">¶</a></h3>
+<p>Datasources are a subset of processors that can write or read to/from a persistent datasource.</p>
+<div class="section" id="mysql-datasource-type-mysql">
+<span id="mysql-datasource-ref"></span><h4>MySQL Datasource <em>(type:mysql)</em><a class="headerlink" href="#mysql-datasource-type-mysql" title="Permalink to this headline">¶</a></h4>
+<p>A connector writing to mysql using MySQLdb</p>
+<ol class="arabic">
+<li><p class="first"><strong>Example</strong>:</p>
+<div class="highlight-python"><pre>[mysql]
+class:          datasource
+type:           mysql
+host:           localhost
+port:           3306
+table:          event
+database:       eventdb
+user:           eventdb
+password:       eventdb</pre>
+</div>
+</li>
+<li><p class="first"><strong>Parameters</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>host</strong>: The host the database is located</li>
+<li><strong>port</strong>: The port of the database</li>
+<li><strong>table</strong> : The table of eventdb (it&#8217;s best to use event here)</li>
+<li><strong>database</strong>: The name of the database this source works onb</li>
+<li><strong>user</strong> : The user credential</li>
+<li><strong>password</strong> : The password of the db user</li>
+<li><strong>flush_interval</strong> : Interval in ms which is used to flush the internal db cache (100ms and don&#8217;t change it if you don&#8217;t need to) after changes</li>
+<li><strong>spool</strong>: A datasource to use for spooling when the db is down or errors occur (normally a <a class="reference internal" href="index.html#spool-datasource-ref"><em>Spool Datasource (type:spool)</em></a>)</li>
+<li><strong>poolsize</strong>: The size of the connection pool (10 connections per default)</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Return codes</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>OK</strong>: Insert succeeded</li>
+<li><strong>FAIL</strong>: Insert failed for some reason</li>
+<li><strong>SPOOL</strong>: No working connection available, written to spool datasource</li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+</div>
+<div class="section" id="spool-datasource-type-spool">
+<span id="spool-datasource-ref"></span><h4>Spool Datasource <em>(type:spool)</em><a class="headerlink" href="#spool-datasource-type-spool" title="Permalink to this headline">¶</a></h4>
+<p>A datasource that buffers queries when a connection is not available. Can write to file or reside queries in memory.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This datasource can only be used as the spool property of a datasource, not directly in chains</p>
+</div>
+<ol class="arabic">
+<li><p class="first"><strong>Example</strong>:</p>
+<div class="highlight-python"><pre>[spooler]
+class:  datasource
+type:   spool
+buffer_size: 100
+spool_dir: /tmp/spool.edbc</pre>
+</div>
+</li>
+<li><p class="first"><strong>Parameters</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>spool_filename</strong>: The file name to use for the spool file (not the path, default edbc.spool)</li>
+<li><strong>spool_dir</strong>: If given, the spool buffer will be flushed to a file when exceeding buffer_size. Also other datasources using spooling can read the spool file on startup</li>
+<li><strong>buffer_size</strong>: How many events should reside in memory when being spooled. If you don&#8217;t shutdown edbc correctly (like killing it without the -QUIT or -INT signal) these events will be lost. When no spool dir is given, the first events in the spool will be thrown away if more events than buffer size are written. Otherwise, the buffer is written to the spool file</li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<span id="document-event_format"></span><div class="section" id="eventdb-event">
+<span id="event-format"></span><h2>EventDB Event<a class="headerlink" href="#eventdb-event" title="Permalink to this headline">¶</a></h2>
+<p>Events in the eventdb have the following properties that will be persisted in the database and can be set by <a class="reference internal" href="index.html#transformer-ref"><em>Transformer (class: transformer)</em></a> or <a class="reference internal" href="index.html#processor-ref"><em>Processors (class:processor):</em></a>:</p>
+<ul class="simple">
+<li>message : The message displayed for standalone events</li>
+<li>host: The name of the host the event is associated with as a string</li>
+<li>host_address: The IP address of the event (IPv4 or IPv6)</li>
+<li>facility: The facility of the event as a number (see <a class="reference external" href="http://tools.ietf.org/html/rfc5424#section-6.2.1">RFC 5424</a>)</li>
+<li>priority: The priority of the event as a number</li>
+<li>program: The program that triggered the event</li>
+<li>type: The type of the event (default: syslog or snmp)</li>
+<li>ack: 0 if the event is not acknowledged, else 1</li>
+<li>created: The date of the events creation</li>
+<li>modified: The date of the last event modification (which is, for example, that a new event was added to an aggregation group)</li>
+</ul>
+</div>
+<span id="document-developing"></span><div class="section" id="developing-edbc">
+<h2>Developing EDBC<a class="headerlink" href="#developing-edbc" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="writing-processors">
+<h3>Writing processors<a class="headerlink" href="#writing-processors" title="Permalink to this headline">¶</a></h3>
+<p>Processors can be easily written and  added to edbc, here is a short guide:</p>
+<ol class="arabic">
+<li><p class="first">add a new processor file to the lib/processor package and give it the name %type%_processor.py (where type is the name of your processor). define a class called %type%Processor (where type starts with a capital letter). You can use the NullProcessor as an template here.</p>
+</li>
+<li><dl class="first docutils">
+<dt>Setup your clas:</dt>
+<dd><ul class="first last simple">
+<li>Define a setup(self,id,config={}) method. &#8216;id&#8217; will be the id defined in the component configuration (the one in the brackets) and config will be a dict of the key=value definitions that are set in the compontents configuration. You&#8217;re free to setup your processor here</li>
+<li>Define a process(self,event) method. This will be called with the event when the chain containing your custom processor is executed. You can do anything you want with the event.</li>
+<li>Add your file to the __init__.py of the processor package</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you&#8217;re writing a lot to the database, use the execute_after_flush method of the datasource.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html#document-index">Table Of Contents</a></h3>
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html#document-about">What is EDBC?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="index.html#basic-concept">Basic concept</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="index.html#document-installation">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="index.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#installing-the-executables">Installing the executables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#setting-up-the-database">Setting up the database</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="index.html#document-overview">Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="index.html#file-layout">File layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#configuration-files">Configuration files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="index.html#document-configuration">Configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="index.html#basic-configuration-syntax">Basic configuration syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#step-by-step-1-the-most-minimal-setup">Step by step: 1. The most minimal setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#step-by-step-2-adding-aggregators">Step by step: 2. Adding aggregators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#step-by-step-3-conditional-processing-autoacknowledge-events">Step by step: 3. Conditional processing - Autoacknowledge events</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="index.html#document-matcher">EDBC Matcher syntax</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="index.html#syntax-definition">Syntax definition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#examples">Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#pitfalls">Pitfalls</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="index.html#document-component_reference">Component Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="index.html#transformer-class-transformer">Transformer <em>(class: transformer)</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#receptors-class-receptor">Receptors <em>(class:receptor)</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#processors-class-processor">Processors <em>(class:processor)</em>:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#datasources-class-datasource">Datasources <em>(class:datasource)</em></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="index.html#document-event_format">EventDB Event</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html#document-developing">Developing EDBC</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="index.html#writing-processors">Writing processors</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li><a href="index.html#document-index">EventDB Correlator 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Jannis Mosshammer.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

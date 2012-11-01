@@ -6,7 +6,5 @@ class SqlPersister(object):
         self.datasource = config["datasource"]
        
             
-    def process(self,event):
-        logging.debug("Inserting %s" % event)
-        return self.datasource.insert(event)
+    
     

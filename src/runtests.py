@@ -6,18 +6,19 @@ import unittest
 import logging
 
 UNITTESTS = [
-    InstanceFactoryTest,
-    PipeReceptorTestCase,
-    SNMPReceptorTest,
-    SNMPTransformerTest,
-    RSyslogTransformerTestCase,
-    IPAddressTestCase,
-    MatcherTestCase,
-    MysqlDatasourceTest,
-    SpoolDatasourceTest,
-    ChainTestCase,
-    AggregatorTestCase,
-    CommandProcessorTest
+   InstanceFactoryTest,
+   PipeReceptorTestCase,
+   SNMPReceptorTest,
+   SNMPTransformerTest,
+   RSyslogTransformerTestCase,
+   IPAddressTestCase,
+   MatcherTestCase,
+   MysqlDatasourceTest,
+   SpoolDatasourceTest,
+   ChainTestCase,
+   AggregatorTestCase,
+   CommandProcessorTest,
+   ModifierProcessorTest
 ]
 
 

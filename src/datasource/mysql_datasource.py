@@ -466,4 +466,5 @@ class MysqlDatasource(object):
             conn = self.get_new_connection()
         self.connections.put(conn)
 
-
+    def process(self,event):
+        return self.insert(event)

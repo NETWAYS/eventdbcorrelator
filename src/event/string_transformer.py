@@ -9,7 +9,7 @@ class StringTransformer(object):
     def setup(self,id,config):
         self.id = id
         self.format = re.compile(config["format"])
-        if "defaultMessage" in config:
+        if "defaultmessage" in config:
             self.defaultMessage = config["defaultMessage"]
         else:
             self.defaultMessage = "No message given"
@@ -20,7 +20,8 @@ class StringTransformer(object):
             for keyval in fixed:
                 keyval = keyval.split("=")
                 self.fixed[keyval[0].lower()] = keyval[1]
-        self.dateFormat = "%b %d %H:%M:%S"
+        
+	self.dateFormat = "%b %d %H:%M:%S"
     
     def set_current_year(self,st):
         now = time.localtime()

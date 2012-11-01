@@ -12,9 +12,9 @@ class SnmpReceptor(PipeReceptor):
             "mod": 0774,
             "owner": os.getuid(),
             "group": os.getgid(),
-            "handler" : "/usr/local/edbc/bin/edbc_traphandler",
-            "path" : "/usr/local/edbc/bin/edbc_traphandler.pipe",
-            "handler_tpl" : "/usr/local/edbc/share/snmp_handler_template",
+            "handler" : "/usr/local/var/edbc_traphandler",
+            "path" : "/usr/local/var/edbc_traphandler.pipe",
+            "handler_tpl" : "/usr/local/edbc/libexec/snmp_handler_template",
             "bufferSize" : 2048,
             "format" : None
         }
