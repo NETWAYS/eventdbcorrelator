@@ -11,4 +11,5 @@ Makefile
 etc/edbc.cfg
 etc/conf.d/database.cfg
 src/config/config.py
+src/receptors/snmp_receptor.py
 bin/edbc.py

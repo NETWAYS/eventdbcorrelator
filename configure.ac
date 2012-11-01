@@ -84,6 +84,7 @@ AC_CONFIG_FILES([
     Makefile
     src/Makefile
     src/config/config.py
+    src/receptors/snmp_receptor.py
     etc/conf.d/database.cfg
     etc/edbc.cfg
     bin/edbc

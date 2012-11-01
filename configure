@@ -1477,7 +1477,7 @@ else
 fi;
 
 
-                                                            ac_config_files="$ac_config_files Makefile src/Makefile src/config/config.py etc/conf.d/database.cfg etc/edbc.cfg bin/edbc"
+                                                                      ac_config_files="$ac_config_files Makefile src/Makefile src/config/config.py src/receptors/snmp_receptor.py etc/conf.d/database.cfg etc/edbc.cfg bin/edbc"
 
 
 cat >confcache <<\_ACEOF
@@ -2034,6 +2034,7 @@ do
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "src/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
   "src/config/config.py" ) CONFIG_FILES="$CONFIG_FILES src/config/config.py" ;;
+  "src/receptors/snmp_receptor.py" ) CONFIG_FILES="$CONFIG_FILES src/receptors/snmp_receptor.py" ;;
   "etc/conf.d/database.cfg" ) CONFIG_FILES="$CONFIG_FILES etc/conf.d/database.cfg" ;;
   "etc/edbc.cfg" ) CONFIG_FILES="$CONFIG_FILES etc/edbc.cfg" ;;
   "bin/edbc" ) CONFIG_FILES="$CONFIG_FILES bin/edbc" ;;
