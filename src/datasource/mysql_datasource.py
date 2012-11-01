@@ -346,7 +346,11 @@ class MysqlDatasource(object):
             self.flush()
         finally:
             self.release_connection(conn)
-    
+
+    def acknowledge_group(self,groupId,leader):
+        query = "UPDATE "+self.table+" SET ack = 1 WHERE (group_id = %s AND group_leader = %s) OR id=%s ";
+        self.execute_after_flush(query,(groupId,leader,leader)) 
+
     def close(self,noFlush=False):
         try:
             conn = self.acquire_connection()

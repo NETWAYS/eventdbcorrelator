@@ -21,7 +21,7 @@ class AggregationProcessor(object):
     def setup(self,id,config = {}):
         self.id = id
         self.config = {
-            "maxdelay": 3600*24,             # DEFAULT: Break aggregation when 
+            "maxdelay": 3600*24,         # DEFAULT: Break aggregation when 
                                          # 10 minutes have passed without matching event
             "maxCount": -1,              # DEFAULT: No limit in how many events can be aggregated
             "datasource": None,
@@ -34,6 +34,12 @@ class AggregationProcessor(object):
         self.validate()
         self.lock = threading.Lock()
         self.datasource = self.config["datasource"]
+
+        if "acknowledge_on_clear" in self.config:
+            self.auto_acknowledge = True
+        else:
+            self.auto_acknowledge = False
+
         self.create_matcher()
     
     
@@ -51,7 +57,11 @@ class AggregationProcessor(object):
             matchgroups = self.matcher.get_match_groups()
         finally:
             self.lock.release()
-        
+
+
+        if self.autoclear:
+            event["group_autoclear"] = 1
+
         self.set_aggregation_group_id(event,matchgroups)
         (group,lastmod) =  self.datasource.get_group_leader(event["group_id"])
 
@@ -60,13 +70,14 @@ class AggregationProcessor(object):
             self.datasource.deactivate_group(event["group_id"])
             group = None
 
-        
         if self.clear_matcher.matches(event):
             group_id = event["group_id"]
             event["clear_group_leader"] = group
             event["clear_group_id"] = group_id
             event["group_id"] = None
             self.datasource.deactivate_group(group_id)
+            self.datasource.acknowledge_group(group_id,group)
+            event["ack"] = 1
             group = None
             return "CLEAR"
 
@@ -98,14 +109,17 @@ class AggregationProcessor(object):
             self.matcher = matcher.Matcher(self.config["matcher"])
         else:
             self.matcher = matcher.TrueMatcher()
+        
         self.use_fields_for_id = []
         if "matcherfield" in self.config:
             self.use_fields_for_id = self.config["matcherfield"].split(",")
         
         if "clear" in self.config:
             self.clear_matcher = matcher.Matcher(self.config["clear"])
+            self.autoclear = self.auto_acknowledge
         else:
             self.clear_matcher = matcher.FalseMatcher()
+            self.autoclear = False
         
  
     

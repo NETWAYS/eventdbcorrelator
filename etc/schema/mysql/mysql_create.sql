@@ -16,6 +16,7 @@ CREATE TABLE event (
   `group_id`            binary(16) default NULL, 
   `group_count`         int(16) default NULL, 
   `group_leader`        bigint(20) default NULL,
+  `group_autoclear`     tinyint(1) default '0',
   `flags`               int(11) default '0',
   
   PRIMARY KEY (`id`),

@@ -119,6 +119,7 @@ class AggregatorMysqlTest(unittest.TestCase):
             
             assert aggregator.process(event1) == "NEW" 
             self.source.insert(event1)
+            assert event1["group_autoclear"] == None
             assert aggregator.process(event2) == "AGGR"
             self.source.insert(event2)
 
@@ -167,7 +168,9 @@ class AggregatorMysqlTest(unittest.TestCase):
             event3 = Event(message="clear 1234", additional=cfg)
             event4 = Event(message="test 1234", additional=cfg)
             
+            assert aggregator.autoclear == False
             assert aggregator.process(event1) == "NEW" 
+            assert event1["group_autoclear"] == None
             self.source.insert(event1)
             assert aggregator.process(event2) == "AGGR"
             self.source.insert(event2)
@@ -204,7 +207,72 @@ class AggregatorMysqlTest(unittest.TestCase):
             self.source.test_teardown_db()
             self.source.close(True)
             
+    def test_aggregation_with_autoack(self):
+        try:
+            self.source.test_setup_db() 
+            self.source.flush_interval = 1000 
+            aggregator = AggregationProcessor()
 
+            aggregator.setup("test",{
+                "matcherfield": ".* 1234",
+                "datasource"  : self.source,
+                "clear"       : "message STARTS WITH 'clear'", 
+                "acknowledge_on_clear" : True
+            })
+            cfg = {
+                "program"       : "testcase",
+                "host_name"     : "localhost",
+                "host_address"  : ip_address.IPAddress("127.0.0.1"),
+                "source"        : 'snmp',
+                "facility"      : 5,
+                "priority"      : 0,
+                "ack"           : 0
+            }
+            
+            event1 = Event(message="test 1234", additional=cfg)
+            event2 = Event(message="test 1234", additional=cfg)
+            event3 = Event(message="clear 1234", additional=cfg)
+            event4 = Event(message="test 1234", additional=cfg)
+            
+            assert aggregator.autoclear == True
+            assert aggregator.process(event1) == "NEW" 
+            assert event1["group_autoclear"] == 1
+            self.source.insert(event1)
+            assert aggregator.process(event2) == "AGGR"
+            self.source.insert(event2)
+            self.source.insert(event2)
+            self.source.insert(event2)
+            self.source.insert(event2)
+            self.source.insert(event2)
+            self.source.insert(event2)
+            self.source.insert(event2)
+            self.source.insert(event2)
+            self.source.insert(event2)
+            
+            assert aggregator.process(event3) == "CLEAR" 
+            assert event3["ack"] == True
+            self.source.insert(event3)
+    
+            assert aggregator.process(event4) == "NEW"
+            self.source.insert(event4)
+            
+            assert event1.group_leader == -1
+            assert event2.group_leader == event1["id"]
+            assert event3.group_leader == None
+            assert event4.group_leader == -1
+             
+            time.sleep(1.5)    
+            dbResult = self.source.execute("SELECT COUNT(id) FROM %s WHERE (group_leader = %s OR id = %s) AND ack=1" % (self.source.table,event1["id"],event1["id"]))
+            assert dbResult != None
+
+            # Assert 10 items returned
+            assert dbResult[0][0] == 10
+            
+
+        finally:
+            self.source.test_teardown_db()
+            self.source.close(True)
+            
     def test_aggregation_group_performance(self):
         try: 
             self.source.test_setup_db()
@@ -245,6 +313,4 @@ class AggregatorMysqlTest(unittest.TestCase):
         finally:
             self.source.test_teardown_db()
             self.source.close(True)
-
-
 	
