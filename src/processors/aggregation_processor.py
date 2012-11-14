@@ -61,7 +61,9 @@ class AggregationProcessor(object):
 
         if self.autoclear:
             event["group_autoclear"] = 1
-
+        else:
+            event["group_autoclear"] = 0
+            
         self.set_aggregation_group_id(event,matchgroups)
         (group,lastmod) =  self.datasource.get_group_leader(event["group_id"])
 
@@ -99,7 +101,7 @@ class AggregationProcessor(object):
         if USE_DEPRECATED_MD5:
             h = md5()
         else:
-            h = md5.new()
+            h = md5()
         h.update(string)
         return h.digest()
     
