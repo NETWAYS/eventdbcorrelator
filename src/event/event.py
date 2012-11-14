@@ -21,13 +21,14 @@ class Event(object):
         self.message = message
         self.alternative_message = message
         self.data["created"] = date
+        self.data["ack"] = 0
         self.active = True
         self.group_id = None
         self.group_leader = None
         for val in additional: 
-            self.data[val.lower()] = additional[val];
+            self.__setitem__(val.lower(),additional[val]);
     
-    def __setitem__(self,name,value):#
+    def __setitem__(self,name,value):
         name = name.lower()
         if name == "message":
             self.message = value
@@ -100,6 +101,7 @@ class Event(object):
                 self["host_address"] = IPAddress(data[i],binary=True)
             else:
                 self[keys[i]] = data[i]
+                
     def free(self):
         del self.data
         

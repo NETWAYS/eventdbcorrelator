@@ -18,10 +18,8 @@ EventDB Correlator
    event_format
    developing
 
-
-Indices and tables
-==================
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+.. Indices and tables
+   ==================
+   * :ref:`genindex`
+   * :ref:`modindex`
+   * :ref:`search`

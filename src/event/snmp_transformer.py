@@ -154,7 +154,9 @@ class SnmpTransformer(object):
                 continue
             if line.startswith("FORMAT"):
                 self.parse_format_line(line,mib)
-            #ignore rest
+            if line.startswith("REGEXP"):
+                self.parse_regexp_expression(line,mib)
+            
         return mib
     
     
@@ -220,7 +222,12 @@ class SnmpTransformer(object):
             mibformat = mibformat.replace("$v%i" % i,variables[i-1][0])
         
         return mibformat
-        
+   
+    def parse_regexp_expression(self,regexp):
+        #groups = regexp.match(" *REGEX *\((?P<SEARCH>.*)\)\((?P<REPLACE>.*)\) *")
+        pass
+	 	
+ 
     def get_mib_for(self,oid):
         for mib in self.registered_mibs:
             if re.match("^%s$" % mib["oid"],oid):

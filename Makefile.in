@@ -11,6 +11,9 @@ install: installdirs
 	$(INSTALL) -m 644 $(INSTALL_OPTS) ./share/snmp_handler_template $(prefix)/libexec/snmp_handler_template
 	$(INSTALL) -m 755 $(INSTALL_OPTS) ./bin/edbc $(prefix)/bin/edbc
 	make install-base-config
+
+update: 
+	cd ./src && make install; 	
  
 installdirs: 
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)
@@ -20,6 +23,7 @@ installdirs:
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/etc
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/libexec
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/etc/chains
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/etc/rules
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/etc/conf.d
 
 install-base-config:

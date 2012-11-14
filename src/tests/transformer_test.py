@@ -4,7 +4,7 @@ import unittest
 import time
 import logging
 from event import IPAddress
-from event import SnmpTransformer,StringTransformer
+from event import SnmpTransformer,StringTransformer,SplitTransformer
 
 
 class RSyslogTransformerTestCase(unittest.TestCase):
@@ -119,4 +119,40 @@ class SNMPTransformerTest(unittest.TestCase):
 
         assert event["message"] == "Argument 1"
         
+    
+
+class SplitTransformerTest(unittest.TestCase):
+
+    def test_implicit_tabulator_split(self):
+        transformer = SplitTransformer()
+        transformer.setup("test",{
+            "dateformat" : "%Y-%m-%d %H:%M:%S",
+            "group_order" : "HOST_NAME HOST_ADDRESS PRIORITY FACILITY TIME DATE MESSAGE"  
+        })
+        teststring = "test_host\t42.2.53.52\t5\t4\t11:00:24\t2012-12-10\tTestmessage"
+        event = transformer.transform(teststring)
+        assert event != None
+        assert event["host_name"] == "test_host"
+        assert event["host_address"] == IPAddress("42.2.53.52")
+        assert event["priority"] == "5"
+        assert event["facility"] == "4"
+        assert event["message"] == "Testmessage"
         
+   
+    def test_explicit_edlimiter_specification(self):
+        transformer = SplitTransformer()
+        transformer.setup("test",{
+            "dateformat" : "%Y-%m-%d %H:%M:%S",
+            "delimiter" : "\.-\.",
+            "group_order" : "HOST_NAME HOST_ADDRESS PRIORITY FACILITY TIME DATE MESSAGE"  
+        })
+        teststring = "test_host.-.42.2.53.52.-.5.-.4.-.11:00:24.-.2012-12-10.-.Testmessage"
+        event = transformer.transform(teststring)
+        assert event != None
+        assert event["host_name"] == "test_host"
+        assert event["host_address"] == IPAddress("42.2.53.52")
+        assert event["priority"] == "5"
+        assert event["facility"] == "4"
+        assert event["message"] == "Testmessage"
+        
+    

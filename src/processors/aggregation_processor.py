@@ -77,7 +77,8 @@ class AggregationProcessor(object):
             event["group_id"] = None
             self.datasource.deactivate_group(group_id)
             self.datasource.acknowledge_group(group_id,group)
-            event["ack"] = 1
+            if self.auto_acknowledge:
+                event["ack"] = 1
             group = None
             return "CLEAR"
 

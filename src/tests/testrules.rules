@@ -1,0 +1,8 @@
+
+[aggr1]
+match: ^(?P<HOST>[^:]*):(?P<MESSAGE>.*)
+clear: CLEAR (?P<HOST>[^:]*):(?P<MESSAGE>.*)
+
+[aggr2]
+match: ^test 2 (?P<HOST>[^:]*):(?P<MESSAGE>.*)
+clear: test 2 CLEAR (?P<HOST>[^:]*):(?P<MESSAGE>.*)

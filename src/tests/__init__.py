@@ -8,5 +8,6 @@ from spool_datasource_test import *
 from mysql_datasource_test import *
 from chain_test import *
 from aggregator_test import *
+from multiaggregator_test import *
 from modifier_processor_test import *
 from command_processor_test import *

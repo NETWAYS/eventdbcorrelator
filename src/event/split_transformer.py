@@ -3,12 +3,13 @@ import re
 import logging
 import os
 import time
-from event import *
+from event import Event
 
-class StringTransformer(object):
+class SplitTransformer(object):
+
     def setup(self,id,config):
         self.id = id
-        self.format = re.compile(config["format"])
+        
         if "defaultmessage" in config:
             self.defaultMessage = config["defaultMessage"]
         else:
@@ -20,27 +21,44 @@ class StringTransformer(object):
             for keyval in fixed:
                 keyval = keyval.split("=")
                 self.fixed[keyval[0].lower()] = keyval[1]
+        
         if "dateformat" in config:
             self.dateFormat = config["dateformat"]
         else:
             self.dateFormat = "%b %d %H:%M:%S"
+
+        if "delimiter" in config:
+            self.delimiter = config["delimiter"]
+        else:
+            self.delimiter = "\t"
+        self.group_order = config["group_order"].split(" ")
+        self.nr_of_groups = len(self.group_order)
+
     
     def set_current_year(self,st):
         now = time.localtime()
         return (now[0],st[1],st[2],st[3],st[4],st[5],st[6],st[7],st[8])
-    
+ 
     def transform(self,string):
         try:
-            matches =  self.format.match(string)
-            if matches == None:
-                return None
+            dict = {} 
 
-            matchdict = matches.groupdict()
-            return self.dict_to_event(matchdict) 
+            stringtokens = re.split(self.delimiter,string)
+            nr_of_tokens = len(stringtokens)
+            tokenrange = range(0,nr_of_tokens)
+
+            if nr_of_tokens != self.nr_of_groups:
+                logging.warn("Event has %i properties, expected %i (raw event : %s)" %(nr_of_tokens,self.nr_of_groups,string))
+                if self.nr_of_groups < nr_of_tokens:
+                    tokenrange = range(0,self.nr_of_groups) # prevent overflow
+
+            for pos in tokenrange:
+                dict[self.group_order[pos]] = stringtokens[pos]
+
+            return self.dict_to_event(dict)
         except Exception, e:
-            logging.warn(e)
-    
-       
+            logging.error("Couldn't transform %s to an event : %s" % (string, e))
+            return None
  
     def dict_to_event(self,matchdict = {}):
         for i in self.fixed:

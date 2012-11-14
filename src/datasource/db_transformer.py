@@ -6,7 +6,8 @@ class DBTransformer(object):
             return self.transform_snmp(event)
         if event["source"] == "syslog":
             return self.transform_syslog(event)
-        
+        if event["type"]:
+            return self.transform_syslog(event,event["type"])
     
     def transform_snmp(self,event):
         return {
@@ -14,7 +15,7 @@ class DBTransformer(object):
             "host_address" : event["host_address"].bytes,
             "type" : 1,
             "facility" : 1,
-            "priority" : 1,
+            "priority" : event["priority"],
             "program" : event["program"],
             "message" : event["message"],
             "ack"     : event["ack"],
@@ -22,16 +23,16 @@ class DBTransformer(object):
             "modified": event["modified"]
         }
 
-    def transform_syslog(self,event):
+    def transform_syslog(self,event,nr=0):
         return {
             "host_name" : event["host_name"],
             "host_address" : event["host_address"].bytes,
-            "type" : 0,
+            "type" : nr,
             "facility" : event["facility"],
             "priority" : event["priority"],
             "program" : event["program"],
             "message" : event["message"],
-            "ack"     : event["acked"],
+            "ack"     : event["ack"],
             "created" : event["created"],
             "modified": event["modified"]
         }

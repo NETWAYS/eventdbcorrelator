@@ -11,12 +11,14 @@ UNITTESTS = [
    SNMPReceptorTest,
    SNMPTransformerTest,
    RSyslogTransformerTestCase,
+   SplitTransformerTest,
    IPAddressTestCase,
    MatcherTestCase,
    MysqlDatasourceTest,
    SpoolDatasourceTest,
    ChainTestCase,
    AggregatorTestCase,
+   MultiAggregatorTest,
    CommandProcessorTest,
    ModifierProcessorTest
 ]

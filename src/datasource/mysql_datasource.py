@@ -81,8 +81,8 @@ class MysqlGroupCache(object):
         
 
     def flush_to_db(self,conn,table):
+        cursor = conn.cursor()
         try:
-            cursor = conn.cursor()
             self.lock.acquire()
             self.flush_deprecated_to_db(cursor,table)  
 
@@ -96,9 +96,10 @@ class MysqlGroupCache(object):
                 if not group["group_active"]:
                     self.clear(groupId)
         finally:
-            self.lock.release()
-            cursor.close()
             conn.commit()
+            cursor.close()
+            self.lock.release()
+            
         
 class MysqlDatasource(object):
     
@@ -135,8 +136,9 @@ class MysqlDatasource(object):
         
         if "poolsize" in config:
             self.poolsize = config["poolsize"]
-        else:
-            self.poolsize = 10
+        #else:
+        #TODO: Pooling causes deadlocks at this time, so always ignore it
+        self.poolsize = 1
             
         if "table" in config:
             self.table = config["table"]
@@ -368,7 +370,6 @@ class MysqlDatasource(object):
         if not self.spool:
             return
         
-        
         try:
             ctr = 0
             cursor = self.cursor_class(c)
@@ -428,7 +429,7 @@ class MysqlDatasource(object):
             if self.spool:
                 return self.spool
             else:
-                raise 
+                return self.acquire_connection(noSpool)
 
     def flush_exec_queue(self,conn):
         try:
@@ -442,8 +443,8 @@ class MysqlDatasource(object):
             self.flushlock.release()
 
     def _flush(self):
+        conn = self.acquire_connection()
         try: 
-            conn = self.acquire_connection()
             self.group_cache.flush_to_db(conn,self.table)
             self.flush_exec_queue(conn)
         finally:
