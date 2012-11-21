@@ -12,7 +12,7 @@ class RSyslogTransformerTestCase(unittest.TestCase):
     def setUp(self):
         self.FORMAT = "^(?P<DATE>[a-zA-Z]{2,3} \d\d \d\d:\d\d:\d\d) (?P<HOST>[^ ]+)( (?P<PROGRAM>[^:]+):)? (?P<MESSAGE>.*)$"
         self.LOG_MESSAGES = "./tests/logtest.syslog"
-        self.MAX_TIME_PER_EVENT = 0.0001 # Hard limit on how long an incoming event should take on average
+        self.MAX_TIME_PER_EVENT = 0.001 # Hard limit on how long an incoming event should take on average
         self.rsyslog = [
             ("Sep 21 12:40:02 localhost syslogd 1.4.1: restart.",{
                 "CREATED" : 1348224002,
