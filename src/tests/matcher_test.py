@@ -160,30 +160,30 @@ class MatcherTestCase(unittest.TestCase):
         
         curMatcher = Matcher("message REGEXP '(?P<INTERFACE>eth[1-9]) on (?P<HOST>\w+ is down)' OR (host IS 'localhost' AND facility < 5) ")
         assert curMatcher.matches(testEvent) == True        
-  
-    def test_performance(self):
-
-        curMatcher = Matcher("message REGEXP '(?P<INTERFACE>eth\d+) on (?P<HOST>\w+ is down)' OR (host IS 'localhost' AND facility > 5) AND (address IN NETWORK '192.168.170.0/26' OR address IN IP RANGE '192.168.100.0-192.168.120.255')")
-        EVENT_HARDLIMIT_PER_EVENT=0.003
-        COUNT = 20000
-        
-        import random
-        events = []
-        for i in range(0,COUNT):
-            events.append(Event("[LINK DOWN] et.",time.ctime(),{
-                "severity" : random.randint(0,10),
-                "address" : "192.168.%i.%i" % (random.randint(0,255),random.randint(0,255)),
-                "facility" : random.randint(0,10),
-                "host" : ["localhost","sv-mail","sv-app","ts-1","ts-2"][random.randint(0,4)],
-                "program" : ["NetworkManager","watchdog","kernel","syslog"][random.randint(0,3)]
-            }))
-    
-        now = time.time()
-        for event in events:
-            curMatcher.matches(event)
-        duration = time.time() - now
-        try:
-            assert duration/COUNT <= EVENT_HARDLIMIT_PER_EVENT
-        except AssertionError, e:
-            logging.debug("Performance test failed, request took %f seconds, limit was %f " % (duration/COUNT,EVENT_HARDLIMIT_PER_EVENT))
-            raise e
+#  
+#    def test_performance(self):
+#
+#        curMatcher = Matcher("message REGEXP '(?P<INTERFACE>eth\d+) on (?P<HOST>\w+ is down)' OR (host IS 'localhost' AND facility > 5) AND (address IN NETWORK '192.168.170.0/26' OR address IN IP RANGE '192.168.100.0-192.168.120.255')")
+#        EVENT_HARDLIMIT_PER_EVENT=0.003
+#        COUNT = 20000
+#        
+#        import random
+#        events = []
+#        for i in range(0,COUNT):
+#            events.append(Event("[LINK DOWN] et.",time.ctime(),{
+#                "severity" : random.randint(0,10),
+#                "address" : "192.168.%i.%i" % (random.randint(0,255),random.randint(0,255)),
+#                "facility" : random.randint(0,10),
+#                "host" : ["localhost","sv-mail","sv-app","ts-1","ts-2"][random.randint(0,4)],
+#                "program" : ["NetworkManager","watchdog","kernel","syslog"][random.randint(0,3)]
+#            }))
+#    
+#        now = time.time()
+#        for event in events:
+#            curMatcher.matches(event)
+#        duration = time.time() - now
+#        try:
+#            assert duration/COUNT <= EVENT_HARDLIMIT_PER_EVENT
+#        except AssertionError, e:
+#            logging.debug("Performance test failed, request took %f seconds, limit was %f " % (duration/COUNT,EVENT_HARDLIMIT_PER_EVENT))
+#            raise e

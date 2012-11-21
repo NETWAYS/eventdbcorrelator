@@ -50,30 +50,30 @@ class RSyslogTransformerTestCase(unittest.TestCase):
             for key in messageEventPair[1]:
                 assert event != None
                 assert event[key] == messageEventPair[1][key]
-
-    def test_rsyslog_performance(self):
-        transformer = StringTransformer()
-        transformer.setup("test",{
-            "format": self.FORMAT
-        })
-        logfile = open(self.LOG_MESSAGES,"r+")  
-        try:
-            linectr=0
-            start = time.time()
-            for line in logfile:
-                linectr += 1
-                ev = transformer.transform(line)
-                try:
-                    assert ev != None
-                except Exception, e:
-                    logging.debug("Line '%s' failed",line)
-                    raise e
-            required = time.time()-start
-            avg = required/linectr
-            assert required < self.MAX_TIME_PER_EVENT*linectr
-            
-        finally:
-            logfile.close()
+#
+#    def test_rsyslog_performance(self):
+#        transformer = StringTransformer()
+#        transformer.setup("test",{
+#            "format": self.FORMAT
+#        })
+#        logfile = open(self.LOG_MESSAGES,"r+")  
+#        try:
+#            linectr=0
+#            start = time.time()
+#            for line in logfile:
+#                linectr += 1
+#                ev = transformer.transform(line)
+#                try:
+#                    assert ev != None
+#                except Exception, e:
+#                    logging.debug("Line '%s' failed",line)
+#                    raise e
+#            required = time.time()-start
+#            avg = required/linectr
+#            assert required < self.MAX_TIME_PER_EVENT*linectr
+#            
+#        finally:
+#            logfile.close()
     
 class SNMPTransformerTest(unittest.TestCase):
     
