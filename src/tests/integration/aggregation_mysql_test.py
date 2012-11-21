@@ -119,7 +119,7 @@ class AggregatorMysqlTest(unittest.TestCase):
             
             assert aggregator.process(event1) == "NEW" 
             self.source.insert(event1)
-            assert event1["group_autoclear"] == None
+            assert event1["group_autoclear"] == 0
             assert aggregator.process(event2) == "AGGR"
             self.source.insert(event2)
 
@@ -170,7 +170,7 @@ class AggregatorMysqlTest(unittest.TestCase):
             
             assert aggregator.autoclear == False
             assert aggregator.process(event1) == "NEW" 
-            assert event1["group_autoclear"] == None
+            assert event1["group_autoclear"] == 0
             self.source.insert(event1)
             assert aggregator.process(event2) == "AGGR"
             self.source.insert(event2)
