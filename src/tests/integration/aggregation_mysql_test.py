@@ -272,45 +272,45 @@ class AggregatorMysqlTest(unittest.TestCase):
         finally:
             self.source.test_teardown_db()
             self.source.close(True)
-            
-    def test_aggregation_group_performance(self):
-        try: 
-            self.source.test_setup_db()
-            aggregator = AggregationProcessor()
-
-            aggregator.setup("test",{
-                "matcherfield": "test .*",
-                "datasource"  : self.source,
-                "clear"       : "message STARTS WITH 'clear'" 
-            })
-            eventThreads = []
-            NR_OF_THREADS=10
-            NR_OF_EVENTS=200
-            for i in range(0,NR_OF_THREADS):
-                thread = TestAggregationInsertionThread()
-                thread.setup(aggregator,NR_OF_EVENTS,{
-                    "program"       : "testcase",
-                    "host_name"     : "localhost",
-                    "host_address"  : ip_address.IPAddress("127.0.0.1"),
-                    "source"        : 'snmp',
-                    "facility"      : 5,
-                    "priority"      : 0,
-                    "ack"           : 0
-                },self.source)
-                eventThreads.append(thread)
-
-            start = time.time()
-
-            for i in eventThreads:
-                i.start()
-
-            for i in eventThreads:
-                i.join()
-
-            end = time.time()
-            assert (end-start)/(NR_OF_THREADS*NR_OF_EVENTS) <= MAX_TIME_PER_EVENT
-            
-        finally:
-            self.source.test_teardown_db()
-            self.source.close(True)
-	
+#            
+#    def test_aggregation_group_performance(self):
+#        try: 
+#            self.source.test_setup_db()
+#            aggregator = AggregationProcessor()
+#
+#            aggregator.setup("test",{
+#                "matcherfield": "test .*",
+#                "datasource"  : self.source,
+#                "clear"       : "message STARTS WITH 'clear'" 
+#            })
+#            eventThreads = []
+#            NR_OF_THREADS=10
+#            NR_OF_EVENTS=200
+#            for i in range(0,NR_OF_THREADS):
+#                thread = TestAggregationInsertionThread()
+#                thread.setup(aggregator,NR_OF_EVENTS,{
+#                    "program"       : "testcase",
+#                    "host_name"     : "localhost",
+#                    "host_address"  : ip_address.IPAddress("127.0.0.1"),
+#                    "source"        : 'snmp',
+#                    "facility"      : 5,
+#                    "priority"      : 0,
+#                    "ack"           : 0
+#                },self.source)
+#                eventThreads.append(thread)
+#
+#            start = time.time()
+#
+#            for i in eventThreads:
+#                i.start()
+#
+#            for i in eventThreads:
+#                i.join()
+#
+#            end = time.time()
+#            assert (end-start)/(NR_OF_THREADS*NR_OF_EVENTS) <= MAX_TIME_PER_EVENT
+#            
+#        finally:
+#            self.source.test_teardown_db()
+#            self.source.close(True)
+#	
