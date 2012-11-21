@@ -21,6 +21,7 @@ class DBTransformer(object):
             "ack"     : event["ack"],
             "created" : event["created"],
             "modified": event["modified"]
+            
         }
 
     def transform_syslog(self,event,nr=0):

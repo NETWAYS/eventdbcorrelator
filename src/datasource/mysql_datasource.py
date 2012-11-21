@@ -76,7 +76,7 @@ class MysqlGroupCache(object):
     def flush_deprecated_to_db(self,cursor,table):
         for group in self.deprecated_groups:
             group["modified_ts"] = time.mktime(group["modified"])
-            cursor.execute("UPDATE "+table+" SET group_active=%(group_active)s, modified=FROM_UNIXTIME(%(modified_ts)s), group_count=%(group_count)s WHERE id=%(group_leader)s OR group_leader=%(group_leader)s",group)
+            cursor.execute("UPDATE "+table+" SET group_active=%(group_active)s, group_autoclear=%(group_autoclear)s, modified=FROM_UNIXTIME(%(modified_ts)s), group_count=%(group_count)s WHERE id=%(group_leader)s OR group_leader=%(group_leader)s",group)
         self.deprecated_groups = [] 
         
 
@@ -91,7 +91,7 @@ class MysqlGroupCache(object):
                 if not group["dirty"]:
                     continue
                 group["modified_ts"] = time.mktime(group["modified"])
-                cursor.execute("UPDATE "+table+" SET group_active=%(group_active)s, modified=FROM_UNIXTIME(%(modified_ts)s), group_count=%(group_count)s WHERE id=%(group_leader)s",group)
+                cursor.execute("UPDATE "+table+" SET group_active=%(group_active)s, group_autoclear=%(group_autoclear)s, modified=FROM_UNIXTIME(%(modified_ts)s), group_count=%(group_count)s WHERE id=%(group_leader)s",group)
                 group["dirty"] = False
                 if not group["group_active"]:
                     self.clear(groupId)
@@ -178,7 +178,7 @@ class MysqlDatasource(object):
         
     def fetch_active_groups(self):
         self.group_cache = MysqlGroupCache()
-        groups = self.execute("SELECT group_active,id,group_id,group_count,modified FROM "+self.table+"  WHERE group_count AND group_active = 1 AND group_leader = -1");
+        groups = self.execute("SELECT group_active,id,group_id,group_count,modified,group_autoclear FROM "+self.table+"  WHERE group_count AND group_active = 1 AND group_leader = -1");
 
         for group in groups:
                 
@@ -187,7 +187,8 @@ class MysqlDatasource(object):
                 "group_leader" : group[1],
                 "group_id" : group[2],
                 "group_count" : int(group[3]),
-                "modified": group[4].timetuple()
+                "modified": group[4].timetuple(),
+                "group_autoclear" : group[5]
             }
             self.group_cache.add(groupDesc)
         
@@ -225,7 +226,7 @@ class MysqlDatasource(object):
             try: # Python 2.4 doesn't allow try: except: finally: together
                 cursor = self.cursor_class(conn)
 
-                query = "INSERT INTO "+self.table+" (id, host_name,host_address,type,facility,priority,program,message,alternative_message,ack,created,modified,group_active,group_id,group_leader) VALUES (%(id)s,%(host_name)s,%(host_address)s,%(type)s,%(facility)s,%(priority)s,%(program)s,%(message)s,%(alternative_message)s,%(ack)s,NOW(),NOW(),%(group_active)s,%(group_id)s,%(group_leader)s);"
+                query = "INSERT INTO "+self.table+" (id, host_name,host_address,type,facility,priority,program,message,alternative_message,ack,created,modified,group_active,group_id,group_autoclear,group_leader) VALUES (%(id)s,%(host_name)s,%(host_address)s,%(type)s,%(facility)s,%(priority)s,%(program)s,%(message)s,%(alternative_message)s,%(ack)s,NOW(),NOW(),%(group_active)s,%(group_id)s,%(group_autoclear)s,%(group_leader)s);"
             
                 self.execute(query,self.get_event_params(event),noResult=True,cursor=cursor)
             
@@ -236,7 +237,8 @@ class MysqlDatasource(object):
                         "active" : 1,
                         "group_leader" : event["id"],
                         "group_id" : event.group_id,
-                        "dirty" : True
+                        "dirty" : True,
+                        "group_autoclear" : event["group_autoclear"]
                     });
                     self.flush()
                     
@@ -263,7 +265,7 @@ class MysqlDatasource(object):
         params["group_id"] = event.group_id
         params["alternative_message"] = event.alternative_message
         params["group_active"] = int(event.in_active_group())
-        
+        params["group_autoclear"] = event["group_autoclear"]
         return params
     
     
