@@ -40,17 +40,18 @@ class CommandProcessor(object):
             if not self.matcher.matches(event):
                 return "PASS"
             groups = self.matcher.get_match_groups()
-            msg = self.create_notification_message(event,groups)
-            msg = "[%i] %s" % (time.time(),msg)
-            
-            try:
-                self.send_to_pipe(msg)
-                return "OK"
-            except:
-                return "FAIL"
-            
         finally:
             self.lock.release()
+            
+        msg = self.create_notification_message(event,groups)
+        msg = "[%i] %s" % (time.time(),msg)
+        try:
+            self.send_to_pipe(msg)
+            return "OK"
+        except:
+            return "FAIL"
+            
+
     
     def send_to_pipe(self,msg):
         try:
