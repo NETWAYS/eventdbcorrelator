@@ -29,13 +29,12 @@ class CommandProcessor(object):
             self.matcher = Matcher(config["matcher"])
         else:
             self.matcher = TrueMatcher()
-        
+            
         if "uppercasetokens" in config:
             self.uppercase_tokens = True
         else:
             self.uppercase_tokens = False
-        
-    
+            
     def process(self,event):
         if not self.format or not self.pipe:
             return "PASS"
@@ -58,17 +57,17 @@ class CommandProcessor(object):
             
         finally:
             self.lock.release()
-
     
-    def send_to_pipe(self,msg):
+    def send_to_pipe(self,msg,pipe_name):
         try:
-            pipe = os.open(self.pipe,os.O_WRONLY)
+            pipe = os.open(pipe_name,os.O_WRONLY)
             os.write(pipe,msg)
             os.close(pipe)
         except Exception, e:
             logging.error("Could not send command %s to pipe : %s" % (msg,e))
             raise e
     
+   
     def create_notification_message(self,event,matchgroups):
         msg = self.format
         tokens = re.findall("[#$]\w+",msg)
