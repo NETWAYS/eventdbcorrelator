@@ -30,6 +30,11 @@ class CommandProcessor(object):
         else:
             self.matcher = TrueMatcher()
         
+        if "uppercasetokens" in config:
+            self.uppercase_tokens = True
+        else
+            self.uppercase_tokens = False
+        
     def process(self,event):
         if not self.format or not self.pipe:
             return "PASS"
@@ -67,10 +72,16 @@ class CommandProcessor(object):
         tokens = re.findall("[#$]\w+",msg)
         for token in tokens:
             if token[0] == '#':
-                msg = msg.replace(token,str(event[token[1:]]))
+                token_tmp = str(event[token[1:]])
+                if self.uppercase_tokens:
+                    token_tmp = token_tmp.upper()
+                msg = msg.replace(token,token_tmp)
                 continue
             if token[0] == '$':
-                msg = msg.replace(token,str(matchgroups[token[1:]]))
+                token_tmp = str(matchgroups[token[1:]])
+                if self.uppercase_tokens:
+                    token_tmp = token_tmp.upper()
+                msg = msg.replace(token,token_tmp)
                 continue
         if not msg.endswith("\n"):
             msg = msg+"\n"
