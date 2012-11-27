@@ -223,7 +223,31 @@ class MysqlDatasourceTest(unittest.TestCase):
             assert self.source.connections.qsize() == self.source.poolsize
         finally:
             self.source.test_teardown_db()
-        
+    
+    def test_id_generation_error(self):
+        try:
+            self.source.test_setup_db()
+            ev = Event(message="test",additional={
+                "host_address": ip_address.IPAddress("192.168.178.56"),
+                "program" : "test_program",
+
+                "priority" : 0,
+                "facility" : 0,
+                "active" : 1,
+                "group_active" : True
+            })
+            assert self.source.last_id == 0
+            self.source.insert(ev)
+            self.source.insert(ev)
+            self.source.insert(ev)
+            self.source.last_id = 0
+            self.source.insert(ev)
+            self.source.insert(ev)
+            
+            assert self.source.last_id == 5
+            
+        finally:
+            self.source.test_teardown_db()
     def test_group_persistence(self):
         logging.debug("group_persistence")
         try:

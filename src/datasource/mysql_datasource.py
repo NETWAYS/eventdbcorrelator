@@ -10,6 +10,7 @@ from event import *
 
 LOCATION_SETUP_SCHEME = "./database/mysql_create.sql"
 LOCATION_TEARDOWN_SCHEME="./database/mysql_teardown.sql"
+MAX_INSERT_TRIES = 5
 
 class MysqlGroupCache(object):
     def __init__(self):
@@ -226,10 +227,19 @@ class MysqlDatasource(object):
             try: # Python 2.4 doesn't allow try: except: finally: together
                 cursor = self.cursor_class(conn)
 
-                query = "INSERT INTO "+self.table+" (id, host_name,host_address,type,facility,priority,program,message,alternative_message,ack,created,modified,group_active,group_id,group_autoclear,group_leader) VALUES (%(id)s,%(host_name)s,%(host_address)s,%(type)s,%(facility)s,%(priority)s,%(program)s,%(message)s,%(alternative_message)s,%(ack)s,NOW(),NOW(),%(group_active)s,%(group_id)s,%(group_autoclear)s,%(group_leader)s);"
-            
-                self.execute(query,self.get_event_params(event),noResult=True,cursor=cursor)
-            
+                for i in range(0,MAX_INSERT_TRIES):        
+                    try: 
+                        query = "INSERT INTO "+self.table+" (id, host_name,host_address,type,facility,priority,program,message,alternative_message,ack,created,modified,group_active,group_id,group_autoclear,group_leader) VALUES (%(id)s,%(host_name)s,%(host_address)s,%(type)s,%(facility)s,%(priority)s,%(program)s,%(message)s,%(alternative_message)s,%(ack)s,NOW(),NOW(),%(group_active)s,%(group_id)s,%(group_autoclear)s,%(group_leader)s);"
+                        self.execute(query,self.get_event_params(event),noResult=True,cursor=cursor)
+                        break
+                    except MySQLdb.IntegrityError,e:
+                        # maybe another process wrote to the db and now there's primary key confusion
+                        # refresh the id from the db should fix that
+                        self.fetch_last_id(cursor=cursor,step=i*MAX_INSERT_TRIES) 
+                        continue
+                    
+                    
+                    
                 if event.group_leader and event.group_leader > -1:
                     self.increase_group_count(event.group_id)
                 else:
@@ -248,7 +258,7 @@ class MysqlDatasource(object):
                     return "SPOOL"
                 return "OK"
             except Exception:
-                logging.error("Insert failed : %s" % traceback.format_exc())            
+                logging.error("Insert failed : %s" % traceback.format_exc())      
                 return "FAIL"
         finally:
             self.release_connection(conn)
@@ -403,13 +413,14 @@ class MysqlDatasource(object):
             return
             
    
-    def fetch_last_id(self):
-        res = self.execute("SELECT id FROM event ORDER BY id DESC LIMIT 1")
+    def fetch_last_id(self,cursor = None,step=0):
+        res = self.execute("SELECT id FROM event ORDER BY id DESC LIMIT 1",cursor=cursor)
         if len(res) < 1:
             self.last_id = 0
             return
-        self.last_id = res[0][0]
-    
+        self.last_id = res[0][0]+step
+       
+            
     def next_id(self):
         try:
             self.lock.acquire()
