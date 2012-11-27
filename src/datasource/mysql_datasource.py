@@ -235,7 +235,9 @@ class MysqlDatasource(object):
                     except MySQLdb.IntegrityError,e:
                         # maybe another process wrote to the db and now there's primary key confusion
                         # refresh the id from the db should fix that
-                        self.fetch_last_id(cursor=cursor,step=i*MAX_INSERT_TRIES) 
+                        self.fetch_last_id(cursor=cursor,step=i*MAX_INSERT_TRIES)
+                        if i >= MAX_INSERT_TRIES-1:
+                            raise
                         continue
                     
                     
