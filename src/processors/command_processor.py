@@ -32,7 +32,7 @@ class CommandProcessor(object):
         
         if "uppercasetokens" in config:
             self.uppercase_tokens = True
-        else
+        else:
             self.uppercase_tokens = False
         
     def process(self,event):
