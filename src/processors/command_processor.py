@@ -23,7 +23,7 @@ class CommandProcessor(object):
             logging.warn("No pipe given for CommandProcessor %s, ignoring", id)
             self.pipe = None
         else:
-            self.pipe = config["pipe"]
+            self.pipe = config["pipe"].split(";")
             
         if "matcher" in config:
             self.matcher = Matcher(config["matcher"])
@@ -35,6 +35,7 @@ class CommandProcessor(object):
         else:
             self.uppercase_tokens = False
         
+    
     def process(self,event):
         if not self.format or not self.pipe:
             return "PASS"
@@ -45,17 +46,18 @@ class CommandProcessor(object):
             if not self.matcher.matches(event):
                 return "PASS"
             groups = self.matcher.get_match_groups()
+            msg = self.create_notification_message(event,groups)
+            msg = "[%i] %s" % (time.time(),msg)
+            
+            try:
+                for pipe in self.pipe:
+                    self.send_to_pipe(msg,pipe)
+                return "OK"
+            except:
+                return "FAIL"
+            
         finally:
             self.lock.release()
-            
-        msg = self.create_notification_message(event,groups)
-        msg = "[%i] %s" % (time.time(),msg)
-        try:
-            self.send_to_pipe(msg)
-            return "OK"
-        except:
-            return "FAIL"
-            
 
     
     def send_to_pipe(self,msg):
