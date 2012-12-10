@@ -308,7 +308,7 @@ class MysqlDatasource(object):
         Use this at the beginning of your unittests
         """
         self.test_teardown_db()
-        self.test_create_db()
+        self.test_setup_db()
 
 
     def insert(self, event):
