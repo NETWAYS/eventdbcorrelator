@@ -20,7 +20,7 @@ class Edbc(object):
 
     def __setupLogging(self):
         if self.config["log"]:
-            logging.basicConfig(level=logging.INFO,filename=self.config["log"])
+            logging.basicConfig(level=logging.INFO, filename=self.config["log"])
         else:
             logging.basicConfig(level=logging.INFO)
     def __init__(self):

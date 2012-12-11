@@ -17,10 +17,10 @@ class CommandProcessorTest(unittest.TestCase):
         
     def test_unformatted_command_submit(self):
         try:
-            f = open(PIPE_LOCATION,"w+")
+            f = open(PIPE_LOCATION, "w+")
 
             proc = CommandProcessor()
-            proc.setup("test",{
+            proc.setup("test", {
                 "pipe": PIPE_LOCATION,
                 "format" : "Plain string"
             })
@@ -39,10 +39,10 @@ class CommandProcessorTest(unittest.TestCase):
     
     def test_formatted_command_submit(self):
         try:
-            f = open(PIPE_LOCATION,"w+")
+            f = open(PIPE_LOCATION, "w+")
 
             proc = CommandProcessor()
-            proc.setup("test",{
+            proc.setup("test", {
                 "pipe": PIPE_LOCATION,
                 "matcher" : "message REGEXP 'Testmessage from host (?P<HOST>\w+) received'",
                 "format" : "#priority : #anotherfield - $HOST"
@@ -62,10 +62,10 @@ class CommandProcessorTest(unittest.TestCase):
         
     def test_formatted_command_submit_uc(self):
         try:
-            f = open(PIPE_LOCATION,"w+")
+            f = open(PIPE_LOCATION, "w+")
 
             proc = CommandProcessor()
-            proc.setup("test",{
+            proc.setup("test", {
                 "pipe": PIPE_LOCATION,
                 "matcher" : "message REGEXP 'Testmessage from host (?P<HOST>\w+) received'",
                 "format" : "#priority : #anotherfield - $HOST",

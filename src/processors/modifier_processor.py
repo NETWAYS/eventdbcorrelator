@@ -1,12 +1,12 @@
 
 
 import logging
-from event import Matcher,TrueMatcher
-MOD_TARGETS = ["event","group"]
+from event import Matcher, TrueMatcher
+MOD_TARGETS = ["event", "group"]
 
 class ModifierProcessor(object):
     
-    def setup(self,id,config):
+    def setup(self, id, config):
         self.id = id
         self.overwrites = []
         if "overwrite" in config:
@@ -16,7 +16,7 @@ class ModifierProcessor(object):
         self.target = "event"
         if "target" in config:
             if not config["target"] in MOD_TARGETS:
-                logging.warn("Target %s is invalid for ModifierProcessor %s, using 'event' instead" % (config["target"],self.id))
+                logging.warn("Target %s is invalid for ModifierProcessor %s, using 'event' instead" % (config["target"], self.id))
             else:
                 self.target = config["target"]
         
@@ -34,7 +34,7 @@ class ModifierProcessor(object):
             if config["acknowledge"] != "false":
                 self.acknowledge = True
         
-    def process(self,event):
+    def process(self, event):
         if not self.matcher.matches(event):
             return "PASS"
         if self.target == "event":
@@ -42,14 +42,14 @@ class ModifierProcessor(object):
         if self.target == "group" and event["group_id"] or event["clear_group_id"]:
             return self.process_group(event)
         
-    def process_event(self,event):
+    def process_event(self, event):
         if self.acknowledge:
             event["ack"] = 1
-        for (key,val) in self.overwrites:
+        for (key, val) in self.overwrites:
             event[key] = val
         return "OK"
     
-    def process_group(self,event):
+    def process_group(self, event):
         if not self.datasource :
             logging.warn("Can't process group without datasource")
             return "PASS"
@@ -57,13 +57,13 @@ class ModifierProcessor(object):
         glue = ""
         if self.acknowledge:
             query = query+" ack = 1 "
-            glue = ","
+            glue = ", "
         
-        for (key,val) in self.overwrites:            
-            query = query + "%s %s = '%s' " % (glue,key,val,)
-            glue = ","
+        for (key, val) in self.overwrites:            
+            query = query + "%s %s = '%s' " % (glue, key, val, )
+            glue = ", "
         group_id = event["group_id"] or event["clear_group_id"]
         group_leader = event["group_leader"] or event["clear_group_leader"]
         query = query + " WHERE (group_id = %s AND group_leader = %s) OR id=%s " 
-        self.datasource.execute_after_flush(query,(group_id,group_leader,group_leader))
+        self.datasource.execute_after_flush(query, (group_id, group_leader, group_leader))
         return "OK"

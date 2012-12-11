@@ -3,11 +3,11 @@ from ConfigParser import ConfigParser
 from processors import AggregationProcessor 
 import logging 
 
-CONFIG_DIRECTIVES = ("clear","matcher","aggregatemessage")
+CONFIG_DIRECTIVES = ("clear", "matcher", "aggregatemessage")
 
 class MultiaggregationProcessor(object):
     
-    def setup(self,id,config = {}):
+    def setup(self, id, config = {}):
         self.id = id
         self.config = {
             "maxdelay": 3600*24,         # DEFAULT: Break aggregation when 
@@ -39,7 +39,7 @@ class MultiaggregationProcessor(object):
             return False
         self.rulesetparser = ConfigParser()
         self.rulesetparser.readfp(open(self.config["ruleset"]))
-        logging.debug("Multiaggregation parser %s: setting up %i rules" % (self.id,len(self.rulesetparser.sections())))
+        logging.debug("Multiaggregation parser %s: setting up %i rules" % (self.id, len(self.rulesetparser.sections())))
         return True
     
 
@@ -49,20 +49,20 @@ class MultiaggregationProcessor(object):
         for section in self.rulesetparser.sections():
             items = self.rulesetparser.items(section)
             cfg = self.config
-            for (cfg_item,value) in items:
+            for (cfg_item, value) in items:
                 if not cfg_item in CONFIG_DIRECTIVES:
-                    logging.warn("Ignoring config setting %s in rule file %s" % (cfg_item,self.config["ruleset"]))
+                    logging.warn("Ignoring config setting %s in rule file %s" % (cfg_item, self.config["ruleset"]))
                 else:
                     cfg[cfg_item] = value
                 
             aggregator = self.aggregator_class()
-            aggregator.setup(self.id+"_"+section,cfg)
+            aggregator.setup(self.id+"_"+section, cfg)
 
             self.aggregators.append(aggregator)
         
-        logging.debug("Registered %i aggregators underneath %s " % (len(self.aggregators),self.id))
+        logging.debug("Registered %i aggregators underneath %s " % (len(self.aggregators), self.id))
     
-    def process(self,event):
+    def process(self, event):
         for aggregator in self.aggregators:
             result = aggregator.process(event)
             if result == "PASS":

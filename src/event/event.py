@@ -10,7 +10,7 @@ from ip_address import IPAddress
 
 class Event(object):
 
-    def __init__(self, message = "", date=time.ctime(),additional = dict(),record=None):
+    def __init__(self, message = "", date=time.ctime(), additional = dict(), record=None):
         self.data = dict();
         self["host_address"] = IPAddress("127.0.0.1")
         self["host_name"] = "unknown"
@@ -26,9 +26,9 @@ class Event(object):
         self.group_id = None
         self.group_leader = None
         for val in additional: 
-            self.__setitem__(val.lower(),additional[val]);
+            self.__setitem__(val.lower(), additional[val]);
     
-    def __setitem__(self,name,value):
+    def __setitem__(self, name, value):
         name = name.lower()
         if name == "message":
             self.message = value
@@ -48,16 +48,16 @@ class Event(object):
         if name == "active":
             self.active = value
             return 
-        if name == "host_address" and isinstance(value,str):
+        if name == "host_address" and isinstance(value, str):
             try:
                 value = IPAddress(value)
-            except Exception,e:
+            except Exception, e:
                 logging.debug("Invalid ip: %s" % value)
             
         self.data[name] = value
         return None
     
-    def __getitem__(self,name):
+    def __getitem__(self, name):
         name = name.lower()
         if name == "message":
             return self.message
@@ -76,7 +76,7 @@ class Event(object):
             return self.data[name]
         return None
     
-    def __eq__(self,event):
+    def __eq__(self, event):
         
         if event.message != self.message:
             return False
@@ -91,14 +91,14 @@ class Event(object):
     def in_active_group(self):
         return self.group_leader != None
     
-    def from_record(self,record):
+    def from_record(self, record):
               
         keys = record["keys"]
         data = record["data"]
-        for i in range(0,len(keys)):
+        for i in range(0, len(keys)):
 
             if keys[i] == 'host_address':
-                self["host_address"] = IPAddress(data[i],binary=True)
+                self["host_address"] = IPAddress(data[i], binary=True)
             else:
                 self[keys[i]] = data[i]
                 

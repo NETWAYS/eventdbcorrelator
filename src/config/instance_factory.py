@@ -15,7 +15,7 @@ class InstanceFactory(object):
     Initialize with the base edbc.cfg file as a starting point.
     The section global will be ignored here.
     """
-    def __init__(self,config):
+    def __init__(self, config):
         self.config = config
         self.deferred = {}
         instanceDefs = self.config.get_instance_definitions()
@@ -24,17 +24,17 @@ class InstanceFactory(object):
             if id == "global":
                 continue
             cfgObject = instanceDefs[id]
-            self.register(id,cfgObject)
+            self.register(id, cfgObject)
             
         logging.debug("Registered %i instances" % len (self.instances["all"]))
 
 
-    def defer_registration(self,required,args):
+    def defer_registration(self, required, args):
         if not required in self.deferred:
             self.deferred[required] = []
         self.deferred[required].append(args)
        
-    def apply_template(self,cfgObject):    
+    def apply_template(self, cfgObject):    
         parent = self.__getitem__(cfgObject["template"])
         for i in parent.base_config:
             if not i in cfgObject:
@@ -47,21 +47,21 @@ class InstanceFactory(object):
     
     If factoryFn is given, this will be called (class is 
     only being registered here and not used for instance creation), otherwise 
-    %class%.setup(id,cfgObject) is called.
+    %class%.setup(id, cfgObject) is called.
     
     """
-    def register(self,instance_id,cfgObject,factoryFn = None):
+    def register(self, instance_id, cfgObject, factoryFn = None):
         # type myType and class myClass will be called MyTypeMyClass()
         required = self.resolve_references(cfgObject)
         if required != None:
-            self.defer_registration(required,(instance_id,cfgObject,factoryFn))
+            self.defer_registration(required, (instance_id, cfgObject, factoryFn))
             return False
         
         r = None
         
         if "template" in cfgObject:
             if not cfgObject["template"] in self.instances["all"]:
-                self.defer_registration(required,(instance_id,cfgObject,factoryFn))
+                self.defer_registration(required, (instance_id, cfgObject, factoryFn))
                 return False
             else:
                 self.apply_template(cfgObject)
@@ -74,16 +74,16 @@ class InstanceFactory(object):
             instanceCls = cfgObject["class"].capitalize()
             configname = cfgObject["type"].capitalize()+instanceCls
             if not configname in globals():
-                logging.error("Couldn't find %s, %s won't work." % (configname,instance_id))
+                logging.error("Couldn't find %s, %s won't work." % (configname, instance_id))
                 return False
             
             r = globals()[configname]()
             
-            logging.debug("Instance of %s : %s (instance_id=%i)" % (instance_id,r,id(r)))
-            r.setup(instance_id,cfgObject)
+            logging.debug("Instance of %s : %s (instance_id=%i)" % (instance_id, r, id(r)))
+            r.setup(instance_id, cfgObject)
         else:
             # Pass instance creation to factory function
-            r = factoryFn(instance_id,cfgObject)
+            r = factoryFn(instance_id, cfgObject)
         try: 
             r.base_config = cfgObject
         except:
@@ -93,14 +93,14 @@ class InstanceFactory(object):
         self.handle_unresolved(instance_id)
         return True
         
-    def handle_unresolved(self,id):
+    def handle_unresolved(self, id):
             
         if "@"+id in self.deferred:
 
             unmatched = []
             while self.deferred["@"+id]:
                 item = self.deferred["@"+id].pop()
-                if not self.register(item[0],item[1],item[2]):
+                if not self.register(item[0], item[1], item[2]):
                     unmatched.append(item)
             if unmatched:
                 self.deferred["@"+id] = unmatched
@@ -111,7 +111,7 @@ class InstanceFactory(object):
         logging.debug(self.deferred)
         return len(self.deferred) > 0
 
-    def resolve_references(self,cfgobject):
+    def resolve_references(self, cfgobject):
         for i in cfgobject:
             if cfgobject[i].startswith('@'):
                 resolved = self.__getitem__(cfgobject[i])
@@ -119,25 +119,25 @@ class InstanceFactory(object):
                     return cfgobject[i]
                 cfgobject[i] = resolved
 
-    def register_class(self,classname):
+    def register_class(self, classname):
         classname = classname.strip()
         self.instances[classname] = {}
         
         # register class methods so they are available with get%CLASS%(id)
-        getter = lambda id: self.instances[classname][(id,id[1:])[id[0] == '@']]
+        getter = lambda id: self.instances[classname][(id, id[1:])[id[0] == '@']]
         getter.__name__ = "get"+classname.capitalize()
-        setattr(self,getter.__name__,getter)
+        setattr(self, getter.__name__, getter)
         
         # register getAll%Class%Instances method
         getter = lambda : self.instances[classname]
         logging.debug("Registering %s " % ("getAll"+classname.capitalize()+"Instances"))
         getter.__name__ = "getAll"+classname.capitalize()+"Instances"
-        setattr(self,getter.__name__,getter)
+        setattr(self, getter.__name__, getter)
         
     """
         Returns the object instance that can be found under the id "id"
     """
-    def __getitem__(self,id):
+    def __getitem__(self, id):
         if id[0] == '@':
             id = id[1:]
         if id in self.instances:

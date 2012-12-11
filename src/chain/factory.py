@@ -23,7 +23,7 @@ class ChainFactory(object):
     def __init(self):
         self.chains = []
         
-    def read_config_file(self,chaindir,instances):
+    def read_config_file(self, chaindir, instances):
         self.instances = instances
         if not os.path.exists(chaindir):
             raise Exception("Chain configuration directory is non-existent or not readable")
@@ -33,7 +33,7 @@ class ChainFactory(object):
         self.wire_chains()
         self.start_chains()
         
-    def read_dir(self,curDir):
+    def read_dir(self, curDir):
          for cfg in os.listdir(curDir):
             if cfg[0] == ".":
                 continue
@@ -50,18 +50,18 @@ class ChainFactory(object):
         for section in self.configReader.sections():
             self.read_chain(section)
         
-    def read_chain(self,id):
+    def read_chain(self, id):
         chainDef = {'class': 'chain', 'type' : ''}
         for i in self.configReader.options(id):
-            chainDef[i] = self.configReader.get(id,i)
+            chainDef[i] = self.configReader.get(id, i)
         logging.debug("Registering chain %s", id)
-        self.instances.register(id,chainDef,self.create_chain)
+        self.instances.register(id, chainDef, self.create_chain)
  
         
-    def create_chain(self,id,config):
+    def create_chain(self, id, config):
         chain = Chain()
         config["instances"] = self.instances
-        chain.setup(id,config)
+        chain.setup(id, config)
         
         return chain
 

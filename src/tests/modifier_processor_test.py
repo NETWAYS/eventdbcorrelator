@@ -12,12 +12,12 @@ class MockDataSource(object):
         self.flushed = []
         
         
-    def get_group_leader(self,group_id):
+    def get_group_leader(self, group_id):
         if group_id in self.groups:
-            return (self.groups[group_id],time.time())
-        return (None,time.time())
+            return (self.groups[group_id], time.time())
+        return (None, time.time())
     
-    def execute_after_flush(self,query,args = ()):
+    def execute_after_flush(self, query, args = ()):
         self.flushed.append(query)
         
     def reset(self):
@@ -33,7 +33,7 @@ class ModifierProcessorTest(unittest.TestCase):
         }
         
         processor = ModifierProcessor()
-        processor.setup("test",{
+        processor.setup("test", {
             "overwrite" : "test=4;test2=test",
             "target" : "event"
         })
@@ -43,7 +43,7 @@ class ModifierProcessorTest(unittest.TestCase):
         assert event["test2"] == "test"
         assert event["ack"] == 0
         
-        processor.setup("test",{
+        processor.setup("test", {
             "overwrite" : "test=4;test2=test",
             "target" : "event",
             "acknowledge" : "True"
@@ -64,14 +64,14 @@ class ModifierProcessorTest(unittest.TestCase):
         }
         
         processor = ModifierProcessor()
-        processor.setup("test",{
+        processor.setup("test", {
             "overwrite" : "test=4;test2=test",
             "target" : "group"
         })
         
         assert processor.process(event) == "PASS" # No datasource
         ds.reset()
-        processor.setup("test",{
+        processor.setup("test", {
             "overwrite" : "test=4;test2=test",
             "target" : "group",
             "datasource" : ds
