@@ -1,3 +1,22 @@
+"""
+EDBC - Message correlation and aggregation engine for passive monitoring events
+Copyright (C) 2012  NETWAYS GmbH
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+"""
 import os
 import re
 import time
@@ -56,18 +75,25 @@ DEFAULT_PRIO_MAP = {
 }
 
 class SnmpTransformer(object):
+    """ SNMP Receptor class that creates a simple snmp handler which forwards traps to a normal
+        edbc pipe. Has some, but not all features of snmptt and is able to parse snmptt mib files
+        in order to format traps properly
 
+    """
 
-    def setup(self,instance_id,config):
+    
+    def setup(self, instance_id, config):
+        """ Processor setup method called by the InstanceFactory to apply configuration settings
+
+        """
         self.id = instance_id
         if not "mib_dir" in  config:
-            raise "mib_dir directive is missing in %i, this should point to the directory of your snmpttconvertmib files"
-
+            raise Exception("mib_dir directive is missing in %i, this should point to the directory of your snmpttconvertmib files")
 
         if "trap_format" in config:
-                self.trap_format= config["trap_format"]
+            self.trap_format = config["trap_format"]
         else: 
-                self.trap_format= "HOST:(?P<HOST>.*);IP:(?P<IP>.*);VARS:(?P<VARS>.*)"
+            self.trap_format = "HOST:(?P<HOST>.*);IP:(?P<IP>.*);VARS:(?P<VARS>.*)"
         self.mib_dir = config["mib_dir"]
         self.ip_regexp = re.compile("\[(.*)\]")
         self.trap_matcher = re.compile(self.trap_format)
@@ -84,7 +110,7 @@ class SnmpTransformer(object):
         if "prioritymap" in config:
             prios = config["prioritymap"].split(",")
             for sevprio in prios:
-                (severity,priority) = keyval.split("=")
+                (severity, priority) = keyval.split("=")
                 self.priorities[severity] = priority
         else:
                 self.priorities = DEFAULT_PRIO_MAP
@@ -93,8 +119,11 @@ class SnmpTransformer(object):
 
     
     def parse_mibs(self):
+        """ Reads snmptt mib files from the given mib_dir folder and parses them
+
+        """
         if not os.path.exists(self.mib_dir):
-            raise "mib_dir folder %s for %s is not existing/readable " % (self.mib_dir,self.id)
+            raise Exception("mib_dir folder %s for %s is not existing/readable " % (self.mib_dir, self.id))
         self.registered_mibs = []
         for dir in os.walk(self.mib_dir):
             for file in dir[2]:
@@ -103,13 +132,16 @@ class SnmpTransformer(object):
                 else:
                     self.load_mib(dir[0]+file)
         
-        logging.debug("%s registered %i mibs " % (self.id,len(self.registered_mibs)))
+        logging.debug("%s registered %i mibs " % (self.id, len(self.registered_mibs)))
         if len(self.registered_mibs) < 1:
             logging.warn("Warning: %s couldn't find any event definitions registered underneath %s, no events will be persisted" % (self.id, self.mib_dir,))
 
     
-    def parse_event_line(self,line,mib):
-        groups = re.match("EVENT (?P<EVENT_NAME>[^ ]+) (?P<OID>[0-9\.\*]+) \"(?P<CATEGORY>[\w ]+)\" (?P<EVENT_SEVERITY>\w+)",line)
+    def _parse_event_line(self, line, mib):
+        """ Reads the EVENT line from a snmpttconvertmib generated mib file
+
+        """
+        groups = re.match("EVENT (?P<EVENT_NAME>[^ ]+) (?P<OID>[0-9\.\*]+) \"(?P<CATEGORY>[\w ]+)\" (?P<EVENT_SEVERITY>\w+)", line)
         if groups:
             groups = groups.groupdict()
             mib["event_name"] = groups["EVENT_NAME"]
@@ -119,30 +151,43 @@ class SnmpTransformer(object):
             mib["priority"] = self.get_priority_for(mib["severity"]) 
    
 
-    def get_priority_for(self,severity):
+    def get_priority_for(self, severity):
+        """ Returns the priority mapped to an event specific severity
+
+        """
         severity = severity.lower()
         for key in self.priorities:
              if severity[0:len(key)] == key.lower():
                   return self.priorities[key]
         return None
 
-    def parse_format_line(self,line,mib):
-        groups = re.match("FORMAT (?P<FORMAT>.*)",line)
+    def _parse_format_line(self, line, mib):
+        """ Read the format line of a snmpttconvertmib generated mib file
+
+        """
+        groups = re.match("FORMAT (?P<FORMAT>.*)", line)
         if groups:
             mib["format"] = groups.groupdict()["FORMAT"]    
 
         format = mib["format"] # parse static replacements directly
         for field in STATIC_STRING_REPLACEMENTS:
-            mib["format"] = mib["format"].replace(field,STATIC_STRING_REPLACEMENTS[field])
+            mib["format"] = mib["format"].replace(field, STATIC_STRING_REPLACEMENTS[field])
         
     
-    def load_mib(self,path):
+    def load_mib(self, path):
+        """ Load the mib file defined at path
+
+        """
         file = open(path)
         mib = self.parse_file(file)
         file.close()
         self.registered_mibs.append(mib)
     
-    def parse_file(self,lines):
+    
+    def parse_file(self, lines):
+        """ PArses a fileobject or an array if strings (representing lines in the mib) as a snmpttconvertmib mib file
+
+        """
         # It doesn't matter if 'lines' is a FileObject or just an array,
         # this makes testing easier
         mib = {}
@@ -150,17 +195,20 @@ class SnmpTransformer(object):
             if line.strip().startswith("#"):
                 continue
             if line.startswith("EVENT"):
-                self.parse_event_line(line,mib)
+                self._parse_event_line(line, mib)
                 continue
             if line.startswith("FORMAT"):
-                self.parse_format_line(line,mib)
+                self._parse_format_line(line, mib)
             if line.startswith("REGEXP"):
-                self.parse_regexp_expression(line,mib)
+                self._parse_regexp_expression(line, mib)
             
         return mib
     
     
-    def transform(self,string):
+    def transform(self, string):
+        """ Transformer method as called by the receptor - Transforms a raw snmptt trap to an Event object 
+
+        """
         groups = self.trap_matcher.match(string)
         if not groups:
             return None
@@ -176,7 +224,7 @@ class SnmpTransformer(object):
         
         
         vars = groups["VARS"].split(" ; ")
-        expected = ["uptime","oid"]
+        expected = ["uptime", "oid"]
         meta = {"host_name" : groups["HOST"]}
         variables = []
         
@@ -188,49 +236,60 @@ class SnmpTransformer(object):
             if oid in STATIC_OIDS:
                 meta[STATIC_OIDS[oid]] = value
                 continue
-            variables.append((oid,value))
+            variables.append((oid, value))
         mib = self.get_mib_for(meta["oid"])
         if not mib:
             return None
         event["priority"] = mib["priority"]
         event["created"] = time.time
-        event["message"] = self.get_formatted_message(meta,variables,mib)
+        event["message"] = self.get_formatted_message(meta, variables, mib)
         return event
 
-    
-    def get_formatted_message(self,meta,variables,mib):
+    def get_formatted_message(self, meta, variables,mib):
+        """ Formats the message according to the FORMAT line in the snmptt mib
+
+        """
         mibformat = mib["format"]
         for i in FIELD_NAME_REPLACEMENTS:
             field_to_replace = FIELD_NAME_REPLACEMENTS[i]
             if field_to_replace in meta:
-                mibformat = mibformat.replace(i,meta[field_to_replace])
+                mibformat = mibformat.replace(i, meta[field_to_replace])
                 
-        mibformat = mibformat.replace("$X",str(time.time()))
-        mibformat = mibformat.replace("$@",str(time.time()))
-        mibformat = mibformat.replace("$x",time.strftime("%x", time.localtime()))
-        mibformat = self.replace_variable_expressions(mibformat,variables)
+        mibformat = mibformat.replace("$X", str(time.time()))
+        mibformat = mibformat.replace("$@", str(time.time()))
+        mibformat = mibformat.replace("$x", time.strftime("%x", time.localtime()))
+        mibformat = self.replace_variable_expressions(mibformat, variables)
         return mibformat
     
-    def replace_variable_expressions(self,mibformat,variables):
-        mibformat = mibformat.replace("$#",str(int(len(variables))))
-        mibformat = mibformat.replace("$*"," ".join(map(lambda x : x[1],variables)))
-        mibformat = mibformat.replace("$+*"," ".join(map(lambda x : "%s:%s" % x,variables)))
+    def replace_variable_expressions(self, mibformat, variables):
+        """ Substitutes variable definitions as snmptt does
+
+        """
+        mibformat = mibformat.replace("$#", str(int(len(variables))))
+        mibformat = mibformat.replace("$*", " ".join(map(lambda x : x[1], variables)))
+        mibformat = mibformat.replace("$+*", " ".join(map(lambda x : "%s:%s" % x, variables)))
         
         for i in range(1,len(variables)+1):
-            mibformat = mibformat.replace("$%i" % i,variables[i-1][1])
-            mibformat = mibformat.replace("$+%i" % i,"%s:%s" % variables[i-1])
-            mibformat = mibformat.replace("$v%i" % i,variables[i-1][0])
+            mibformat = mibformat.replace("$%i" % i, variables[i-1][1])
+            mibformat = mibformat.replace("$+%i" % i, "%s:%s" % variables[i-1])
+            mibformat = mibformat.replace("$v%i" % i, variables[i-1][0])
         
         return mibformat
    
-    def parse_regexp_expression(self,regexp):
+    def _parse_regexp_expression(self, regexp):
+        """ Parses the regexp line from snmpttconvertmib files
+            @TODO: Not implemented yet
+        """
         #groups = regexp.match(" *REGEX *\((?P<SEARCH>.*)\)\((?P<REPLACE>.*)\) *")
         pass
 	 	
  
-    def get_mib_for(self,oid):
+    def get_mib_for(self, oid):
+        """ Returns the mib defined for the snmp oid or None if the trap is unknown
+
+        """
         for mib in self.registered_mibs:
-            if re.match("^%s$" % mib["oid"],oid):
+            if re.match("^%s$" % mib["oid"], oid):
                 return mib
         
         return None
