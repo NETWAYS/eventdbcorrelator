@@ -13,18 +13,18 @@ TMP_DIR="/tmp/"
 SPOOL_NAME="edbc_test.spool"
 
 class NoOpCursorMock(object):
-    def execute(self,query,args):
+    def execute(self, query, args):
         raise MySQLdb.OperationalError("Mock throw object")
 
 CURSOR_STATIC_HISTORY = []
 
 class HistoryCursor(MySQLdb.cursors.Cursor):
-    def __init__(self,connection):
-        return MySQLdb.cursors.Cursor.__init__(self,connection)
+    def __init__(self, connection):
+        return MySQLdb.cursors.Cursor.__init__(self, connection)
     
-    def execute(self,query,args):
-        CURSOR_STATIC_HISTORY.append((query,args))
-        return MySQLdb.cursors.Cursor.execute(self,query,args)
+    def execute(self, query, args):
+        CURSOR_STATIC_HISTORY.append((query, args))
+        return MySQLdb.cursors.Cursor.execute(self, query, args)
     
 
 class MySQLDataSourceSpoolTest(unittest.TestCase):
@@ -35,7 +35,7 @@ class MySQLDataSourceSpoolTest(unittest.TestCase):
         dbsetup = SETUP_DB
         dbsetup["transform"] = DBTransformer()
         
-        self.source.setup("test",SETUP_DB)
+        self.source.setup("test", SETUP_DB)
         # Try tearing down the database in case a previous run ran wihtou cleanup
         try: 
             self.source.test_teardown_db()
@@ -53,10 +53,10 @@ class MySQLDataSourceSpoolTest(unittest.TestCase):
             })
             self.source.spool = ds
             cursor = NoOpCursorMock()
-            self.source.execute("SELECT %s FROM DUAL",(1),cursor=cursor)
-            self.source.execute("SELECT %s FROM DUAL",(2),cursor=cursor)
-            self.source.execute("SELECT %s FROM DUAL",(3),cursor=cursor)
-            self.source.execute("SELECT %s FROM DUAL",(4),cursor=cursor)
+            self.source.execute("SELECT %s FROM DUAL",(1), cursor=cursor)
+            self.source.execute("SELECT %s FROM DUAL",(2), cursor=cursor)
+            self.source.execute("SELECT %s FROM DUAL",(3), cursor=cursor)
+            self.source.execute("SELECT %s FROM DUAL",(4), cursor=cursor)
             
             assert len(self.source.spool.buffer)  > 0
             assert self.source.check_spool == True
@@ -96,10 +96,10 @@ class MySQLDataSourceSpoolTest(unittest.TestCase):
 
             
             cursor = NoOpCursorMock()
-            self.source.execute("SELECT %s FROM DUAL",(5),cursor=cursor)
-            self.source.execute("SELECT %s FROM DUAL",(6),cursor=cursor)
-            self.source.execute("SELECT %s FROM DUAL",(7),cursor=cursor)
-            self.source.execute("SELECT %s FROM DUAL",(8),cursor=cursor)
+            self.source.execute("SELECT %s FROM DUAL",(5), cursor=cursor)
+            self.source.execute("SELECT %s FROM DUAL",(6), cursor=cursor)
+            self.source.execute("SELECT %s FROM DUAL",(7), cursor=cursor)
+            self.source.execute("SELECT %s FROM DUAL",(8), cursor=cursor)
             ds.flush()
             assert len(ds.buffer) == 0
             assert self.source.check_spool == True

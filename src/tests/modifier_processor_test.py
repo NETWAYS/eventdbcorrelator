@@ -12,12 +12,12 @@ class MockDataSource(object):
         self.flushed = []
         
         
-    def get_group_leader(self,group_id):
+    def get_group_leader(self, group_id):
         if group_id in self.groups:
-            return (self.groups[group_id],time.time())
-        return (None,time.time())
+            return (self.groups[group_id], time.time())
+        return (None, time.time())
     
-    def execute_after_flush(self,query,args = ()):
+    def execute_after_flush(self, query, args = ()):
         self.flushed.append(query)
         
     def reset(self):

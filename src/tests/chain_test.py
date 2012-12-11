@@ -8,10 +8,10 @@ class TestProcessorMock(object):
     def __init__(self):
         self.status = "OK"
         
-    def setStatus(self,status):
+    def setStatus(self, status):
         self.status = status
         
-    def process(self,ev):
+    def process(self, ev):
         return self.status
 
 class ChainInMock(object):
@@ -21,14 +21,14 @@ class ChainInMock(object):
     def clear(self):
         self.queues = []    
         
-    def register_queue(self,queue):
+    def register_queue(self, queue):
         self.queues.append(queue)
     
-    def unregister_queue(self,queue):
+    def unregister_queue(self, queue):
         if queue in self.queues:
             self.queues.remove(queue)
     
-    def fire_event(self,event):
+    def fire_event(self, event):
         for queue in self.queues:
             queue.put(event)
     
@@ -37,7 +37,7 @@ class ChainOutMock(object):
         self.events = []
     def clear(self):
         self.event = []
-    def process(self,event):
+    def process(self, event):
         self.events.append(event)
     
 
@@ -72,12 +72,12 @@ class ChainTestCase(unittest.TestCase):
         }
         
     
-    def _get_test_chain(self,testcase):
+    def _get_test_chain(self, testcase):
         self.inMock.clear()
         self.outMock.clear()
 
         test_chain = Chain()
-        test_chain.setup("test",testcase)
+        test_chain.setup("test", testcase)
         test_chain.setup_event_path()
         return test_chain
 

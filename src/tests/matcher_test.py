@@ -67,7 +67,7 @@ class MatcherTestCase(unittest.TestCase):
         
         
     def test_simple_numeric(self):
-        testEvent = Event("ignore my message",time.ctime(),{
+        testEvent = Event("ignore my message", time.ctime(),{
             "severity" : 4,
             "availability" : 0.995
         })
@@ -100,22 +100,22 @@ class MatcherTestCase(unittest.TestCase):
         assert curMatcher.matches(testEvent) == True
         
     def test_simple_set(self):
-        testEvent = Event("ignore my message",time.ctime(),{
+        testEvent = Event("ignore my message", time.ctime(),{
             "severity" : 6,
             "source" : 'snmp'
         })
         curMatcher = None
 
-        curMatcher = Matcher("severity IN (1,2,3,4,5)")
+        curMatcher = Matcher("severity IN (1, 2, 3, 4, 5)")
         assert curMatcher.matches(testEvent) == False
 
-        curMatcher = Matcher("severity IN (1,2,3,4,5,6)")
+        curMatcher = Matcher("severity IN (1, 2, 3, 4, 5, 6)")
         assert curMatcher.matches(testEvent) == True
 
-        curMatcher = Matcher("severity NOT IN (1,2,3,4,5)")
+        curMatcher = Matcher("severity NOT IN (1, 2, 3, 4, 5)")
         assert curMatcher.matches(testEvent) == True
 
-        curMatcher = Matcher("severity NOT IN (1,2,3,4,5,6)")
+        curMatcher = Matcher("severity NOT IN (1, 2, 3, 4, 5, 6)")
         assert curMatcher.matches(testEvent) == False
 
         
@@ -126,7 +126,7 @@ class MatcherTestCase(unittest.TestCase):
         assert curMatcher.matches(testEvent) == False
 
     def test_ip_operators(self):
-        testEvent = Event("blobb",time.ctime(),{
+        testEvent = Event("blobb", time.ctime(),{
             "address": '192.168.67.3',
             
         })
@@ -145,7 +145,7 @@ class MatcherTestCase(unittest.TestCase):
 
         
     def test_mixed(self):
-        testEvent = Event("[LINK DOWN] eth0 on localhost is down.",time.ctime(),{
+        testEvent = Event("[LINK DOWN] eth0 on localhost is down.", time.ctime(),{
             "severity" : 7,
             "facility" : 4,
             "host" : "localhost",
@@ -169,13 +169,13 @@ class MatcherTestCase(unittest.TestCase):
 #        
 #        import random
 #        events = []
-#        for i in range(0,COUNT):
-#            events.append(Event("[LINK DOWN] et.",time.ctime(),{
-#                "severity" : random.randint(0,10),
-#                "address" : "192.168.%i.%i" % (random.randint(0,255),random.randint(0,255)),
-#                "facility" : random.randint(0,10),
-#                "host" : ["localhost","sv-mail","sv-app","ts-1","ts-2"][random.randint(0,4)],
-#                "program" : ["NetworkManager","watchdog","kernel","syslog"][random.randint(0,3)]
+#        for i in range(0, COUNT):
+#            events.append(Event("[LINK DOWN] et.", time.ctime(),{
+#                "severity" : random.randint(0, 10),
+#                "address" : "192.168.%i.%i" % (random.randint(0, 255), random.randint(0, 255)),
+#                "facility" : random.randint(0, 10),
+#                "host" : ["localhost","sv-mail","sv-app","ts-1","ts-2"][random.randint(0, 4)],
+#                "program" : ["NetworkManager","watchdog","kernel","syslog"][random.randint(0, 3)]
 #            }))
 #    
 #        now = time.time()
@@ -185,5 +185,5 @@ class MatcherTestCase(unittest.TestCase):
 #        try:
 #            assert duration/COUNT <= EVENT_HARDLIMIT_PER_EVENT
 #        except AssertionError, e:
-#            logging.debug("Performance test failed, request took %f seconds, limit was %f " % (duration/COUNT,EVENT_HARDLIMIT_PER_EVENT))
+#            logging.debug("Performance test failed, request took %f seconds, limit was %f " % (duration/COUNT, EVENT_HARDLIMIT_PER_EVENT))
 #            raise e

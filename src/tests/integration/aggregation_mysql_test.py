@@ -11,12 +11,12 @@ SETUP_DB = SETUP_DB_FLUSHING
 MAX_TIME_PER_EVENT=0.001
 
 class TestAggregationInsertionThread(threading.Thread):
-    def setup(self,aggregator,count,evCfg,db):
+    def setup(self, aggregator, count, evCfg, db):
         self.aggregator = aggregator
         self.events = []
         self.db = db
-        for i in range(0,count):
-            self.events.append(Event(message="test "+str(i),additional=evCfg))
+        for i in range(0, count):
+            self.events.append(Event(message="test "+str(i), additional=evCfg))
     
     def run(self):
         self.burst_events()
@@ -36,7 +36,7 @@ class AggregatorMysqlTest(unittest.TestCase):
         self.source = MysqlDatasource()
         dbsetup = SETUP_DB
         dbsetup["transform"] = DBTransformer()
-        self.source.setup("test",SETUP_DB)
+        self.source.setup("test", SETUP_DB)
         # Try tearing down the database in case a previous run ran wihtou cleanup
         try: 
             self.source.test_teardown_db()
@@ -195,7 +195,7 @@ class AggregatorMysqlTest(unittest.TestCase):
             assert event4.group_leader == -1
              
             time.sleep(1.5)    
-            dbResult = self.source.execute("SELECT group_active, group_count FROM %s WHERE id = %s" % (self.source.table,event1["id"]))
+            dbResult = self.source.execute("SELECT group_active, group_count FROM %s WHERE id = %s" % (self.source.table, event1["id"]))
             assert dbResult != None
 
             # Group should be active=0
@@ -262,7 +262,7 @@ class AggregatorMysqlTest(unittest.TestCase):
             assert event4.group_leader == -1
              
             time.sleep(1.5)    
-            dbResult = self.source.execute("SELECT COUNT(id) FROM %s WHERE (group_leader = %s OR id = %s) AND ack=1" % (self.source.table,event1["id"],event1["id"]))
+            dbResult = self.source.execute("SELECT COUNT(id) FROM %s WHERE (group_leader = %s OR id = %s) AND ack=1" % (self.source.table, event1["id"], event1["id"]))
             assert dbResult != None
 
             # Assert 10 items returned
@@ -286,9 +286,9 @@ class AggregatorMysqlTest(unittest.TestCase):
 #            eventThreads = []
 #            NR_OF_THREADS=10
 #            NR_OF_EVENTS=200
-#            for i in range(0,NR_OF_THREADS):
+#            for i in range(0, NR_OF_THREADS):
 #                thread = TestAggregationInsertionThread()
-#                thread.setup(aggregator,NR_OF_EVENTS,{
+#                thread.setup(aggregator, NR_OF_EVENTS,{
 #                    "program"       : "testcase",
 #                    "host_name"     : "localhost",
 #                    "host_address"  : ip_address.IPAddress("127.0.0.1"),
@@ -296,7 +296,7 @@ class AggregatorMysqlTest(unittest.TestCase):
 #                    "facility"      : 5,
 #                    "priority"      : 0,
 #                    "ack"           : 0
-#                },self.source)
+#                }, self.source)
 #                eventThreads.append(thread)
 #
 #            start = time.time()

@@ -4,13 +4,13 @@ import unittest
 import time
 import logging
 from event import IPAddress
-from event import SnmpTransformer,StringTransformer,SplitTransformer
+from event import SnmpTransformer, StringTransformer, SplitTransformer
 
 
 class RSyslogTransformerTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.FORMAT = "^(?P<DATE>[a-zA-Z]{2,3} \d\d \d\d:\d\d:\d\d) (?P<HOST>[^ ]+)( (?P<PROGRAM>[^:]+):)? (?P<MESSAGE>.*)$"
+        self.FORMAT = "^(?P<DATE>[a-zA-Z]{2, 3} \d\d \d\d:\d\d:\d\d) (?P<HOST>[^ ]+)( (?P<PROGRAM>[^:]+):)? (?P<MESSAGE>.*)$"
         self.LOG_MESSAGES = "./tests/logtest.syslog"
         self.MAX_TIME_PER_EVENT = 0.001 # Hard limit on how long an incoming event should take on average
         self.rsyslog = [
@@ -66,7 +66,7 @@ class RSyslogTransformerTestCase(unittest.TestCase):
 #                try:
 #                    assert ev != None
 #                except Exception, e:
-#                    logging.debug("Line '%s' failed",line)
+#                    logging.debug("Line '%s' failed", line)
 #                    raise e
 #            required = time.time()-start
 #            avg = required/linectr

@@ -8,11 +8,11 @@ class MockAggregator(object):
         self.config = {}
         self.state = "PASS"
     
-    def setup(self,id,config={}):
+    def setup(self, id, config={}):
         self.id = id
         self.config = config
     
-    def process(self,event):
+    def process(self, event):
         return self.state
     
 CFG_FILE = "./tests/testrules.rules"
@@ -27,7 +27,7 @@ class MultiAggregatorTest(unittest.TestCase):
             "aggregate_on_clear" : True
         })
         
-        self.assertEqual(len(processor.aggregators),2)
+        self.assertEqual(len(processor.aggregators), 2)
         ctr = 0
         for aggregator in processor.aggregators:
             ctr = ctr + 1

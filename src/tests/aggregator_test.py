@@ -8,10 +8,10 @@ class MockDataSource(object):
         self.count = 0
         self.groups = {}
         
-    def get_group_leader(self,group_id):
+    def get_group_leader(self, group_id):
         if group_id in self.groups:
-            return (self.groups[group_id],time.time())
-        return (None,time.time())
+            return (self.groups[group_id], time.time())
+        return (None, time.time())
         
 
 class AggregatorTestCase(unittest.TestCase):

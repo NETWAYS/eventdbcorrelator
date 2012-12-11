@@ -16,7 +16,7 @@ class PipeToDBTest(unittest.TestCase):
         self.source = MysqlDatasource()
         dbsetup = SETUP_DB
         dbsetup["transform"] = DBTransformer()
-        self.source.setup("test",SETUP_DB)
+        self.source.setup("test", SETUP_DB)
         # Try tearing down the database in case a previous run ran wihtou cleanup
         try: 
             self.source.test_teardown_db()
