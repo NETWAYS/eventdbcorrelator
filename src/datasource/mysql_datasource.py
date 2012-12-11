@@ -260,8 +260,8 @@ class MysqlDatasource(object):
 
         """ 
         self.group_cache = MysqlGroupCache()
-        groups = self.execute("SELECT group_active, id, group_id, group_count, "+
-                "modified, group_autoclear FROM "+self.table+" "+
+        groups = self.execute("SELECT group_active,id,group_id,group_count,"+
+                "modified,group_autoclear FROM "+self.table+" "+
                 "WHERE group_count AND group_active = 1 "+
                 "AND group_leader = -1")
 
@@ -281,7 +281,7 @@ class MysqlDatasource(object):
 
         Only use this to initialize the db for unittests
         """ 
-        sql_file = open(LOCATION_SETUP_SCHEME, 'r')
+        sql_file = open(LOCATION_SETUP_SCHEME,'r')
         setup_sql = ""
         for line in sql_file:
             setup_sql += "%s" % line
@@ -295,7 +295,7 @@ class MysqlDatasource(object):
     
         Only use this to reset the db state after a unittest is complete
         """
-        sql_file = open(LOCATION_TEARDOWN_SCHEME, 'r')
+        sql_file = open(LOCATION_TEARDOWN_SCHEME,'r')
         setup_sql = ""
         for line in sql_file:
             setup_sql += "%s" % line
@@ -325,15 +325,15 @@ class MysqlDatasource(object):
                 for i in range(0, MAX_INSERT_TRIES):        
                     try: 
                         query = "INSERT INTO "+self.table+\
-                            " (id, host_name, host_address, type, facility, "+\
-                            "priority, program, message, alternative_message, ack"+\
-                            ", created, modified, group_active, group_id, "+\
-                            "group_autoclear, group_leader) VALUES "+\
-                            "(%(id)s, %(host_name)s, %(host_address)s, %(type)s, "+\
-                            "%(facility)s, %(priority)s, %(program)s, "+\
-                            "%(message)s, %(alternative_message)s, %(ack)s, "+\
-                            "NOW(), NOW(), %(group_active)s, %(group_id)s, "+\
-                            "%(group_autoclear)s, %(group_leader)s);"
+                            " (id, host_name,host_address,type,facility,"+\
+                            "priority,program,message,alternative_message,ack"+\
+                            ",created,modified,group_active,group_id,"+\
+                            "group_autoclear,group_leader) VALUES "+\
+                            "(%(id)s,%(host_name)s,%(host_address)s,%(type)s,"+\
+                            "%(facility)s,%(priority)s,%(program)s,"+\
+                            "%(message)s,%(alternative_message)s,%(ack)s,"+\
+                            "NOW(),NOW(),%(group_active)s,%(group_id)s,"+\
+                            "%(group_autoclear)s,%(group_leader)s);"
                         self.execute(query, self.get_event_params(event),
                                             no_result=True, cursor=cursor)
                         break
@@ -408,10 +408,10 @@ class MysqlDatasource(object):
 
         """
         query = "UPDATE "+self.table+" SET host_name=%(host_name)s, "+\
-                "host_address=%(host_address)s, type=%(type)s, "+\
-                "facility=%(facility)s, priority=%(priority)s, "+\
-                "program=%(program)s, message=%(message)s, "+\
-                "ack=%(ack)s, created=%(created)s, modified=%(modified)s "+\
+                "host_address=%(host_address)s,type=%(type)s,"+\
+                "facility=%(facility)s,priority=%(priority)s,"+\
+                "program=%(program)s,message=%(message)s,"+\
+                "ack=%(ack)s,created=%(created)s,modified=%(modified)s "+\
                 "WHERE id = "+str(event["id"])
         self.execute(query, self.out.transform(event), no_result=True)
         
@@ -473,11 +473,11 @@ class MysqlDatasource(object):
 
         """ 
         eventfields = ("id", "host_name", "host_address", "type", "facility",
-                    "priority", "program", "message", "alternative_message", "ack",
-                    "created", "modified", "group_id", "group_leader",
+                    "priority","program","message","alternative_message","ack",
+                    "created","modified","group_id","group_leader",
                     "group_active")
         event = self.execute("SELECT %s FROM event WHERE id = %i AND active = 1 " \
-                        % (", ".join(eventfields), int(event_id)))
+                        % (",".join(eventfields), int(event_id)))
     
         if len(event) < 1:
             return None

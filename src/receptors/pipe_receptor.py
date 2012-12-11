@@ -10,7 +10,7 @@ from event import Event
 
 class PipeReceptor(AbstractReceptor):
     
-    def setup(self, id, config):
+    def setup(self,id,config):
         self.id = id
         self.running = False
         self.callback = None
@@ -42,7 +42,7 @@ class PipeReceptor(AbstractReceptor):
     
     
     
-    def start(self, queue=[], cb=None):
+    def start(self,queue=[],cb=None):
         if not queue:
             queue = []
         if isinstance(queue, (list, tuple)):
@@ -56,19 +56,19 @@ class PipeReceptor(AbstractReceptor):
         if "noThread" in self.config: # this is only for testing
             #logging.debug("Threading disabled for PipeReceptor")
             return self.run()
-        return super(PipeReceptor, self).start()
+        return super(PipeReceptor,self).start()
     
     
-    def register_queue(self, queue):        
+    def register_queue(self,queue):        
         self.queues.append(queue)
     
     
-    def unregister_queue(self, queue):
+    def unregister_queue(self,queue):
         if queue in self.queues:
             self.queues.remove(queue)
     
     
-    def __get_messages_from_raw_stream(self, dataPacket):
+    def __get_messages_from_raw_stream(self,dataPacket):
         if len(dataPacket) == 0:
            return [] 
         messages = dataPacket.split("\n")
@@ -92,11 +92,11 @@ class PipeReceptor(AbstractReceptor):
         self.lastPart = ""
         transformed = None
         while self.running:
-            inPipes, pout, pex = select.select([self.pipe], [], [], 3)
+            inPipes,pout,pex = select.select([self.pipe],[],[],3)
 
             if len(inPipes) > 0:
                 pipe = inPipes[0]
-                dataPacket = os.read(pipe, buffersize)
+                dataPacket = os.read(pipe,buffersize)
                 if len(dataPacket) == 0:
                     self.__reopen_pipe()
                     continue
@@ -108,12 +108,12 @@ class PipeReceptor(AbstractReceptor):
                     transformed = tr.transform(message)
                         
                     if self.queues and transformed:
-                        if isinstance(transformed, Event):
+                        if isinstance(transformed,Event):
                             transformed["source"] = self.source
                         for queue in self.queues:
                             queue.put(transformed)    
                     if self.callback != None:
-                        self.callback(self, transformed)
+                        self.callback(self,transformed)
                    
             else:
                 if self.callback != None:
@@ -126,10 +126,10 @@ class PipeReceptor(AbstractReceptor):
         try :
             if self.pipe != None:
                 os.close(self.pipe) 
-        except OSError, e:
+        except OSError,e:
             pass
         
-        self.pipe = os.open(self.config["path"], self.runFlags)
+        self.pipe = os.open(self.config["path"],self.runFlags)
         
     def run(self):
         try :
@@ -149,9 +149,9 @@ class PipeReceptor(AbstractReceptor):
         if os.path.exists(self.config["path"]):
             os.remove(self.config["path"])
         
-        os.mkfifo(self.config["path"], int(self.config["mod"]))
-        os.chown(self.config["path"], self.config["owner"], self.config["group"])
-        os.chmod(self.config["path"], self.config["mod"])
+        os.mkfifo(self.config["path"],int(self.config["mod"]))
+        os.chown(self.config["path"],self.config["owner"],self.config["group"])
+        os.chmod(self.config["path"],self.config["mod"])
         
     def __clean(self):
         try: 
@@ -162,7 +162,7 @@ class PipeReceptor(AbstractReceptor):
             os.remove(self.config["path"])
 
     
-    def on_receive(self, Event):
+    def on_receive(self,Event):
         pass
     
     def stop(self):
@@ -170,8 +170,8 @@ class PipeReceptor(AbstractReceptor):
             logging.debug("Stopping Receptor %s " % self.id )
             if self.running == True:
                 if os.path.exists(self.config["path"]):
-                    fd = os.open(self.config["path"], os.O_WRONLY)
-                    os.write(fd, "_")
+                    fd = os.open(self.config["path"],os.O_WRONLY)
+                    os.write(fd,"_")
                     os.close(fd)
                     
                 self.__clean()

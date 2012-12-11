@@ -7,7 +7,7 @@ import logging
 
 class Controller:
     
-    def __init__(self, config, instances):
+    def __init__(self,config,instances):
         self.config = config
         self.instances = instances
         self.threads = []
@@ -32,7 +32,7 @@ class Controller:
         
     def __read_chain_definitions(self):
         self.chainFactory = ChainFactory()
-        self.chainFactory.read_config_file(self.config["chain_dir"], self.instances)
+        self.chainFactory.read_config_file(self.config["chain_dir"],self.instances)
         
         
         
@@ -42,7 +42,7 @@ class Controller:
         try:
             
             if self.instances.has_unmatched_dependencies():
-                logging.warn("Unmatched dependencies found : %s", self.instances.deferred)
+                logging.warn("Unmatched dependencies found : %s",self.instances.deferred)
             while True:
                 for thread in self.threads:
                     thread.join(5)        

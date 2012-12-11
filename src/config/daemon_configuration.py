@@ -15,10 +15,10 @@ class DaemonConfiguration(object):
     
     def parse_cli(self):
         parser = OptionParser()
-        parser.add_option("-c", "--config", dest="config_file", help="use FILE as configuration", metavar="FILE", default=DEFAULT_CONFIG_PATH)
-        parser.add_option("-C", "--chains", dest="chain_dir", help="dir to search for event chains", default=None)
-        parser.add_option("-f", "--foreground", dest="foreground", action="store_true", default=False, help="run in foreground (useful for debugging")
-        parser.add_option("-l", "--log", default=None, dest="log", help="Log file")
+        parser.add_option("-c","--config",dest="config_file", help="use FILE as configuration",metavar="FILE",default=DEFAULT_CONFIG_PATH)
+        parser.add_option("-C","--chains",dest="chain_dir", help="dir to search for event chains",default=None)
+        parser.add_option("-f","--foreground",dest="foreground",action="store_true",default=False,help="run in foreground (useful for debugging")
+        parser.add_option("-l","--log",default=None,dest="log",help="Log file")
         (self.options, args) = parser.parse_args()
 
     def parse_config_file(self): 
@@ -27,9 +27,9 @@ class DaemonConfiguration(object):
         self.config = ConfigParser.ConfigParser()
         self.config.readfp(open(self.options.config_file))
         
-        self.options.import_dir = self.config.get("global", "config_dir")
+        self.options.import_dir = self.config.get("global","config_dir")
         if self.options.chain_dir == None:
-            self.options.chain_dir = self.config.get("global", "chain_dir")
+            self.options.chain_dir = self.config.get("global","chain_dir")
         
         if path.exists(self.options.import_dir):
             self.__read_sub_configs()
@@ -48,14 +48,14 @@ class DaemonConfiguration(object):
             res[section] = self.__get_section_as_dict(section)
         return res 
     
-    def __get_section_as_dict(self, section):
+    def __get_section_as_dict(self,section):
         dict = {}
 
         for i in self.config.options(section):
-            dict[i] = self.config.get(section, i)
+            dict[i] = self.config.get(section,i)
         return dict
     
-    def __getitem__(self, name):
+    def __getitem__(self,name):
         return self.options.__dict__[name]
 
     

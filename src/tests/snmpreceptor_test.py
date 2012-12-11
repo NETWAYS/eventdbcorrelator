@@ -3,7 +3,7 @@ import os
 from receptors.snmp_receptor import SnmpReceptor
 
 class TransformMock(object): 
-    def transform(self, string):
+    def transform(self,string):
         return string
        
 '''
@@ -15,13 +15,13 @@ class SNMPReceptorTest(unittest.TestCase):
     
     def test_snmp_setup(self):
         snmp = SnmpReceptor()
-        snmp.setup("test", {
+        snmp.setup("test",{
             "handler" : "/tmp/snmp_trap",
             "noThread" : True,
             "transformer": TransformMock()
         })
         assert os.path.exists("/tmp/snmp_trap.pipe")
-        snmp.start(None, lambda me: me.stop())
+        snmp.start(None,lambda me: me.stop())
         snmp.stop()            
         assert os.path.exists("/tmp/snmp_trap")
         

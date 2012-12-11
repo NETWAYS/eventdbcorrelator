@@ -6,7 +6,7 @@ import time
 from event import *
 
 class StringTransformer(object):
-    def setup(self, id, config):
+    def setup(self,id,config):
         self.id = id
         self.format = re.compile(config["format"])
         if "defaultmessage" in config:
@@ -16,7 +16,7 @@ class StringTransformer(object):
         self.fixed = {}
         
         if "fixed" in config:
-            fixed = config["fixed"].split(", ")
+            fixed = config["fixed"].split(",")
             for keyval in fixed:
                 keyval = keyval.split("=")
                 self.fixed[keyval[0].lower()] = keyval[1]
@@ -25,11 +25,11 @@ class StringTransformer(object):
         else:
             self.dateFormat = "%b %d %H:%M:%S"
     
-    def set_current_year(self, st):
+    def set_current_year(self,st):
         now = time.localtime()
-        return (now[0], st[1], st[2], st[3], st[4], st[5], st[6], st[7], st[8])
+        return (now[0],st[1],st[2],st[3],st[4],st[5],st[6],st[7],st[8])
     
-    def transform(self, string):
+    def transform(self,string):
         try:
             matches =  self.format.match(string)
             if matches == None:
@@ -42,7 +42,7 @@ class StringTransformer(object):
     
        
  
-    def dict_to_event(self, matchdict = {}):
+    def dict_to_event(self,matchdict = {}):
         for i in self.fixed:
             matchdict[i] = self.fixed[i]
         if not "DATE" in matchdict:
@@ -50,7 +50,7 @@ class StringTransformer(object):
         else:
             if "TIME" in matchdict:
                 matchdict["DATE"] = matchdict["DATE"]+" "+matchdict["TIME"]
-            matchdict["DATE"] = time.strptime(matchdict["DATE"], self.dateFormat)
+            matchdict["DATE"] = time.strptime(matchdict["DATE"],self.dateFormat)
             if matchdict["DATE"][0] < 2000:
                 matchdict["DATE"] = self.set_current_year(matchdict["DATE"])
             matchdict["DATE"] = time.mktime(matchdict["DATE"])
@@ -58,7 +58,7 @@ class StringTransformer(object):
         if not "MESSAGE" in matchdict:
             matchdict["MESSAGE"] = self.defaultMessage
         
-        event = Event(matchdict["MESSAGE"], matchdict["DATE"], matchdict)
+        event = Event(matchdict["MESSAGE"],matchdict["DATE"],matchdict)
         return event
     
     

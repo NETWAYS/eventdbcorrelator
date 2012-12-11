@@ -6,7 +6,7 @@ from collections import deque
 
 class SpoolDatasource(object):
     
-    def setup(self, id, config):
+    def setup(self,id,config):
         self.id = id
         self.spool_filename = "edbc.spool"
         
@@ -40,10 +40,10 @@ class SpoolDatasource(object):
     def open(self):
         pass
     
-    def execute(self, query, args = (), noResult=False, cursor=None):
+    def execute(self,query,args = (),noResult=False,cursor=None):
         try:
             self.lock.acquire()
-            self.write_to_spool(query, args)
+            self.write_to_spool(query,args)
             return None
         finally:
             self.lock.release()
@@ -54,10 +54,10 @@ class SpoolDatasource(object):
     def open_spool_handler(self):
         if not os.access(self.spool_dir, os.W_OK|os.R_OK):
             raise Exception("Spool dir %s is not write and readable" % self.spool_dir)
-        self.spool_handle = open(self.spool_dir+"/"+self.spool_filename, "a+")
+        self.spool_handle = open(self.spool_dir+"/"+self.spool_filename,"a+")
         
     # protected, as this requires an acquired lock
-    def _flush_buffer_to_file(self, clear = False):
+    def _flush_buffer_to_file(self,clear = False):
         if not self.spool_handle:
             self.buffer.popleft() # if no flush is possible, pop one item so we have space
             return 
@@ -94,11 +94,11 @@ class SpoolDatasource(object):
         
         
     
-    def write_to_spool(self, query, args):
+    def write_to_spool(self,query,args):
         if len(self.buffer) >= self.spool_buffer_size:
             self._flush_buffer_to_file()
         
-        self.buffer.append((query, args))
+        self.buffer.append((query,args))
         
     def get_spooled(self):
         try:

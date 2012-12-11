@@ -2,5 +2,5 @@ import threading
 
 class AbstractReceptor(threading.Thread):
     
-    def setup(self, config):
+    def setup(self,config):
         pass

@@ -17,7 +17,7 @@ class SpoolDatasourceTest(unittest.TestCase):
     def test_spool_file_creation(self):
         try:
             ds = SpoolDatasource()
-            ds.setup("test", {
+            ds.setup("test",{
                 "spool_dir" : TMP_DIR,
                 "spool_filename" : SPOOL_NAME
             })
@@ -29,17 +29,17 @@ class SpoolDatasourceTest(unittest.TestCase):
     def test_spool_buffer_in_memory(self):
         try:
             ds = SpoolDatasource()
-            ds.setup("test", {
+            ds.setup("test",{
                 "buffer_size" : 10
             })
             cursor = ds.cursor()
-            for i in range(0, 100):
-                ds.execute(i, i)
+            for i in range(0,100):
+                ds.execute(i,i)
             ds.close()
             assert len(ds.buffer) == 10
             i = 90
             for x in ds.buffer:
-                assert x == (i, i)
+                assert x == (i,i)
                 i = i+1
             
             
@@ -49,31 +49,31 @@ class SpoolDatasourceTest(unittest.TestCase):
     def test_spool_buffer_in_file(self):
         try:
             ds = SpoolDatasource()
-            ds.setup("test", {
+            ds.setup("test",{
                 "buffer_size" : 10,
                 "spool_dir" : TMP_DIR,
                 "spool_filename" : SPOOL_NAME
             })
             cursor = ds.cursor()
-            for i in range(0, 10):
-                ds.execute(i, i)
+            for i in range(0,10):
+                ds.execute(i,i)
             
             assert len(ds.buffer) == 10
-            ds.execute(11, 11)
+            ds.execute(11,11)
             assert len(ds.buffer) == 1
-            assert ds.buffer[0] == (11, 11)
+            assert ds.buffer[0] == (11,11)
         
         finally:
             self.clear_temp_files()
     
     def test_spool_memory_get_content(self):
             ds = SpoolDatasource()
-            ds.setup("test", {
+            ds.setup("test",{
                 "buffer_size" : 10
             })
             cursor = ds.cursor()
-            for i in range(0, 100):
-                cursor.execute(i, i)
+            for i in range(0,100):
+                cursor.execute(i,i)
             ds.close()
             result = ds.get_spooled()
             # Assert everything exceeding the buffer size being truncated
@@ -86,14 +86,14 @@ class SpoolDatasourceTest(unittest.TestCase):
     def test_spool_file_get_content(self):
         try:
             ds = SpoolDatasource()
-            ds.setup("test", {
+            ds.setup("test",{
                 "buffer_size" : 10,
                 "spool_dir" : TMP_DIR,
                 "spool_filename" : SPOOL_NAME            
             })
             cursor = ds.cursor()
-            for i in range(0, 100):
-                cursor.execute(i, "test\ntest\n.\n")
+            for i in range(0,100):
+                cursor.execute(i,"test\ntest\n.\n")
             ds.close()
             result = ds.get_spooled()
 

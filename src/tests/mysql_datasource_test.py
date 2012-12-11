@@ -10,7 +10,7 @@ from event import ip_address
 
 class DBTransformerMock(object):
     
-    def transform(self, event):
+    def transform(self,event):
         return {
             "host_name" : "test",
             "host_address" : event["host_address"].bytes,
@@ -53,7 +53,7 @@ class MysqlDatasourceTest(unittest.TestCase):
 
     def setUp(self):
         self.source = MysqlDatasource()
-        self.source.setup("test", SETUP_DB)
+        self.source.setup("test",SETUP_DB)
         # Try tearing down the database in case a previous run ran wihtou cleanup
         try: 
             self.source.test_teardown_db()
@@ -66,7 +66,7 @@ class MysqlDatasourceTest(unittest.TestCase):
 
         self.source.test_setup_db()
         try:
-            result1 = self.source.execute("SELECT 'test', 1, 1.2, 0xff from dual")
+            result1 = self.source.execute("SELECT 'test',1,1.2,0xff from dual")
             for row in result1:
                 assert row[0] == 'test'
                 assert row[1] == 1
@@ -74,7 +74,7 @@ class MysqlDatasourceTest(unittest.TestCase):
                 assert ord(row[3]) == 0xff
             
             #test with argument list
-            result2 = self.source.execute("SELECT %s, %s, %s, %s from dual", ('test', 1, 1.2, 0xff ))
+            result2 = self.source.execute("SELECT %s,%s,%s,%s from dual",('test',1,1.2,0xff ))
             for row in result2:
                 assert row[0] == 'test'
                 assert row[1] == 1
@@ -93,7 +93,7 @@ class MysqlDatasourceTest(unittest.TestCase):
         logging.debug("crud")
 
         self.source.test_setup_db()
-        ev = Event(message="testmessage", additional={
+        ev = Event(message="testmessage",additional={
             "host_address": ip_address.IPAddress("192.168.178.56"),
             "program" : "test_program"
         })
@@ -132,10 +132,10 @@ class MysqlDatasourceTest(unittest.TestCase):
             self.source.test_setup_db()
             
             message = "test123456789"
-            for i in range(0, 10):
+            for i in range(0,10):
                 message = message + message;
 
-            ev = Event(message=message, additional={
+            ev = Event(message=message,additional={
                 "host_address": ip_address.IPAddress("192.168.178.56"),
                 "program" : "test_program"
             })
@@ -150,7 +150,7 @@ class MysqlDatasourceTest(unittest.TestCase):
         logging.debug("implicit_insert")
         try:
             self.source.test_setup_db()
-            ev = Event(message="test", additional={
+            ev = Event(message="test",additional={
                 "host_address": ip_address.IPAddress("192.168.178.56"),
                 "program" : "test_program",
 
@@ -163,13 +163,13 @@ class MysqlDatasourceTest(unittest.TestCase):
             ev.group_id = "test"
             self.source.insert(ev)
             leader = self.source.get_group_leader("test")
-            assert leader != (None, None)
+            assert leader != (None,None)
             assert leader[0] == ev["id"]
             lastmod = leader[1]
             time.sleep(1)
             
             # test moddate
-            ev2 = Event(message="test", additional={
+            ev2 = Event(message="test",additional={
                 "host_address": ip_address.IPAddress("192.168.178.56"),
                 "program" : "test_program",
                 "priority" : 0,
@@ -182,7 +182,7 @@ class MysqlDatasourceTest(unittest.TestCase):
             self.source.insert(ev2)
             
             leader = self.source.get_group_leader("test")
-            assert leader != (None, None)
+            assert leader != (None,None)
             assert leader[0] == ev["id"]
             assert lastmod != leader[1]
             assert self.source.connections.qsize() == self.source.poolsize
@@ -195,7 +195,7 @@ class MysqlDatasourceTest(unittest.TestCase):
         logging.debug("id_gen")
         try:
             self.source.test_setup_db()
-            ev = Event(message="test", additional={
+            ev = Event(message="test",additional={
                 "host_address": ip_address.IPAddress("192.168.178.56"),
                 "program" : "test_program",
 
@@ -215,7 +215,7 @@ class MysqlDatasourceTest(unittest.TestCase):
             
             self.source.close()
             self.source = MysqlDatasource()
-            self.source.setup("test", SETUP_DB)
+            self.source.setup("test",SETUP_DB)
             
             assert self.source.last_id == 5
             self.source.insert(ev)
@@ -227,7 +227,7 @@ class MysqlDatasourceTest(unittest.TestCase):
     def test_id_generation_error(self):
         try:
             self.source.test_setup_db()
-            ev = Event(message="test", additional={
+            ev = Event(message="test",additional={
                 "host_address": ip_address.IPAddress("192.168.178.56"),
                 "program" : "test_program",
 
@@ -252,7 +252,7 @@ class MysqlDatasourceTest(unittest.TestCase):
         logging.debug("group_persistence")
         try:
             self.source.test_setup_db()
-            ev = Event(message="test", additional={
+            ev = Event(message="test",additional={
                 "host_address": ip_address.IPAddress("192.168.178.56"),
                 "program" : "test_program",
 
@@ -266,17 +266,17 @@ class MysqlDatasourceTest(unittest.TestCase):
             self.source.insert(ev)
             
             leader = self.source.get_group_leader("test\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
-            assert leader != (None, None)
+            assert leader != (None,None)
             assert leader[0] == ev["id"]
             
             self.source.close()
             
             self.source = MysqlDatasource()
-            self.source.setup("test", SETUP_DB)
+            self.source.setup("test",SETUP_DB)
             self.source.connect()
                         
             leader = self.source.get_group_leader("test\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
-            assert leader != (None, None)
+            assert leader != (None,None)
             assert leader[0] == ev["id"]            
             assert self.source.connections.qsize() == self.source.poolsize
             
@@ -291,7 +291,7 @@ class MysqlDatasourceTest(unittest.TestCase):
             self.source.test_setup_db()
             self.source.no_async_flush = False
             self.source.flush_interval = 500.0
-            ev = Event(message="test", additional={
+            ev = Event(message="test",additional={
                 "host_address": ip_address.IPAddress("192.168.178.56"),
                 "program" : "test_program",
 
