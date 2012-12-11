@@ -2,7 +2,6 @@ prefix=@prefix@
 exec_prefix=@exec_prefix@
 BIN_USER=@bin_user@
 BIN_GROUP=@bin_group@
-
 INSTALL=@INSTALL@
 INSTALL_OPTS=-o $(BIN_USER) -g $(BIN_GROUP)
 
@@ -36,4 +35,5 @@ install-base-config:
 test:
 	cd $(prefix)/lib && python ./runtests.py
 	
-
+dist-package:
+	tar cvf edbc-`git rev-parse --short HEAD`.tar.gz lib/ src/ Makefile.in configure.ac install-sh configure doc/ etc/ bin/ 
