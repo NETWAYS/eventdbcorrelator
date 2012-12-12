@@ -42,9 +42,9 @@ class PipeReceptor(AbstractReceptor):
         self.running = False
         self.callback = None
         self.config = {
-            "mod": 0666,
-            "owner": os.getuid(),
-            "group": os.getgid(),
+            "mod" : 0666,
+            "owner" : os.getuid(),
+            "group" : os.getgid(),
             "path" : "/usr/local/var/edbc.pipe",
             "bufferSize" : 2048,
             "format" : None
