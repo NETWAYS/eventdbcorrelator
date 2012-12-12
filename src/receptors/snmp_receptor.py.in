@@ -1,11 +1,40 @@
+"""
+EDBC - Message correlation and aggregation engine for passive monitoring events
+Copyright (C) 2012  NETWAYS GmbH
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+"""
 from receptors import PipeReceptor
 import logging
 import os 
 
 class SnmpReceptor(PipeReceptor):
+    """ Special PipeRececptor that additionally creates an snmp_handler script that receives traps, 
+        formats them and forwards them to the pipe created by the underlying PipeReceptor
+
+    """   
     
-    def setup(self,id,config):
-        self.id = id
+
+    def setup(self, _id, config):
+        """ Default setup method as called by the InstanceFactroy, sets up the pipe 
+            but doesn't start the read operation yet
+
+        """
+
+        self.id = _id
         self.running = False
         self.callback = None
         self.config = {
@@ -21,7 +50,7 @@ class SnmpReceptor(PipeReceptor):
         if "handler" in config and not "path" in config:
             self.config["path"] = config["handler"]+".pipe"
             
-        self.runFlags = os.O_RDONLY|os.O_NONBLOCK
+        self.run_flags = os.O_RDONLY|os.O_NONBLOCK
         
         for key in config.keys():
             if key == 'owner':
@@ -38,7 +67,7 @@ class SnmpReceptor(PipeReceptor):
             self.source = "snmp"
             
         if not os.path.exists(self.config["handler_tpl"]):
-            logging.error("SNMP handler %s can't be created: %s doesn't exist." % (self.id,self.config["handler_tpl"]))
+            logging.error("SNMP handler %s can't be created: %s doesn't exist.", self.id, self.config["handler_tpl"])
             return 
 
         self.pipe = None
@@ -48,6 +77,9 @@ class SnmpReceptor(PipeReceptor):
         
         
     def __create_handler(self):
+        """ Creates the snmp handler application that formats traps for the pipe and forwards them to the pipereceptor
+
+        """
         #logging.debug("Setting up PipeReceptor with %s" % self.config)
         if os.path.exists(self.config["handler"]):
             os.remove(self.config["handler"])
@@ -61,5 +93,5 @@ class SnmpReceptor(PipeReceptor):
         file = open(self.config["handler"],"w+")
         file.write(trap_app)
         file.close()
-        os.chown(self.config["handler"],self.config["owner"],self.config["group"])
-        os.chmod(self.config["handler"],self.config["mod"])
+        os.chown(self.config["handler"], self.config["owner"], self.config["group"])
+        os.chmod(self.config["handler"], self.config["mod"])
