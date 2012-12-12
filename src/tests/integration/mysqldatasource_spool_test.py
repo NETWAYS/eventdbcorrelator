@@ -24,7 +24,6 @@ import os
 import logging
 
 from datasource import MysqlDatasource, DBTransformer, SpoolDatasource
-from event.event import Event, Matcher
 from event import ip_address
 from tests.mysql_datasource_test import SETUP_DB
 
