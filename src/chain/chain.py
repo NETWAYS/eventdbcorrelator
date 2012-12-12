@@ -37,7 +37,7 @@ class Chain(threading.Thread):
 
     """
 
-    def setup(self,_id, config):
+    def setup(self, _id, config):
         """ Setup function as called by the InstanceFactory after the config is read 
 
         """
@@ -49,9 +49,9 @@ class Chain(threading.Thread):
         else:
             self.matcher = matcher.Matcher(config["matcher"])
         self.config = config
-        '''
+        """
         Chains that will be called depending on the match result of this chain
-        '''
+        """
         self.on_match_chains = []
         self.on_not_match_chains = []
 
@@ -62,10 +62,10 @@ class Chain(threading.Thread):
         """    
         try:
             self.setup_dependencies()
-            '''
+            """
             Only setup input for independent chains, as otherwise the input from
             the previous chain is only forwarded to this chain
-            '''
+            """
             if self.is_independent:
                 self.setup_input()
             
@@ -104,7 +104,7 @@ class Chain(threading.Thread):
             self.is_independent = False
             dependent_chain = self.config[i]
             if not dependent_chain:
-                raise Exception("chain dependency %s:%s can't be resolved in chain %s " % (i,self.config[i],self.id))
+                raise Exception("chain dependency %s:%s can't be resolved in chain %s " % (i, self.config[i], self.id))
             if i == AFTER_DIRECTIVE:
                 dependent_chain.register_chain_on_match(self)
             if i == NOT_AFTER_DIRECTIVE:
@@ -116,11 +116,11 @@ class Chain(threading.Thread):
         """
         for i in self.config:
             if i[0:2] == "to":
-                self.register_processor(i,self.config[i])
+                self.register_processor(i, self.config[i])
         # sort by position, so the chain elements can be run sequentially 
         self.event_chain.sort(lambda x, y: x["pos"]-y["pos"])
         
-    def register_processor(self,type,target):
+    def register_processor(self, type, target):
         """ Registers a new processor in this chain 
 
         """
@@ -137,21 +137,21 @@ class Chain(threading.Thread):
         }
         
         for condition in type[1:-1]:
-            processor_obj["conditions"].append(self.get_condition_object(condition,pos))
+            processor_obj["conditions"].append(self.get_condition_object(condition, pos))
         
         self.event_chain.append(processor_obj)
-        logging.debug("Event chain for %s : %s" %(self.id,self.event_chain))
+        logging.debug("Event chain for %s : %s", self.id, self.event_chain )
 
-    def get_condition_object(self,condition,base_pos):
+    def get_condition_object(self, condition, base_pos):
         """ Reads conditions from a processor definition and sets returns them as a {pos: INT, value: STRING } object
 
         """
-        condition_pos = re.match("(?P<COND_POS>\d+)\[(?P<COND_RETURN>\w+)\]",condition)
+        condition_pos = re.match("(?P<COND_POS>\d+)\[(?P<COND_RETURN>\w+)\]", condition)
         if not condition_pos:
             raise Exception("Error in chain condition: %s couldn't be parsed (format is NR[CONDITION]" % condition)
         cdict = condition_pos.groupdict()
         if int(cdict["COND_POS"]) >= base_pos:
-            raise Exception("Logic error in chain %s: condition %s tests for future events",self.id,condition)
+            raise Exception("Logic error in chain %s: condition %s tests for future events", self.id, condition)
 
         return {
             "pos":    int(cdict["COND_POS"]), 
@@ -165,15 +165,15 @@ class Chain(threading.Thread):
         
         """
         if not self.ready == True:
-            logging.warn("Chain %s won't accept events due to setup errors..." % self.id)
+            logging.warn("Chain %s won't accept events due to setup errors...", self.id)
             return
         if not self.is_independent:
-            logging.debug("Chain is not independent, won't run in seperate thread" % self.id)
+            logging.debug("Chain is not independent, won't run in seperate thread", self.id)
             return
         
         if "noThread" in self.config: # this is only for testing
             return self.run()
-        return super(Chain,self).start()
+        return super(Chain, self).start()
     
     
     def run(self):
@@ -197,12 +197,12 @@ class Chain(threading.Thread):
         """
         while self.running:
             try:
-                ev = self.in_queue.get(True,QUEUE_WAIT_TIMEOUT)
+                ev = self.in_queue.get(True, QUEUE_WAIT_TIMEOUT)
                 self.on_event_recv(ev)
             except Queue.Empty, e:
                 pass
         
-    def on_event_recv(self,ev):
+    def on_event_recv(self, ev):
         """ Called when an event is received. Tests if the general chain matcher applies and routes the event through the chain if so
 
         """
@@ -218,7 +218,7 @@ class Chain(threading.Thread):
             for chain in self.on_match_chains:
                 chain.on_event_recv(ev)
 
-    def process_event(self,ev):
+    def process_event(self, ev):
         """ Runs every processor in the chain (except conditional processors that don't match)
             
         """
@@ -245,20 +245,18 @@ class Chain(threading.Thread):
         """
         try:
             self.input.unregister_queue(self.in_queue)
-            logging.debug("Stopping Chain %s " % self.id )
+            logging.debug("Stopping Chain %s ", self.id )
         finally:
             self.running = False        
             
-    def register_chain_on_match(self,chain):
+    def register_chain_on_match(self, chain):
         """ Registers a chain that will be called after the matcher of this chain matches an event
             
         """
         self.on_match_chains.append(chain)
-        pass
     
-    def register_chain_on_not_match(self,chain):
+    def register_chain_on_not_match(self, chain):
         """ Registers a new chain that will be called after the matcher of this chain does not match an event
 
         """
         self.on_not_match_chains.append(chain)
-        pass
