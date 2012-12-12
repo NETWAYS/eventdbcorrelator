@@ -1,20 +1,53 @@
+"""
+EDBC - Message correlation and aggregation engine for passive monitoring events
+Copyright (C) 2012  NETWAYS GmbH
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+"""
 import unittest
 import os
 import Queue
 import logging
-from event.event import *
+from event.event import Event
 from receptors.pipe_receptor import PipeReceptor
 
-class TransformMock(object): 
+class TransformMock(object):
+    """ Simple transformer mock that does nothing
+    
+    """
     def transform(self, string):
         return string
         
 class PipeReceptorTestCase(unittest.TestCase):
+    """ Tests for the pipereceptor input receptor
+
+    """
+
+
     def setUp(self):
+        """ Unit test setup
+
+        """
         self.TEST_EVENTS = './tests/logtest.syslog'
         self.TESTPATH = '/tmp/test.pipe'
 
     def test_pipe_setup(self):
+        """ Test simple setup and if the pipe created and cleared correctly
+
+        """
         pr = PipeReceptor()
         pr.setup("test",{
             "path": self.TESTPATH,
@@ -24,17 +57,17 @@ class PipeReceptorTestCase(unittest.TestCase):
         assert os.path.exists(self.TESTPATH) == True
 
         # Nonblocking Pipe, otherwise the test would hang
-        pr.runFlags = pr.runFlags | os.O_NONBLOCK
+        pr.run_flags = pr.run_flags | os.O_NONBLOCK
         
         pr.start(None, lambda me: me.stop())
         pr.stop()
         
         assert os.path.exists(self.TESTPATH) == False
 
-    
-    
-
     def test_pipe_read(self):
+        """ Test if the pipe correctly reads strings from the pipe and recognises line breaks
+
+        """
         pr = PipeReceptor()
         pr.setup("test",{
             "path": self.TESTPATH,
@@ -57,9 +90,10 @@ class PipeReceptorTestCase(unittest.TestCase):
         pr.stop()
         assert queueString == teststring
     
-    
-    
     def test_pipe_multi_read(self):
+        """ Test if a pipe is able to write in multiple queues
+
+        """
         pr = PipeReceptor()
         pr.setup("test",{
             "path": self.TESTPATH,
@@ -90,9 +124,11 @@ class PipeReceptorTestCase(unittest.TestCase):
         assert queue4.empty()
         assert queueString1 == queueString2 == queueString3 == teststring
     
-    
-    
     def test_pipe_performance(self):
+        """ Test if the pipe read performance doesn't break down if there are
+            lots of events
+
+        """
         pr = PipeReceptor()
         pr.setup("test",{
             "path": self.TESTPATH,
@@ -128,6 +164,9 @@ class PipeReceptorTestCase(unittest.TestCase):
             pr.stop()
             
     def test_pipe_reopen(self):
+        """ Test if the pipe is correctly reopened when it's being closed
+
+        """
         pr = PipeReceptor()
         pr.setup("test",{
             "path": self.TESTPATH,
@@ -164,5 +203,8 @@ class PipeReceptorTestCase(unittest.TestCase):
             pr.stop()
         
     def tearDown(self):
+        """ Tear down this receptor
+
+        """
         if os.path.exists(self.TESTPATH):
             os.remove(self.TESTPATH)
