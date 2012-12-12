@@ -1,5 +1,22 @@
-# To change this template, choose Tools | Templates
-# and open the template in the editor.
+"""
+EDBC - Message correlation and aggregation engine for passive monitoring events
+Copyright (C) 2012  NETWAYS GmbH
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+"""
 from abstract_receptor import AbstractReceptor;
 import logging
 import os
@@ -9,9 +26,19 @@ import Queue
 from event import Event
 
 class PipeReceptor(AbstractReceptor):
+    """ Receptor that opens a pipe at a given location and reads events in a message
+        format defined by the input formatter and transforms them to normalized Event 
+        objects
+
+    """   
     
-    def setup(self,id,config):
-        self.id = id
+ 
+    def setup(self, _id, config):
+        """ Default setup method as called by the InstanceFactroy, sets up the pipe 
+            but doesn't start the read operation yet
+
+        """
+        self.id = _id
         self.running = False
         self.callback = None
         self.config = {
@@ -23,7 +50,7 @@ class PipeReceptor(AbstractReceptor):
             "format" : None
         }
         
-        self.runFlags = os.O_RDONLY|os.O_NONBLOCK
+        self.run_flags = os.O_RDONLY|os.O_NONBLOCK
         for key in config.keys():
             if key == 'owner':
                 config[key] = pwd.getpwnam(config[key]).pw_uid
@@ -39,10 +66,11 @@ class PipeReceptor(AbstractReceptor):
         self.pipe = None
         self.queues = []
         self.setup_pipe()
-    
-    
-    
-    def start(self,queue=[],cb=None):
+     
+    def start(self, queue=[], cb=None):
+        """ Starts the receptor in a new thread
+        
+        """
         if not queue:
             queue = []
         if isinstance(queue, (list, tuple)):
@@ -56,51 +84,62 @@ class PipeReceptor(AbstractReceptor):
         if "noThread" in self.config: # this is only for testing
             #logging.debug("Threading disabled for PipeReceptor")
             return self.run()
-        return super(PipeReceptor,self).start()
+        return super(PipeReceptor, self).start()
     
     
-    def register_queue(self,queue):        
+    def register_queue(self, queue):        
+        """ Registers a queue to push new events to in the internal queue list
+
+        """
         self.queues.append(queue)
     
     
-    def unregister_queue(self,queue):
+    def unregister_queue(self, queue):
+        """ Removes a queue from this receptors queue list
+
+        """ 
         if queue in self.queues:
             self.queues.remove(queue)
     
-    
-    def __get_messages_from_raw_stream(self,dataPacket):
-        if len(dataPacket) == 0:
+    def __get_messages_from_raw_stream(self, data_packet):
+        """ Reads mesages from raw string input and returns a list of messages 
+
+        """
+        if len(data_packet) == 0:
            return [] 
-        messages = dataPacket.split("\n")
+        messages = data_packet.split("\n")
         
         # ensure truncated messages not fitting in one buffer are respected
         if messages[0] == "":
-            messages[0] = self.lastPart
-            self.lastPart = ""
-        if self.lastPart != "" :
-            messages[0] = self.lastPart + messages[0]
-            self.lastPart = ""
-        if dataPacket[-1] != "\n":
-            self.lastPart = messages.pop()
+            messages[0] = self.last_part
+            self.last_part = ""
+        if self.last_part != "" :
+            messages[0] = self.last_part + messages[0]
+            self.last_part = ""
+        if data_packet[-1] != "\n":
+            self.last_part = messages.pop()
         return messages
         
         
     def __read(self):
+        """ Reads from the pipe and transforms raw event strings to normalized Event objecs
+
+        """
         tr = self.config["transformer"]
         buffersize = self.config["bufferSize"]
         pipe = None
-        self.lastPart = ""
+        self.last_part = ""
         transformed = None
         while self.running:
-            inPipes,pout,pex = select.select([self.pipe],[],[],3)
+            inPipes, pout, pex = select.select([self.pipe], [], [], 3)
 
             if len(inPipes) > 0:
                 pipe = inPipes[0]
-                dataPacket = os.read(pipe,buffersize)
-                if len(dataPacket) == 0:
+                data_packet = os.read(pipe, buffersize)
+                if len(data_packet) == 0:
                     self.__reopen_pipe()
                     continue
-                messages = self.__get_messages_from_raw_stream(dataPacket)
+                messages = self.__get_messages_from_raw_stream(data_packet)
                 
                 for message in messages:                         
                     if message == "": 
@@ -108,12 +147,12 @@ class PipeReceptor(AbstractReceptor):
                     transformed = tr.transform(message)
                         
                     if self.queues and transformed:
-                        if isinstance(transformed,Event):
+                        if isinstance(transformed, Event):
                             transformed["source"] = self.source
                         for queue in self.queues:
                             queue.put(transformed)    
                     if self.callback != None:
-                        self.callback(self,transformed)
+                        self.callback(self, transformed)
                    
             else:
                 if self.callback != None:
@@ -123,15 +162,21 @@ class PipeReceptor(AbstractReceptor):
                 return
     
     def __reopen_pipe(self):
+        """ If the pipe is closed, this method reopens it
+
+        """
         try :
             if self.pipe != None:
                 os.close(self.pipe) 
-        except OSError,e:
+        except OSError, e:
             pass
         
-        self.pipe = os.open(self.config["path"],self.runFlags)
+        self.pipe = os.open(self.config["path"], self.run_flags)
         
     def run(self):
+        """ Thread entry method, calls __read()
+
+        """
         try :
             self.__reopen_pipe()
             self.running = True
@@ -145,32 +190,37 @@ class PipeReceptor(AbstractReceptor):
             logging.debug("Finished Receptor %s", self.id)
     
     def setup_pipe(self):
+        """ Creates a new pipe according to the configuration of this receptor
+
+        """
         #logging.debug("Setting up PipeReceptor with %s" % self.config)
         if os.path.exists(self.config["path"]):
             os.remove(self.config["path"])
         
-        os.mkfifo(self.config["path"],int(self.config["mod"]))
-        os.chown(self.config["path"],self.config["owner"],self.config["group"])
-        os.chmod(self.config["path"],self.config["mod"])
+        os.mkfifo(self.config["path"], int(self.config["mod"]))
+        os.chown(self.config["path"], self.config["owner"], self.config["group"])
+        os.chmod(self.config["path"], self.config["mod"])
         
     def __clean(self):
+        """ Closes and removes the pipe
+
+        """
         try: 
             os.close(self.pipe)
         except:
             pass
         if os.path.exists(self.config["path"]):
             os.remove(self.config["path"])
-
-    
-    def on_receive(self,Event):
-        pass
-    
+ 
     def stop(self):
+        """ Gracefully stops this receptor thread, closes the pipe and cleans up
+    
+        """
         try:
-            logging.debug("Stopping Receptor %s " % self.id )
+            logging.debug("Stopping Receptor %s ", self.id )
             if self.running == True:
                 if os.path.exists(self.config["path"]):
-                    fd = os.open(self.config["path"],os.O_WRONLY)
+                    fd = os.open(self.config["path"], os.O_WRONLY)
                     os.write(fd,"_")
                     os.close(fd)
                     
