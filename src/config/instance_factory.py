@@ -25,7 +25,7 @@ import logging
 class InstanceFactory(object):
     """
     Factory and Registry class that can register object instances and 
-    matches instance references (@instance_id in config files)
+    matches instance references (@id in config files)
 
     @author Jannis Mosshammer <jannis.mosshammer@netways.de>
     """
@@ -38,15 +38,15 @@ class InstanceFactory(object):
         """
         self.config = config
         self.deferred = {}
-        instance_defs = self.config.get_instance_definitions()
+        instanceDefs = self.config.get_instance_definitions()
         self.instances = { "all": {} }
-        for instance_id in instance_defs:
-            if instance_id == "global":
+        for id in instanceDefs:
+            if id == "global":
                 continue
-            cfg_object = instance_defs[instance_id]
-            self.register(instance_id, cfg_object)
+            cfg_object = instanceDefs[id]
+            self.register(id, cfg_object)
             
-        logging.debug("Registered %i instances",  len(self.instances["all"]))
+        logging.debug("Registered %i instances", len (self.instances["all"]))
 
 
     def defer_registration(self, required, args):
@@ -67,28 +67,28 @@ class InstanceFactory(object):
             if not i in cfg_object:
                 cfg_object[i] = parent.base_config[i]
    
-    def register(self, instance_instance_id, cfg_object, factory_fn = None):
+    def register(self, instance_id, cfg_object, factory_fn = None):
         """
-        Registers an object cfg_object with the instance_identifier instance_id. 
+        Registers an object cfg_object with the identifier id. 
         the cfg_object is expected to have a class attribute, which will be registered and 
         used for instance creation.
         
         If factory_fn is given, this will be called (class is 
         only being registered here and not used for instance creation), otherwise 
-        %class%.setup(instance_id, cfg_object) is called.
+        %class%.setup(id, cfg_object) is called.
         
         """ 
         # type myType and class myClass will be called MyTypeMyClass()
         required = self.resolve_references(cfg_object)
         if required != None:
-            self.defer_registration(required,(instance_instance_id, cfg_object, factory_fn))
+            self.defer_registration(required,(instance_id, cfg_object, factory_fn))
             return False
         
         r = None
         
         if "template" in cfg_object:
             if not cfg_object["template"] in self.instances["all"]:
-                self.defer_registration(required,(instance_instance_id, cfg_object, factory_fn))
+                self.defer_registration(required,(instance_id, cfg_object, factory_fn))
                 return False
             else:
                 self.apply_template(cfg_object)
@@ -101,40 +101,40 @@ class InstanceFactory(object):
             instance_cls = cfg_object["class"].capitalize()
             configname = cfg_object["type"].capitalize()+instance_cls
             if not configname in globals():
-                logging.error("Couldn't find %s, %s won't work." % (configname, instance_instance_id))
+                logging.error("Couldn't find %s, %s won't work.", configname, instance_id)
                 return False
             
             r = globals()[configname]()
             
-            logging.debug("Instance of %s : %s (instance_instance_id=%i)" % (instance_instance_id, r, instance_id(r)))
-            r.setup(instance_instance_id, cfg_object)
+            logging.debug("Instance of %s : %s (instance_id=%i)", instance_id, r, id(r))
+            r.setup(instance_id, cfg_object)
         else:
             # Pass instance creation to factory function
-            r = factory_fn(instance_instance_id, cfg_object)
+            r = factory_fn(instance_id, cfg_object)
         try: 
             r.base_config = cfg_object
         except:
             pass
-        self.instances[cfg_object["class"]][instance_instance_id] = r    
-        self.instances["all"][instance_instance_id] = r 
-        self.handle_unresolved(instance_instance_id)
+        self.instances[cfg_object["class"]][instance_id] = r    
+        self.instances["all"][instance_id] = r 
+        self.handle_unresolved(instance_id)
         return True
         
-    def handle_unresolved(self, instance_id):
+    def handle_unresolved(self, id):
         """ Checks if deferred registrations can now be completed and completes them if so
         
         """          
-        if "@"+instance_id in self.deferred:
+        if "@"+id in self.deferred:
 
             unmatched = []
-            while self.deferred["@"+instance_id]:
-                item = self.deferred["@"+instance_id].pop()
+            while self.deferred["@"+id]:
+                item = self.deferred["@"+id].pop()
                 if not self.register(item[0], item[1], item[2]):
                     unmatched.append(item)
             if unmatched:
-                self.deferred["@"+instance_id] = unmatched
+                self.deferred["@"+id] = unmatched
             else:
-                del self.deferred["@"+instance_id]
+                del self.deferred["@"+id]
     
         
     def has_unmatched_dependencies(self):
@@ -163,8 +163,8 @@ class InstanceFactory(object):
         classname = classname.strip()
         self.instances[classname] = {}
         
-        # register class methods so they are available with get%CLASS%(instance_id)
-        getter = lambda instance_id: self.instances[classname][(instance_id, instance_id[1:])[instance_id[0] == '@']]
+        # register class methods so they are available with get%CLASS%(id)
+        getter = lambda id: self.instances[classname][(id, id[1:])[id[0] == '@']]
         getter.__name__ = "get"+classname.capitalize()
         setattr(self, getter.__name__, getter)
         
@@ -174,15 +174,16 @@ class InstanceFactory(object):
         getter.__name__ = "getAll"+classname.capitalize()+"Instances"
         setattr(self, getter.__name__, getter)
         
-    def __getitem__(self, instance_id):
-        """ Returns the object instance that can be found under the instance_id "instance_id"
+    def __getitem__(self, id):
         """
-        if instance_id[0] == '@':
-            instance_id = instance_id[1:]
-        if instance_id in self.instances:
-            return self.instances[instance_id]
-        if instance_id in self.instances["all"]:
-            return self.instances["all"][instance_id]
+        Returns the object instance that can be found under the id "id"
+    """
+        if id[0] == '@':
+            id = id[1:]
+        if id in self.instances:
+            return self.instances[id]
+        if id in self.instances["all"]:
+            return self.instances["all"][id]
         return None
         
     
