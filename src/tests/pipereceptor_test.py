@@ -20,8 +20,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import unittest
 import os
 import Queue
-import logging
-from event.event import Event
 from receptors.pipe_receptor import PipeReceptor
 
 class TransformMock(object):
@@ -49,7 +47,7 @@ class PipeReceptorTestCase(unittest.TestCase):
 
         """
         pr = PipeReceptor()
-        pr.setup("test",{
+        pr.setup("test", {
             "path": self.TESTPATH,
             "noThread": True, # Receptor must be non-threading
             "transformer": TransformMock()
@@ -57,7 +55,7 @@ class PipeReceptorTestCase(unittest.TestCase):
         assert os.path.exists(self.TESTPATH) == True
 
         # Nonblocking Pipe, otherwise the test would hang
-        pr.run_flags = pr.run_flags | os.O_NONBLOCK
+        pr.run_flags |= os.O_NONBLOCK
         
         pr.start(None, lambda me: me.stop())
         pr.stop()
@@ -69,7 +67,7 @@ class PipeReceptorTestCase(unittest.TestCase):
 
         """
         pr = PipeReceptor()
-        pr.setup("test",{
+        pr.setup("test", {
             "path": self.TESTPATH,
             "transformer": TransformMock()
         })
@@ -145,14 +143,14 @@ class PipeReceptorTestCase(unittest.TestCase):
             linectr = 0
             bigstr = ""
             for line in testlog:
-                linectr = linectr+1
-                bigstr = bigstr+line
+                linectr += 1
+                bigstr += line
             os.write(pipeFd, bigstr)
             queueString = ""
             try:
                 while linectr > 0:
                     queueString = queueString + queue.get(True, 2)+"\n"
-                    linectr = linectr-1
+                    linectr -= 1
             except:
                 pass
             

@@ -1,26 +1,49 @@
+"""
+EDBC - Message correlation and aggregation engine for passive monitoring events
+Copyright (C) 2012  NETWAYS GmbH
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+"""
 import unittest
 import os
-import time
-import logging
-
 from processors import CommandProcessor
-PIPE_LOCATION="/tmp/test.pipe"
+
+PIPE_LOCATION = "/tmp/test.pipe"
 
 class CommandProcessorTest(unittest.TestCase):
-    
+    """ Several Tests for the command processor
+    """
         
     def remove_temporary_file(self):
+        """ Removes the test pipe
+        """
         try:
             os.unlink(PIPE_LOCATION)
         except:
             pass
         
     def test_unformatted_command_submit(self):
+        """ Simple plain string to pipe test
+
+        """
         try:
-            f = open(PIPE_LOCATION,"w+")
+            f = open(PIPE_LOCATION, "w+")
 
             proc = CommandProcessor()
-            proc.setup("test",{
+            proc.setup("test", {
                 "pipe": PIPE_LOCATION,
                 "format" : "Plain string"
             })
@@ -38,6 +61,9 @@ class CommandProcessorTest(unittest.TestCase):
             
     
     def test_formatted_command_submit(self):
+        """ Tests $ and # substitution
+
+        """
         try:
             f = open(PIPE_LOCATION,"w+")
 
@@ -61,6 +87,9 @@ class CommandProcessorTest(unittest.TestCase):
             
         
     def test_formatted_command_submit_uc(self):
+        """ Tests $ and # substitution with uppercase conversion
+        """
+
         try:
             f = open(PIPE_LOCATION,"w+")
 
