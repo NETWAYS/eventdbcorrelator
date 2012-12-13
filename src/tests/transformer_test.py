@@ -1,38 +1,59 @@
-# To change this template, choose Tools | Templates
-# and open the template in the editor.
+"""
+EDBC - Message correlation and aggregation engine for passive monitoring events
+Copyright (C) 2012  NETWAYS GmbH
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+"""
 import unittest
-import time
-import logging
 from event import IPAddress
 from event import SnmpTransformer, StringTransformer, SplitTransformer
 
 
 class RSyslogTransformerTestCase(unittest.TestCase):
+    """ Tests whether the RSysLog format ist working by testing a few messages
+
+    """
 
     def setUp(self):
+        """ Creates a few rsyslog messages like they occur on almost every workstation
+
+        """
         self.FORMAT = "^(?P<DATE>[a-zA-Z]{2,3} \d\d \d\d:\d\d:\d\d) (?P<HOST>[^ ]+)( (?P<PROGRAM>[^:]+):)? (?P<MESSAGE>.*)$"
         self.LOG_MESSAGES = "./tests/logtest.syslog"
         self.MAX_TIME_PER_EVENT = 0.001 # Hard limit on how long an incoming event should take on average
         self.rsyslog = [
-            ("Sep 21 12:40:02 localhost syslogd 1.4.1: restart.",{
+            ("Sep 21 12:40:02 localhost syslogd 1.4.1: restart.", {
                 "CREATED" : 1348224002,
                 "HOST" : "localhost",
                 "PROGRAM" : "syslogd 1.4.1",
                 "MESSAGE" : "restart."
             }),
-            ("Sep 21 12:40:02 localhost kernel: klogd 1.4.1, log source = /proc/kmsg started.",{
+            ("Sep 21 12:40:02 localhost kernel: klogd 1.4.1, log source = /proc/kmsg started.", {
                 "CREATED" : 1348224002,
                 "HOST" : "localhost",
                 "PROGRAM" : "kernel",
                 "MESSAGE" : "klogd 1.4.1, log source = /proc/kmsg started."
             }),
-            ("Sep 21 12:40:07 localhost icinga: The command defined for service SYS_LINUX_SWAP does not exist",{
+            ("Sep 21 12:40:07 localhost icinga: The command defined for service SYS_LINUX_SWAP does not exist", {
                 "CREATED" : 1348224007,
                 "HOST" : "localhost",
                 "PROGRAM" : "icinga",
                 "MESSAGE" : "The command defined for service SYS_LINUX_SWAP does not exist"
             }),
-            ("Sep 27 10:08:45 ws-test kernel: [179599.999522] type=1701 audit(1348733325.650:64): auid=4294967295 uid=1000 gid=1000 ses=4294967295 pid=26544 comm=\"chrome\" reason=\"seccomp\" sig=0 syscall=39 compat=0 ip=0x7fd83f0bc6d9 code=0x50001",{
+            ("Sep 27 10:08:45 ws-test kernel: [179599.999522] type=1701 audit(1348733325.650:64): auid=4294967295 uid=1000 gid=1000 ses=4294967295 pid=26544 comm=\"chrome\" reason=\"seccomp\" sig=0 syscall=39 compat=0 ip=0x7fd83f0bc6d9 code=0x50001", {
                 "CREATED" : 1348733325,
                 "HOST" : "ws-test",
                 "PROGRAM" : "kernel",
@@ -41,15 +62,18 @@ class RSyslogTransformerTestCase(unittest.TestCase):
         ]
         
     def test_rsyslog_transformer(self):
+        """ Tests whether the messages result in the expected events after transformation
+
+        """
         transformer = StringTransformer()
-        transformer.setup("test",{
-            "format": self.FORMAT
+        transformer.setup("test", {
+            "format" : self.FORMAT
         })
-        for messageEventPair in self.rsyslog:
-            event = transformer.transform(messageEventPair[0])
-            for key in messageEventPair[1]:
+        for message_event_pair in self.rsyslog:
+            event = transformer.transform(message_event_pair[0])
+            for key in message_event_pair[1]:
                 assert event != None
-                assert event[key] == messageEventPair[1][key]
+                assert event[key] == message_event_pair[1][key]
 #
 #    def test_rsyslog_performance(self):
 #        transformer = StringTransformer()
@@ -76,14 +100,24 @@ class RSyslogTransformerTestCase(unittest.TestCase):
 #            logfile.close()
     
 class SNMPTransformerTest(unittest.TestCase):
-    
+    """ SNMPTransformers contain more logic than normal transformers, as they read
+        snmpttconvertmib generated files
+
+    """
     def test_setup(self):
+        """ Tests the setup of the snmp transformer
+
+        """
+
         transformer = SnmpTransformer()
         transformer.setup("test",{
             "mib_dir" : "/tmp/"
         })
       
     def test_mib_parsing(self):
+        """ Tests whether simple mib files are correctly parsed and variables are substituted
+
+        """
         transformer = SnmpTransformer()
         transformer.setup("test",{
             "mib_dir" : "/dev/null"
@@ -103,6 +137,9 @@ class SNMPTransformerTest(unittest.TestCase):
         
         
     def test_transform_simple(self):
+        """ Simple (non substituted) message transformation
+
+        """
         transformer = SnmpTransformer()
         transformer.setup("test",{
             "mib_dir" : "/dev/null"
@@ -122,10 +159,15 @@ class SNMPTransformerTest(unittest.TestCase):
     
 
 class SplitTransformerTest(unittest.TestCase):
+    """ Splittransformers just split the input by a specified character
+
+    """
 
     def test_implicit_tabulator_split(self):
+        """ Test the default setting, split by tab
+        """
         transformer = SplitTransformer()
-        transformer.setup("test",{
+        transformer.setup("test", {
             "dateformat" : "%Y-%m-%d %H:%M:%S",
             "group_order" : "HOST_NAME HOST_ADDRESS PRIORITY FACILITY TIME DATE MESSAGE"  
         })
@@ -138,10 +180,14 @@ class SplitTransformerTest(unittest.TestCase):
         assert event["facility"] == "4"
         assert event["message"] == "Testmessage"
         
-   
-    def test_explicit_edlimiter_specification(self):
+
+    def test_explicit_delimiter_specification(self):
+        """ Test whether own delimiters are correctly recognized, also if they are multi character
+            delimiters
+
+        """
         transformer = SplitTransformer()
-        transformer.setup("test",{
+        transformer.setup("test", {
             "dateformat" : "%Y-%m-%d %H:%M:%S",
             "delimiter" : "\.-\.",
             "group_order" : "HOST_NAME HOST_ADDRESS PRIORITY FACILITY TIME DATE MESSAGE"  

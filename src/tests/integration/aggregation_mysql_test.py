@@ -1,9 +1,28 @@
+"""
+EDBC - Message correlation and aggregation engine for passive monitoring events
+Copyright (C) 2012  NETWAYS GmbH
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+"""
 import unittest
+import time
 import threading
 
 from datasource import MysqlDatasource, DBTransformer
-from event.event import *
-from event import ip_address
+from event import ip_address, Event
 from processors import AggregationProcessor
 from tests.mysql_datasource_test import SETUP_DB_FLUSHING
 
@@ -11,28 +30,42 @@ SETUP_DB = SETUP_DB_FLUSHING
 MAX_TIME_PER_EVENT=0.001
 
 class TestAggregationInsertionThread(threading.Thread):
+    """ Testthread that aggregates and inserts events and simulates an event burst
+    """
+
     def setup(self, aggregator, count, evCfg, db):
+        """ Sets up the thread with the aggregator, how much events should be inserted,
+            how events look like and where to persist them
+        """
         self.aggregator = aggregator
         self.events = []
         self.db = db
         for i in range(0, count):
-            self.events.append(Event(message="test "+str(i), additional=evCfg))
+            self.events.append(Event(message = "test "+str(i), additional = evCfg))
     
     def run(self):
+        """ Thread entry point, runs burst_event
+        """
         self.burst_events()
         
         
     def burst_events(self):
+        """ runs through all events and processes/inserts them
+        """
         for i in self.events:
             self.aggregator.process(i)
             self.db.insert(i)
-        
-        
-        
+
 
 class AggregatorMysqlTest(unittest.TestCase):
-    
+    """ Integration test of aggregators and mysqldatasources
+
+    """
+
     def setUp(self):
+        """ Creates and cleans up the datasource
+
+        """
         self.source = MysqlDatasource()
         dbsetup = SETUP_DB
         dbsetup["transform"] = DBTransformer()
@@ -46,6 +79,10 @@ class AggregatorMysqlTest(unittest.TestCase):
 
         
     def test_new_aggregation_group(self):
+        """ Tests the creation of a new aggregation group and
+            if it's persisted correctly
+
+        """
         try:
             self.source.test_setup_db()
             aggregator = AggregationProcessor()
@@ -93,6 +130,9 @@ class AggregatorMysqlTest(unittest.TestCase):
             
     
     def test_aggregation_group_timeout(self):
+        """ Tests if groups are cleared automatically after the aggregation timeout
+            has passed
+        """
         try:
             self.source.test_setup_db()
             aggregator = AggregationProcessor()
@@ -134,8 +174,7 @@ class AggregatorMysqlTest(unittest.TestCase):
             assert event1.group_leader == event3.group_leader == -1
             assert event2.group_leader == event1["id"]
             assert event4.group_leader == event3["id"]
-            
-            
+
         finally:
             self.source.test_teardown_db()
             self.source.close(True)
@@ -143,6 +182,10 @@ class AggregatorMysqlTest(unittest.TestCase):
     
     
     def test_aggregation_group_clear_message(self):
+        """ Tests whether clear messages are correctly recognized and
+            persisted on the database side
+
+        """
         try:
             self.source.test_setup_db() 
             self.source.flush_interval = 1000 
@@ -208,6 +251,10 @@ class AggregatorMysqlTest(unittest.TestCase):
             self.source.close(True)
             
     def test_aggregation_with_autoack(self):
+        """ Tests whether automatic acknowledgement is working correctly
+            when a group is cleared
+
+        """
         try:
             self.source.test_setup_db() 
             self.source.flush_interval = 1000 

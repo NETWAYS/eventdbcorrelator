@@ -18,10 +18,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
 import unittest
-import logging
 from config import InstanceFactory
 
-class ConfigMock(object): 
+class ConfigMock(object):
+    """ Mock that acts as a dependency placeholder for object setup
+    """
     def get_instance_definitions(self):
         return []
 
@@ -29,7 +30,11 @@ class ConfigMock(object):
 class InstanceFactoryTest(unittest.TestCase):
     
     def test_resolve_deferred(self):
-        testObj = InstanceFactory(ConfigMock())
+        """ Test if processors with dependencies to not yet created processors
+            are correctly deferred
+        """
+        
+        test_obj = InstanceFactory(ConfigMock())
         cfg1 = {
             "class":"Mock",
             "type": "Proc",
@@ -39,18 +44,21 @@ class InstanceFactoryTest(unittest.TestCase):
             "class":"Mock",
             "type": "Proc",
         }
-        testObj.register("test1", cfg1, lambda id, cfg: cfg)
+        test_obj.register("test1", cfg1, lambda id, cfg: cfg)
         
-        assert testObj.has_unmatched_dependencies()
+        assert test_obj.has_unmatched_dependencies()
         assert cfg1["blobb"] == "@test2"        
 
-        testObj.register("test2", cfg2, lambda id, cfg: cfg)
-        assert not testObj.has_unmatched_dependencies()
+        test_obj.register("test2", cfg2, lambda id, cfg: cfg)
+        assert not test_obj.has_unmatched_dependencies()
         assert cfg1["blobb"] == cfg2
 
     def test_resolve_cfg(self):
-        testObj = InstanceFactory(ConfigMock())
-        testObj.instances["testmock"] = testinstance = {
+        """ Test resolving of @instance references
+
+        """
+        test_obj = InstanceFactory(ConfigMock())
+        test_obj.instances["testmock"] = testinstance = {
             "a" : "testobject"
         }
         cfg = {
@@ -58,7 +66,6 @@ class InstanceFactoryTest(unittest.TestCase):
             "to_resolve" : "@testmock"
         }
         
-        testObj.resolve_references(cfg)
-        logging.debug(cfg)
+        test_obj.resolve_references(cfg)
         assert cfg["to_resolve"] == testinstance
         

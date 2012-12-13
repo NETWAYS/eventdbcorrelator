@@ -1,3 +1,22 @@
+"""
+EDBC - Message correlation and aggregation engine for passive monitoring events
+Copyright (C) 2012  NETWAYS GmbH
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+"""
 import unittest
 from datasource import MysqlDatasource
 import logging
@@ -7,10 +26,14 @@ import MySQLdb
 from event.event import Event
 from event import ip_address
 
-
 class DBTransformerMock(object):
-    
+    """ Transformer mock to resolve datasource dependencies
+    """
+
     def transform(self, event):
+        """ Transforms the event, using only the address, program and message
+        """
+
         return {
             "host_name" : "test",
             "host_address" : event["host_address"].bytes,
@@ -49,9 +72,14 @@ SETUP_DB_FLUSHING = {
 }
 
 class MysqlDatasourceTest(unittest.TestCase):
+    """ Several tests for the mysql datasource
 
+    """
 
     def setUp(self):
+        """ Creates the datasource and clears previous states
+        """
+
         self.source = MysqlDatasource()
         self.source.setup("test", SETUP_DB)
         # Try tearing down the database in case a previous run ran wihtou cleanup
@@ -62,8 +90,9 @@ class MysqlDatasourceTest(unittest.TestCase):
         
     
     def test_execute(self):
-        logging.debug("exec")
+        """ Tests the execute method by simply selecting dual values
 
+        """
         self.source.test_setup_db()
         try:
             result1 = self.source.execute("SELECT 'test', 1, 1.2, 0xff from dual")
@@ -74,7 +103,7 @@ class MysqlDatasourceTest(unittest.TestCase):
                 assert ord(row[3]) == 0xff
             
             #test with argument list
-            result2 = self.source.execute("SELECT %s,%s,%s,%s from dual",('test', 1, 1.2, 0xff ))
+            result2 = self.source.execute("SELECT %s,%s,%s,%s from dual", ('test', 1, 1.2, 0xff ))
             for row in result2:
                 assert row[0] == 'test'
                 assert row[1] == 1
@@ -85,105 +114,106 @@ class MysqlDatasourceTest(unittest.TestCase):
             self.source.test_teardown_db()
 
 
-    '''
-    Tests Create, Read, Update and Delete operations on this datasource.
-    Not really an atomic test, but should do the job
-    '''
     def test_crud(self):
-        logging.debug("crud")
+        """
+        Tests Create, Read, Update and Delete operations on this datasource.
+        Not really an atomic test, but should do the job
+        """
 
         self.source.test_setup_db()
-        ev = Event(message="testmessage", additional={
-            "host_address": ip_address.IPAddress("192.168.178.56"),
+        test_event = Event(message = "testmessage", additional = {
+            "host_address" : ip_address.IPAddress("192.168.178.56"),
             "program" : "test_program"
         })
         try:
             # Create
-            assert self.source.insert(ev) == "OK"
-            assert ev["id"]
+            assert self.source.insert(test_event) == "OK"
+            assert test_event["id"]
             
             # Read
-            ev_from_db = self.source.get_event_by_id(ev["id"])
+            ev_from_db = self.source.get_event_by_id(test_event["id"])
             assert ev_from_db.message == "testmessage"
             assert ev_from_db["host_address"] == ip_address.IPAddress("192.168.178.56")
-            assert ev_from_db["id"] == ev["id"]
+            assert ev_from_db["id"] == test_event["id"]
             
             # Update
-            ev["host_address"] = ip_address.IPAddress("192.168.178.57")
-            ev["message"] = "testmessage2"
-            self.source.update(ev)
-            ev_from_db = self.source.get_event_by_id(ev["id"])
+            test_event["host_address"] = ip_address.IPAddress("192.168.178.57")
+            test_event["message"] = "testmessage2"
+            self.source.update(test_event)
+            ev_from_db = self.source.get_event_by_id(test_event["id"])
             assert ev_from_db.message == "testmessage2"
             assert ev_from_db["host_address"] == ip_address.IPAddress("192.168.178.57")
-            assert ev_from_db["id"] == ev["id"]
+            assert ev_from_db["id"] == test_event["id"]
             
             # Delete
-            self.source.remove(ev)
-            ev_from_db = self.source.get_event_by_id(ev["id"])
+            self.source.remove(test_event)
+            ev_from_db = self.source.get_event_by_id(test_event["id"])
             assert ev_from_db == None
             
         finally:
             self.source.test_teardown_db()
-  
-  
+
     def test_message_overflow(self):
-        logging.debug("overflow")
+        """ Test what happens it the message is overflowing. This shouldn't break
+
+        """
         try :
             self.source.test_setup_db()
             
             message = "test123456789"
             for i in range(0, 10):
-                message = message + message;
+                message += message;
 
-            ev = Event(message=message, additional={
-                "host_address": ip_address.IPAddress("192.168.178.56"),
+            test_event = Event(message = message, additional = {
+                "host_address" : ip_address.IPAddress("192.168.178.56"),
                 "program" : "test_program"
             })
-            self.source.insert(ev)
+            self.source.insert(test_event)
             
-            ev_from_db = self.source.get_event_by_id(ev["id"])
+            ev_from_db = self.source.get_event_by_id(test_event["id"])
             assert ev_from_db.message == message[0:4096] # assume data being truncated
         finally:
             self.source.test_teardown_db() 
         
     def test_group_implicit_insertion(self):
-        logging.debug("implicit_insert")
+        """ Test implicit insertion to groups if an event matches them
+
+        """
         try:
             self.source.test_setup_db()
-            ev = Event(message="test", additional={
+            test_event = Event(message = "test", additional = {
                 "host_address": ip_address.IPAddress("192.168.178.56"),
                 "program" : "test_program",
-
                 "priority" : 0,
                 "facility" : 0,
                 "active" : 1,
                 "group_active" : True
             })
-            ev.group_leader = -1
-            ev.group_id = "test"
-            self.source.insert(ev)
+            test_event.group_leader = -1
+            test_event.group_id = "test"
+            self.source.insert(test_event)
             leader = self.source.get_group_leader("test")
             assert leader != (None, None)
-            assert leader[0] == ev["id"]
+            assert leader[0] == test_event["id"]
             lastmod = leader[1]
             time.sleep(1)
             
             # test moddate
-            ev2 = Event(message="test", additional={
-                "host_address": ip_address.IPAddress("192.168.178.56"),
+            ev2 = Event(message = "test", additional = {
+                "host_address" : ip_address.IPAddress("192.168.178.56"),
                 "program" : "test_program",
                 "priority" : 0,
                 "facility" : 0,
                 "active" : 1,
                 "group_active" : True
             })
-            ev2.group_leader = ev["id"]
+            ev2.group_leader = test_event["id"]
             ev2.group_id = "test"
             self.source.insert(ev2)
             
             leader = self.source.get_group_leader("test")
             assert leader != (None, None)
-            assert leader[0] == ev["id"]
+            assert leader[0] == test_event["id"]
             assert lastmod != leader[1]
             assert self.source.connections.qsize() == self.source.poolsize
             
@@ -192,10 +222,12 @@ class MysqlDatasourceTest(unittest.TestCase):
     
     
     def test_id_generation(self):
-        logging.debug("id_gen")
+        """ As the MySQLDataSource determines by itself which ids can be used
+            this is tested here
+        """
         try:
             self.source.test_setup_db()
-            ev = Event(message="test", additional={
+            ev = Event(message="test", additional = {
                 "host_address": ip_address.IPAddress("192.168.178.56"),
                 "program" : "test_program",
 
@@ -225,6 +257,9 @@ class MysqlDatasourceTest(unittest.TestCase):
             self.source.test_teardown_db()
     
     def test_id_generation_error(self):
+        """ Tests whether the datasource can cope with primary key issues and reassign
+            a new id if so
+        """
         try:
             self.source.test_setup_db()
             ev = Event(message="test", additional={
@@ -248,11 +283,16 @@ class MysqlDatasourceTest(unittest.TestCase):
             
         finally:
             self.source.test_teardown_db()
+
+
     def test_group_persistence(self):
-        logging.debug("group_persistence")
+        """ Tests whether grouped events are correctly persisted
+
+        """
+
         try:
             self.source.test_setup_db()
-            ev = Event(message="test", additional={
+            ev = Event(message="test", additional = {
                 "host_address": ip_address.IPAddress("192.168.178.56"),
                 "program" : "test_program",
 
@@ -286,12 +326,14 @@ class MysqlDatasourceTest(unittest.TestCase):
 
 
     def test_async_flush(self):
-        logging.debug("async_flush")
+        """ Tests whether query buffering and buffer flushing is correctly working
+
+        """
         try:
             self.source.test_setup_db()
             self.source.no_async_flush = False
             self.source.flush_interval = 500.0
-            ev = Event(message="test", additional={
+            ev = Event(message="test", additional = {
                 "host_address": ip_address.IPAddress("192.168.178.56"),
                 "program" : "test_program",
 
@@ -315,6 +357,8 @@ class MysqlDatasourceTest(unittest.TestCase):
 
 
     def tearDown(self):
+        """ Removes any traces this test has left
+        """
         try: 
             self.source.test_teardown_db()
         except:
