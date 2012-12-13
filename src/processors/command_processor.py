@@ -1,3 +1,22 @@
+"""
+EDBC - Message correlation and aggregation engine for passive monitoring events
+Copyright (C) 2012  NETWAYS GmbH
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+"""
 import threading
 import time
 import os
@@ -6,11 +25,18 @@ import re
 from event import Matcher, TrueMatcher
 
 class CommandProcessor(object):
+    """ Processor that is able to submit icinga commands to a defined command pipe
+
+    """
+
+
     def __init__(self):
         self.lock = threading.Lock()
         
-    def setup(self,id,config):
-        
+    def setup(self, id, config):
+        """ Sets up the initial state
+
+        """
         self.id = id
         
         if not "format" in config:
@@ -35,22 +61,25 @@ class CommandProcessor(object):
         else:
             self.uppercase_tokens = False
             
-    def process(self,event):
+    def process(self, event):
+        """ Matches the event with the defined matcher (if any), rewrites
+            it if necessary and submits it in the icinga command format
+
+        """
         if not self.format or not self.pipe:
             return "PASS"
-        
-        groups = {}
+
         try:
             self.lock.acquire()
             if not self.matcher.matches(event):
                 return "PASS"
             groups = self.matcher.get_match_groups()
-            msg = self.create_notification_message(event,groups)
-            msg = "[%i] %s" % (time.time(),msg)
+            msg = self.create_notification_message(event, groups)
+            msg = "[%i] %s" % (time.time(), msg)
             
             try:
                 for pipe in self.pipe:
-                    self.send_to_pipe(msg,pipe)
+                    self.send_to_pipe(msg, pipe)
                 return "OK"
             except:
                 return "FAIL"
@@ -58,32 +87,38 @@ class CommandProcessor(object):
         finally:
             self.lock.release()
     
-    def send_to_pipe(self,msg,pipe_name):
+    def send_to_pipe(self, msg, pipe_name):
+        """ opens the icinga pipe and writes the string msg to it
+        """
+
         try:
-            pipe = os.open(pipe_name,os.O_WRONLY)
-            os.write(pipe,msg)
+            pipe = os.open(pipe_name, os.O_WRONLY)
+            os.write(pipe, msg)
             os.close(pipe)
         except Exception, e:
-            logging.error("Could not send command %s to pipe : %s" % (msg,e))
+            logging.error("Could not send command %s to pipe : %s", msg,e)
             raise e
     
    
-    def create_notification_message(self,event,matchgroups):
+    def create_notification_message(self, event, matchgroups):
+        """ Creates the message and substitues #FIELD with message fields
+            and $VAR with named regular expression groups
+        """
         msg = self.format
-        tokens = re.findall("[#$]\w+",msg)
+        tokens = re.findall("[#$]\w+", msg)
         for token in tokens:
             if token[0] == '#':
                 token_tmp = str(event[token[1:]])
                 if self.uppercase_tokens:
                     token_tmp = token_tmp.upper()
-                msg = msg.replace(token,token_tmp)
+                msg = msg.replace(token, token_tmp)
                 continue
             if token[0] == '$':
                 token_tmp = str(matchgroups[token[1:]])
                 if self.uppercase_tokens:
                     token_tmp = token_tmp.upper()
-                msg = msg.replace(token,token_tmp)
+                msg = msg.replace(token, token_tmp)
                 continue
         if not msg.endswith("\n"):
-            msg = msg+"\n"
+            msg += "\n"
         return msg
