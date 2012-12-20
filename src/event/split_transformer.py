@@ -65,7 +65,7 @@ class SplitTransformer(object):
 
         """
         now = time.localtime()
-        return (now[0],time_struct[1],time_struct[2],time_struct[3],time_struct[4],time_struct[5],time_struct[6],time_struct[7],time_struct[8])
+        return (now[0], time_struct[1], time_struct[2] ,time_struct[3], time_struct[4], time_struct[5], time_struct[6], time_struct[7], time_struct[8])
  
     def transform(self, string):
         """ Transforms a raw string to an event by splitting it at dthe delimiter and returns the created event
@@ -111,7 +111,7 @@ class SplitTransformer(object):
         if not "MESSAGE" in matchdict:
             matchdict["MESSAGE"] = self.default_message
         
-        event = Event(matchdict["MESSAGE"],matchdict["DATE"],matchdict)
+        event = Event(matchdict["MESSAGE"], matchdict["DATE"], matchdict)
         return event
     
     

@@ -1,12 +1,36 @@
-# Helper class to transform strings, arrays, etc to EVent objects
+"""
+EDBC - Message correlation and aggregation engine for passive monitoring events
+Copyright (C) 2012  NETWAYS GmbH
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+"""
 import re
 import logging
-import os
 import time
-from event import *
+from event import Event
 
 class StringTransformer(object):
-    def setup(self,id,config):
+    """ Transforms strings to events using regular expression groups
+
+    """
+
+    def setup(self, id, config):
+        """ default processor setup method
+
+        """
         self.id = id
         self.format = re.compile(config["format"])
         if "defaultmessage" in config:
@@ -25,11 +49,21 @@ class StringTransformer(object):
         else:
             self.dateFormat = "%b %d %H:%M:%S"
     
-    def set_current_year(self,st):
+    def set_current_year(self, time_struct):
+        """ Returns a new time struct from the given time_struct with the current year set.
+            This is needed in case no year is given by an event definition
+
+        """
+
         now = time.localtime()
-        return (now[0],st[1],st[2],st[3],st[4],st[5],st[6],st[7],st[8])
+        return (now[0], time_struct[1], time_struct[2], time_struct[3], time_struct[4], time_struct[5], time_struct[6], time_struct[7], time_struct[8])
     
     def transform(self,string):
+        """ Transforms string to an event using thre regular expression defined in 'format' and
+            the fixed values defined in 'fixed'
+
+        """
+
         try:
             matches =  self.format.match(string)
             if matches == None:
@@ -42,7 +76,11 @@ class StringTransformer(object):
     
        
  
-    def dict_to_event(self,matchdict = {}):
+    def dict_to_event(self, matchdict = {}):
+        """ Turns an dict to an Event object and returns it
+
+       """
+
         for i in self.fixed:
             matchdict[i] = self.fixed[i]
         if not "DATE" in matchdict:
@@ -58,7 +96,7 @@ class StringTransformer(object):
         if not "MESSAGE" in matchdict:
             matchdict["MESSAGE"] = self.defaultMessage
         
-        event = Event(matchdict["MESSAGE"],matchdict["DATE"],matchdict)
+        event = Event(matchdict["MESSAGE"], matchdict["DATE"], matchdict)
         return event
     
     
