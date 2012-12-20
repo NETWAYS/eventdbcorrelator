@@ -1,16 +1,35 @@
-# To change this template, choose Tools | Templates
-# and open the template in the editor.
+"""
+EDBC - Message correlation and aggregation engine for passive monitoring events
+Copyright (C) 2012  NETWAYS GmbH
 
-__author__="moja"
-__date__ ="$Sep 24, 2012 6:41:33 PM$"
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+"""
+
 import time
 import logging
 from ip_address import IPAddress
 
-
 class Event(object):
+    """ The event class that is used internally for representing snmp/syslog/.. events
+        in a normalized manner
 
-    def __init__(self, message = "", date=time.ctime(),additional = dict(),record=None):
+    """
+
+
+    def __init__(self, message = "", date=time.ctime(), additional = dict(), record=None):
         self.data = dict();
         self["host_address"] = IPAddress("127.0.0.1")
         self["host_name"] = "unknown"
@@ -26,9 +45,9 @@ class Event(object):
         self.group_id = None
         self.group_leader = None
         for val in additional: 
-            self.__setitem__(val.lower(),additional[val]);
+            self.__setitem__(val.lower(), additional[val]);
     
-    def __setitem__(self,name,value):
+    def __setitem__(self, name, value):
         name = name.lower()
         if name == "message":
             self.message = value
@@ -48,22 +67,21 @@ class Event(object):
         if name == "active":
             self.active = value
             return 
-        if name == "host_address" and isinstance(value,str):
+        if name == "host_address" and isinstance(value, str):
             try:
                 value = IPAddress(value)
-            except Exception,e:
-                logging.debug("Invalid ip: %s" % value)
+            except Exception, e:
+                logging.debug("Invalid ip: %s", value)
             
         self.data[name] = value
         return None
     
-    def __getitem__(self,name):
+    def __getitem__(self, name):
         name = name.lower()
         if name == "message":
             return self.message
         if name == "alternative_message":
             return self.alternative_message
-            return
         if name == "date":
             return self.date
         if name == "group_id":
@@ -76,7 +94,7 @@ class Event(object):
             return self.data[name]
         return None
     
-    def __eq__(self,event):
+    def __eq__(self, event):
         
         if event.message != self.message:
             return False
@@ -89,19 +107,27 @@ class Event(object):
 
     
     def in_active_group(self):
+        """ returns true if this event is assigned to an active group
+
+        """
         return self.group_leader != None
     
-    def from_record(self,record):
-              
+    def from_record(self, record):
+        """ Creates the event from a database record
+
+        """
         keys = record["keys"]
         data = record["data"]
-        for i in range(0,len(keys)):
+        for i in range(0, len(keys)):
 
             if keys[i] == 'host_address':
-                self["host_address"] = IPAddress(data[i],binary=True)
+                self["host_address"] = IPAddress(data[i], binary=True)
             else:
                 self[keys[i]] = data[i]
                 
     def free(self):
+        """ frees the internal data dictionary
+
+        """
         del self.data
         
