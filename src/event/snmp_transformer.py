@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import os
 import re
 import time
-from event import Event
+from event.event import Event
 import logging
 
 STATIC_OIDS = {
@@ -95,7 +95,7 @@ class SnmpTransformer(object):
         else: 
             self.trap_format = "HOST:(?P<HOST>.*);IP:(?P<IP>.*);VARS:(?P<VARS>.*)"
         self.mib_dir = config["mib_dir"]
-        self.ip_regexp = re.compile("\[(.*)\]")
+        self.ip_regexp = re.compile(r"\[(.*)\]")
         self.trap_matcher = re.compile(self.trap_format)
 
         self.fixed = {}
@@ -113,7 +113,7 @@ class SnmpTransformer(object):
                 (severity, priority) = keyval.split("=")
                 self.priorities[severity] = priority
         else:
-                self.priorities = DEFAULT_PRIO_MAP
+            self.priorities = DEFAULT_PRIO_MAP
         
         self.parse_mibs()
 
@@ -125,23 +125,23 @@ class SnmpTransformer(object):
         if not os.path.exists(self.mib_dir):
             raise Exception("mib_dir folder %s for %s is not existing/readable " % (self.mib_dir, self.id))
         self.registered_mibs = []
-        for dir in os.walk(self.mib_dir):
-            for file in dir[2]:
-                if not file.endswith("txt") and not file.endswith("mib"):
+        for mibdir in os.walk(self.mib_dir):
+            for mibfile in mibdir[2]:
+                if not mibfile.endswith("txt") and not mibfile.endswith("mib"):
                     continue
                 else:
-                    self.load_mib(dir[0]+file)
+                    self.load_mib(mibdir[0]+mibfile)
         
-        logging.debug("%s registered %i mibs " % (self.id, len(self.registered_mibs)))
+        logging.debug("%s registered %i mibs ", self.id, len(self.registered_mibs))
         if len(self.registered_mibs) < 1:
-            logging.warn("Warning: %s couldn't find any event definitions registered underneath %s, no events will be persisted" % (self.id, self.mib_dir,))
+            logging.warn("Warning: %s couldn't find any event definitions registered underneath %s, no events will be persisted", self.id, self.mib_dir)
 
     
     def _parse_event_line(self, line, mib):
         """ Reads the EVENT line from a snmpttconvertmib generated mib file
 
         """
-        groups = re.match("EVENT (?P<EVENT_NAME>[^ ]+) (?P<OID>[0-9\.\*]+) \"(?P<CATEGORY>[\w ]+)\" (?P<EVENT_SEVERITY>\w+)", line)
+        groups = re.match(r"EVENT (?P<EVENT_NAME>[^ ]+) (?P<OID>[0-9\.\*]+) \"(?P<CATEGORY>[\w ]+)\" (?P<EVENT_SEVERITY>\w+)", line)
         if groups:
             groups = groups.groupdict()
             mib["event_name"] = groups["EVENT_NAME"]
@@ -158,8 +158,8 @@ class SnmpTransformer(object):
         """
         severity = severity.lower()
         for key in self.priorities:
-             if severity[0:len(key)] == key.lower():
-                  return self.priorities[key]
+            if severity[0:len(key)] == key.lower():
+                return self.priorities[key]
         return None
 
     def _parse_format_line(self, line, mib):
@@ -170,7 +170,6 @@ class SnmpTransformer(object):
         if groups:
             mib["format"] = groups.groupdict()["FORMAT"]    
 
-        format = mib["format"] # parse static replacements directly
         for field in STATIC_STRING_REPLACEMENTS:
             mib["format"] = mib["format"].replace(field, STATIC_STRING_REPLACEMENTS[field])
         
@@ -179,9 +178,9 @@ class SnmpTransformer(object):
         """ Load the mib file defined at path
 
         """
-        file = open(path)
-        mib = self.parse_file(file)
-        file.close()
+        mibfile = open(path)
+        mib = self.parse_file(mibfile)
+        mibfile.close()
         self.registered_mibs.append(mib)
     
     
@@ -224,12 +223,12 @@ class SnmpTransformer(object):
             event["host_address"] = self.ip_regexp.search(groups["IP"]).group(1)
         
         
-        vars = groups["VARS"].split(" ; ")
+        mib_vars = groups["VARS"].split(" ; ")
         expected = ["uptime", "oid"]
         meta = {"host_name" : groups["HOST"]}
         variables = []
         
-        for var in vars:
+        for var in mib_vars:
             (oid,value) = var.split(" = ")
             if expected:
                 meta[expected.pop(0)] = value
@@ -274,7 +273,7 @@ class SnmpTransformer(object):
         mibformat = mibformat.replace("$*", " ".join(map(lambda x : x[1], variables)))
         mibformat = mibformat.replace("$+*", " ".join(map(lambda x : "%s:%s" % x, variables)))
         
-        for i in range(1,len(variables)+1):
+        for i in range(1, len(variables)+1):
             mibformat = mibformat.replace("$%i" % i, variables[i-1][1])
             mibformat = mibformat.replace("$+%i" % i, "%s:%s" % variables[i-1])
             mibformat = mibformat.replace("$v%i" % i, variables[i-1][0])
@@ -287,14 +286,13 @@ class SnmpTransformer(object):
         """
         for regexp in regexps:
             try:
-                mibformat = re.sub(regexp[0],regexp[1],mibformat,count=regexp[2])
+                mibformat = re.sub(regexp[0], regexp[1], mibformat,count=regexp[2])
             except re.error, regexp_error:
-                logging.warn("Regular expression %s is invalid and ignored (error: %s).",regexp,regexp_error)
+                logging.warn("Regular expression %s is invalid and ignored (error: %s).", regexp, regexp_error)
         return mibformat
 
     def _parse_regexp_expression(self, regexp, mib):
         """ Parses the regexp line from snmpttconvertmib files
-            @TODO: Not implemented yet
         """
         if not "regexp" in mib:
             mib["regexp"] = []
