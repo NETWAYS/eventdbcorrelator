@@ -97,7 +97,6 @@ class SnmpTransformer(object):
         self.mib_dir = config["mib_dir"]
         self.ip_regexp = re.compile(r"\[(.*)\]")
         self.trap_matcher = re.compile(self.trap_format)
-
         self.fixed = {}
         
         if "fixed" in config:

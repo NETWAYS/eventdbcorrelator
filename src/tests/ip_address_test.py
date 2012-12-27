@@ -55,7 +55,7 @@ class IPAddressTestCase(unittest.TestCase):
         assert test_ip.subnet == [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0]
         
         test_ip = ip_address.IPAddress("127.0.0.1/16")        
-        assert test_ip.addr == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 127, 0, 0, 1]
+        assert test_ip.addr == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
         assert test_ip.subnet == [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0, 0]
         
         test_ip = ip_address.IPAddress("127.0.0.1/8")

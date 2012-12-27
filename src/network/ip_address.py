@@ -44,7 +44,10 @@ class IPAddress(object):
         try:            
             self.bytes = socket.inet_pton(socket.AF_INET, cidr_split[0])
             if socket.has_ipv6 and not self.force_v4:
-                ipstring = "::ffff:%s" % ipstring
+                if ipstring.startswith("127.0.0.1"):
+                    ipstring = ipstring.replace("127.0.0.1","::1")
+                else :
+                    ipstring = "::ffff:%s" % ipstring
                 cidr_split = ipstring.split("/")
                 if len(cidr_split) > 1:
                     cidr_split[1] = int(cidr_split[1]) + 96
