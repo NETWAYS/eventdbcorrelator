@@ -19,7 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 import re
 from constants import *
-from event import ip_address
+from network import ip_address
 
 
 class MatcherTree(object):

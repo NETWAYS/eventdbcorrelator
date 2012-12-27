@@ -19,12 +19,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 import unittest
 from datasource import MysqlDatasource
-import logging
 import time
 import MySQLdb
 
 from event.event import Event
-from event import ip_address
+from network import ip_address
 
 class DBTransformerMock(object):
     """ Transformer mock to resolve datasource dependencies

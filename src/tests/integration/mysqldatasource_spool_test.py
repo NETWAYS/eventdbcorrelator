@@ -20,11 +20,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import unittest
 import MySQLdb
 import MySQLdb.cursors
-import os 
-import logging
+import os
 
 from datasource import MysqlDatasource, DBTransformer, SpoolDatasource
-from event import ip_address
 from tests.mysql_datasource_test import SETUP_DB
 
 TMP_DIR = "/tmp/"

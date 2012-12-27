@@ -80,7 +80,6 @@ class SnmpReceptor(PipeReceptor):
         """ Creates the snmp handler application that formats traps for the pipe and forwards them to the pipereceptor
 
         """
-        #logging.debug("Setting up PipeReceptor with %s" % self.config)
         if os.path.exists(self.config["handler"]):
             os.remove(self.config["handler"])
         handler_tpl = open(self.config["handler_tpl"],"r")

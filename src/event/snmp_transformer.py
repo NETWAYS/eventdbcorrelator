@@ -97,7 +97,7 @@ class SnmpTransformer(object):
         self.mib_dir = config["mib_dir"]
         self.ip_regexp = re.compile("\[(.*)\]")
         self.trap_matcher = re.compile(self.trap_format)
-        
+
         self.fixed = {}
         
         if "fixed" in config:
@@ -148,7 +148,8 @@ class SnmpTransformer(object):
             mib["oid"] = groups["OID"]
             mib["category"] = groups["CATEGORY"]
             mib["severity"] = groups["EVENT_SEVERITY"]
-            mib["priority"] = self.get_priority_for(mib["severity"]) 
+            mib["priority"] = self.get_priority_for(mib["severity"])
+
    
 
     def get_priority_for(self, severity):
@@ -199,7 +200,7 @@ class SnmpTransformer(object):
                 continue
             if line.startswith("FORMAT"):
                 self._parse_format_line(line, mib)
-            if line.startswith("REGEXP"):
+            if line.startswith("REGEX"):
                 self._parse_regexp_expression(line, mib)
             
         return mib
@@ -243,6 +244,7 @@ class SnmpTransformer(object):
         event["priority"] = mib["priority"]
         event["created"] = time.time
         event["message"] = self.get_formatted_message(meta, variables, mib)
+
         return event
 
     def get_formatted_message(self, meta, variables,mib):
@@ -259,8 +261,11 @@ class SnmpTransformer(object):
         mibformat = mibformat.replace("$@", str(time.time()))
         mibformat = mibformat.replace("$x", time.strftime("%x", time.localtime()))
         mibformat = self.replace_variable_expressions(mibformat, variables)
+        if "regexp" in mib:
+            mibformat = self._apply_regular_expressions(mib["regexp"],mibformat)
+
         return mibformat
-    
+
     def replace_variable_expressions(self, mibformat, variables):
         """ Substitutes variable definitions as snmptt does
 
@@ -275,13 +280,40 @@ class SnmpTransformer(object):
             mibformat = mibformat.replace("$v%i" % i, variables[i-1][0])
         
         return mibformat
-   
-    def _parse_regexp_expression(self, regexp):
+
+    def _apply_regular_expressions(self,regexps, mibformat):
+        """ Applies all regexs defined in the mib
+
+        """
+        for regexp in regexps:
+            try:
+                mibformat = re.sub(regexp[0],regexp[1],mibformat,count=regexp[2])
+            except re.error, regexp_error:
+                logging.warn("Regular expression %s is invalid and ignored (error: %s).",regexp,regexp_error)
+        return mibformat
+
+    def _parse_regexp_expression(self, regexp, mib):
         """ Parses the regexp line from snmpttconvertmib files
             @TODO: Not implemented yet
         """
-        #groups = regexp.match(" *REGEX *\((?P<SEARCH>.*)\)\((?P<REPLACE>.*)\) *")
-        pass
+        if not "regexp" in mib:
+            mib["regexp"] = []
+        groups = re.match(r" *REGEX *\((?P<SEARCH>.*)\)\((?P<REPLACE>.*)\)(?P<FLAGS>[ig]{0,1}) *", regexp)
+        if groups == None:
+            logging.warn("Invalid Regular expression line '%s#. Ignoring this line", regexp)
+            return
+
+        group_dict = groups.groupdict()
+        count = 1
+        if group_dict["FLAGS"] != "":
+            if "i" in group_dict["FLAGS"]:
+                group_dict["SEARCH"] = "(?i)%s" % group_dict["SEARCH"]
+            if "g" in group_dict["FLAGS"]:
+                count = 0
+
+
+        mib["regexp"].append((group_dict["SEARCH"], group_dict["REPLACE"],count))
+
 	 	
  
     def get_mib_for(self, oid):

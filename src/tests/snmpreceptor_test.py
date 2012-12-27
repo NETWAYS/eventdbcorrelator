@@ -50,6 +50,5 @@ class SNMPReceptorTest(unittest.TestCase):
         })
         assert os.path.exists("/tmp/snmp_trap.pipe")
         snmp.start(None, lambda me: me.stop())
-        snmp.stop()            
+        snmp.stop()
         assert os.path.exists("/tmp/snmp_trap")
-        

@@ -22,7 +22,8 @@ import time
 import threading
 
 from datasource import MysqlDatasource, DBTransformer
-from event import ip_address, Event
+from event import  Event
+from network import ip_address
 from processors import AggregationProcessor
 from tests.mysql_datasource_test import SETUP_DB_FLUSHING
 

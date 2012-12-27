@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import time
 import logging
-from ip_address import IPAddress
+from network.ip_address import IPAddress
 
 class Event(object):
     """ The event class that is used internally for representing snmp/syslog/.. events

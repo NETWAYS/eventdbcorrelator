@@ -18,7 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
 import unittest
-from event import IPAddress
+from network.ip_address import IPAddress
 from event import SnmpTransformer, StringTransformer, SplitTransformer
 
 
@@ -122,9 +122,16 @@ class SNMPTransformerTest(unittest.TestCase):
         transformer.setup("test",{
             "mib_dir" : "/dev/null"
         })
+        # Example from
         mib = transformer.parse_file({
             "EVENT test_event 0.1.4.* \"test category\" severity" : 0,
-            "FORMAT test format  $* $_ #": 1
+            "FORMAT test format  $* $_ #": 1,
+            "REGEX (Building alarm 3)(Computer room high temperature)": 2,
+            "REGEX (Building alarm 4)(Moisture detection alarm)" : 3,
+            "REGEX (roOm)(ROOM)ig" : 4,
+            "REGEX (UPS)(The big UPS)" : 5,
+            "REGEX (\s+)( )g" : 6,
+            "REGEX (tes(t))$" : 7  #invalid line
         })
         transformer.registered_mibs.append(mib)
         assert mib["event_name"] == "test_event"
@@ -132,6 +139,10 @@ class SNMPTransformerTest(unittest.TestCase):
         assert mib["category"] == "test category"
         assert mib["severity"] == "severity"
         assert mib["format"] == "test format  $* $_ #"
+
+        # Check correct regexp parsing
+        assert "regexp" in mib
+        assert len(mib["regexp"]) == 5
         assert transformer.get_mib_for("0.1.4.5.6.7") != None
         assert transformer.get_mib_for("0.1.4.5.6.7") == mib
         
@@ -155,8 +166,71 @@ class SNMPTransformerTest(unittest.TestCase):
         assert event["host_name"] == "testhost.localdomain"
 
         assert event["message"] == "Argument 1"
-        
-    
+
+    def test_regexp_execution_1(self):
+        """ First example of http://snmptt.sourceforge.net/docs/snmptt.shtml#SNMPTT.CONF-REGEX
+
+        """
+        transformer = SnmpTransformer()
+        transformer.setup("test",{
+            "mib_dir" : "/dev/null"
+        })
+        transformer.registered_mibs.append(transformer.parse_file({
+            "EVENT test_event .1.3.6.1.4.1.2021.13.990.0.17 \"test category\" severity" : 0,
+            "FORMAT $*" : 1,
+            r"REGEX (Building alarm 3)(Computer room high temperature)": 2,
+            r"REGEX (Building alarm 4)(Moisture detection alarm)" : 3,
+            r"REGEX (roOm)(ROOM)ig" : 4,
+            r"REGEX (UPS)(The big UPS)" : 5,
+            r"REGEX (\s+)( )g" : 6,
+        }))
+        str = 'HOST:testhost.localdomain;IP:UDP: [127.0.5.1]:50935;VARS:.1.3.6.1.2.1.1.3.0 = 2:22:16:27.46 ; .1.3.6.1.6.3.1.1.4.1.0 = .1.3.6.1.4.1.2021.13.990.0.17 ; .1.3.6.1.2.1.1.6.0 = UPS has       detected a      building alarm.       Cause: UPS1 Alarm #14: Building alarm 3 ; .1.3.6.1.6.3.18.1.3.0 = 127.0.0.1 ; .1.3.6.1.6.3.18.1.4.0 = "public" ; .1.3.6.1.6.3.1.1.4.3.0 = .1.3.6.1.4.1.2021.13.990'
+        event = transformer.transform(str)
+
+        assert event["host_address"] == "127.0.5.1"
+        assert event["host_name"] == "testhost.localdomain"
+        assert event["message"] == "The big UPS has detected a building alarm. Cause: UPS1 Alarm #14: Computer ROOM high temperature"
+
+    def test_regexp_execution_2(self):
+        """ Second example of http://snmptt.sourceforge.net/docs/snmptt.shtml#SNMPTT.CONF-REGEX
+
+        """
+        transformer = SnmpTransformer()
+        transformer.setup("test",{
+            "mib_dir" : "/dev/null"
+        })
+        transformer.registered_mibs.append(transformer.parse_file({
+            "EVENT test_event .1.3.6.1.4.1.2021.13.990.0.17 \"test category\" severity" : 0,
+            "FORMAT $*" : 1,
+            r"REGEX (\(1\))(One)" : 2,
+            r"REGEX (\(2\))((Two))": 3
+        }))
+        str = 'HOST:testhost.localdomain;IP:UDP: [127.0.5.1]:50935;VARS:.1.3.6.1.2.1.1.3.0 = 2:22:16:27.46 ; .1.3.6.1.6.3.1.1.4.1.0 = .1.3.6.1.4.1.2021.13.990.0.17 ; .1.3.6.1.2.1.1.6.0 = Alarm (1) and (2) has been triggered ; .1.3.6.1.6.3.18.1.3.0 = 127.0.0.1 ; .1.3.6.1.6.3.18.1.4.0 = "public" ; .1.3.6.1.6.3.1.1.4.3.0 = .1.3.6.1.4.1.2021.13.990'
+        event = transformer.transform(str)
+
+        assert event["host_address"] == "127.0.5.1"
+        assert event["host_name"] == "testhost.localdomain"
+        assert event["message"] == "Alarm One and (Two) has been triggered"
+
+    def test_regexp_execution_groups(self):
+        """ Second example of http://snmptt.sourceforge.net/docs/snmptt.shtml#SNMPTT.CONF-REGEX
+
+        """
+        transformer = SnmpTransformer()
+        transformer.setup("test",{
+            "mib_dir" : "/dev/null"
+        })
+        transformer.registered_mibs.append(transformer.parse_file({
+            "EVENT test_event .1.3.6.1.4.1.2021.13.990.0.17 \"test category\" severity" : 0,
+            "FORMAT $*" : 1,
+            r"REGEX (The system has logged exception error (\d+) for the service (\w+))(Service \2 generated error \1)" : 2
+        }))
+        str = 'HOST:testhost.localdomain;IP:UDP: [127.0.5.1]:50935;VARS:.1.3.6.1.2.1.1.3.0 = 2:22:16:27.46 ; .1.3.6.1.6.3.1.1.4.1.0 = .1.3.6.1.4.1.2021.13.990.0.17 ; .1.3.6.1.2.1.1.6.0 = The system has logged exception error 55 for the service testservice ; .1.3.6.1.6.3.18.1.3.0 = 127.0.0.1 ; .1.3.6.1.6.3.18.1.4.0 = "public" ; .1.3.6.1.6.3.1.1.4.3.0 = .1.3.6.1.4.1.2021.13.990'
+        event = transformer.transform(str)
+
+        assert event["host_address"] == "127.0.5.1"
+        assert event["host_name"] == "testhost.localdomain"
+        assert event["message"] == "Service testservice generated error 55"
 
 class SplitTransformerTest(unittest.TestCase):
     """ Splittransformers just split the input by a specified character
