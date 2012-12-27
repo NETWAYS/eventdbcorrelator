@@ -76,7 +76,17 @@ class InstanceFactory(object):
         If factory_fn is given, this will be called (class is 
         only being registered here and not used for instance creation), otherwise 
         %class%.setup(id, cfg_object) is called.
-        
+
+        Instances look like
+        {
+            "class": "CLASSNAME",
+            "type" : "typename",
+            "arg1" : "argval1"
+            ...
+            "argN" : "argvalN"
+            "ref1" : "@referencedId"
+        }
+
         """ 
         # type myType and class myClass will be called MyTypeMyClass()
         required = self.resolve_references(cfg_object)

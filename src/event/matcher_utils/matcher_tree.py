@@ -25,8 +25,43 @@ from event import ip_address
 class MatcherTree(object):
     """ Binary tree that represents a matcher. Nodes are operators or conjunctions, left side
         leafs are fields, right side fields are values. 
-        Compiled to python code by the py_compiler.py class 
-    """    
+        Compiled to python code by the py_compiler.py class. A tree could look like this.
+
+        Expression (HOST_ADDRESS IN NETWORK 10.0.10.0/8 OR PRIORITY >= 4) AND HOST_NAME IS 'string':
+
+                                       AND
+                                        |
+                               ----------------------------
+                               |                          |
+                               |                          |
+                              OR                          IS
+                               |                          |
+                  --------------------------        ------------------
+                  |                        |        |                |
+             IN NETWORK                   >=      HOST_NAME       'string'
+                  |                        |
+             -----------                -------
+             |         |                |     |
+    HOST_ADDRESS     10.0.10.0/8    PRIORITY  4
+
+        This tree would be compiled by traversing it in-order (left, root, right) so the result is and adding the
+        compiled expression to a 'compiled' field in each branch (but not leafs). The left subtree would be compiled first,
+        so it would look like this after the first step
+
+                                       AND
+                                        |
+                               ------------------------------------------
+                               |                                         |
+                               |                                         |
+                              OR                                         IS
+                               |                                         |
+                  ------------------------------                    ------------------
+                  |                             |                   |                |
+COMPILED: IPAdress(event["HOST_ADDRESS"]). event["PRIORITY"] >= 4   HOST_NAME       'string'
+                in_network(10.0.10.0/8)
+
+
+    """
     
 
     def __init__(self,query_string,tokens):
