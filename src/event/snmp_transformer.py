@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import os
 import re
 import time
-from event.event import Event
+from event import Event
 import logging
 
 STATIC_OIDS = {
