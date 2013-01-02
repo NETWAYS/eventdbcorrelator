@@ -89,9 +89,9 @@ class MailReceptorTest(unittest.TestCase):
                 os.write(pipeFd, message)
                 os.close(pipeFd)
 
-            assert queue.get(timeout=2) in MAIL_STRINGS
-            assert queue.get(timeout=2) in MAIL_STRINGS
-            assert queue.empty()
+            self.assertEqual(queue.get(timeout=2), MAIL_STRINGS[0])
+            self.assertEqual(queue.get(timeout=2), MAIL_STRINGS[1])
+            self.assertTrue(queue.empty())
         finally:
             pr.stop()
 
