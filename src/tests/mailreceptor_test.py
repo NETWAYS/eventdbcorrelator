@@ -87,10 +87,9 @@ class MailReceptorTest(unittest.TestCase):
             for message in MAIL_STRINGS:
                 pipeFd = os.open(TESTPATH, os.O_WRONLY)
                 os.write(pipeFd, message)
-                os.close(pipeFd)
 
-            self.assertEqual(queue.get(timeout=2), MAIL_STRINGS[0])
-            self.assertEqual(queue.get(timeout=2), MAIL_STRINGS[1])
+            self.assertEqual(queue.get(timeout=2).strip(), MAIL_STRINGS[0].strip())
+            self.assertEqual(queue.get(timeout=2).strip(), MAIL_STRINGS[1].strip())
             self.assertTrue(queue.empty())
         finally:
             pr.stop()
