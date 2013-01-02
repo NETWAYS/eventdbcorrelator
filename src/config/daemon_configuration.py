@@ -40,6 +40,7 @@ class DaemonConfiguration(object):
         parser.add_option("-C","--chains", dest="chain_dir", help="dir to search for event chains", default=None)
         parser.add_option("-f","--foreground", dest="foreground", action="store_true", default=False, help="run in foreground (useful for debugging")
         parser.add_option("-l","--log", default=None, dest="log", help="Log file")
+        parser.add_option("-v","--verbose", default=False, dest="verbose", help="Log verbose", action="store_true")
         (self.options, args) = parser.parse_args()
 
     def parse_config_file(self):

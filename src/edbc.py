@@ -62,13 +62,16 @@ class Edbc(object):
 
     def __setup_logging(self):
         """ When 'log' is not set, logging is done to a logfile, otherwise to stdout
-            @TODO: Loglevel is missing
         """
 
+        loglevel = logging.INFO
+        if self.config["verbose"]:
+            loglevel = logging.DEBUG
+
         if self.config["log"]:
-            logging.basicConfig(level=logging.INFO, filename=self.config["log"])
+            logging.basicConfig(level=loglevel, filename=self.config["log"])
         else:
-            logging.basicConfig(level=logging.INFO)
+            logging.basicConfig(level=loglevel)
 
             
 if __name__ == "__main__":
