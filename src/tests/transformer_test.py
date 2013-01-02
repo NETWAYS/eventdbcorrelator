@@ -18,6 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
 import unittest
+
 from network.ip_address import IPAddress
 from event import SnmpTransformer, StringTransformer, SplitTransformer
 
@@ -275,4 +276,3 @@ class SplitTransformerTest(unittest.TestCase):
         assert event["facility"] == "4"
         assert event["message"] == "Testmessage"
         
-    

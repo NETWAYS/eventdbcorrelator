@@ -101,7 +101,7 @@ class PipeReceptor(AbstractReceptor):
         if queue in self.queues:
             self.queues.remove(queue)
     
-    def __get_messages_from_raw_stream(self, data_packet):
+    def _get_messages_from_raw_stream(self, data_packet):
         """ Reads mesages from raw string input and returns a list of messages 
 
         """
@@ -121,7 +121,7 @@ class PipeReceptor(AbstractReceptor):
         return messages
         
         
-    def __read(self):
+    def _read(self):
         """ Reads from the pipe and transforms raw event strings to normalized Event objecs
 
         """
@@ -139,7 +139,7 @@ class PipeReceptor(AbstractReceptor):
                 if len(data_packet) == 0:
                     self.__reopen_pipe()
                     continue
-                messages = self.__get_messages_from_raw_stream(data_packet)
+                messages = self._get_messages_from_raw_stream(data_packet)
                 
                 for message in messages:                         
                     if message == "": 
@@ -181,7 +181,7 @@ class PipeReceptor(AbstractReceptor):
             self.__reopen_pipe()
             self.running = True
             try :                
-                self.__read()
+                self._read()
             except OSError, e:
                 logging.warn("Error %s", e)
             self.running = False

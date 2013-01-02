@@ -17,6 +17,18 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-from pipe_receptor import *
-from snmp_receptor import *
-from mail_receptor import *
+from receptors import PipeReceptor
+from email.parser import FeedParser
+import logging
+import os
+
+class MailReceptor(PipeReceptor):
+    """ PipeReceptor that doesn't stop on line breaks, but on finished mails
+
+    """
+
+    def _get_messages_from_raw_stream(self, data_packet):
+        return [data_packet]
+
+
+

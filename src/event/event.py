@@ -92,10 +92,12 @@ class Event(object):
             return self.active
         if name in self.data:
             return self.data[name]
-        return None
+        return ""
     
     def __eq__(self, event):
-        
+        if event == None:
+            return False
+
         if event.message != self.message:
             return False
         if event.date != self.date:

@@ -68,7 +68,7 @@ class PyCompiler(object):
         else:
             value = "event[\"%s\"].lower()" % node["right"]
         field = "event[\"%s\"].lower()" % node["left"]
-        
+
         operator = node["root"]
 
         if(operator in ["IS","IS NOT"]):
@@ -82,7 +82,7 @@ class PyCompiler(object):
             return "%s.endswith(%s)" % (field, value)
         if operator == "REGEXP":
             return "self.regexp_test(%s,%s) " % (value, field)
-        
+
         return "False" 
     
     def _compile_network_expression(self, node):

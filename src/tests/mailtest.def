@@ -1,0 +1,9 @@
+[default]
+ignore: true
+host_name: rule_default
+host_address: 127.0.0.1
+message: test
+
+[FROM CONTAINS 'jmosshammer']
+host_name: test
+

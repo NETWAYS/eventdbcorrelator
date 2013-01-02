@@ -177,6 +177,20 @@ class MatcherTestCase(unittest.TestCase):
         current_matcher = Matcher("address IN IP RANGE '192.168.1.0-192.169.1.1'")
         assert current_matcher.matches(test_event) == True
 
+    def test_nonexisting_field(self):
+        """ Test a matcher that contains an unknown event field (typo in matcher)
+
+        """
+        test_event = Event("[LINK DOWN] eth0 on localhost is down.", time.ctime(),{
+            "severity" : 7,
+            "facility" : 4,
+            "host" : "localhost",
+            "program" : "NetworkManager"
+        })
+
+        current_matcher = Matcher("mfessage REGEXP '(?P<INTERFACE>eth\d+) on (?P<HOST>\w+ is down)' OR (host IS 'localhost' AND facility > 5) ")
+        assert current_matcher.matches(test_event) == False
+
     def test_mixed(self):
         """ Tests of several conjunctions and different operators
 
@@ -189,6 +203,7 @@ class MatcherTestCase(unittest.TestCase):
         })
         
         current_matcher = Matcher("message REGEXP '(?P<INTERFACE>eth\d+) on (?P<HOST>\w+ is down)' OR (host IS 'localhost' AND facility > 5) ")
+        print current_matcher.tree.raw_tree["compiled_py"]
         assert current_matcher.matches(test_event)
         
         current_matcher = Matcher("message REGEXP '(?P<INTERFACE>eth[1-9]) on (?P<HOST>\w+ is down)' OR (host IS 'localhost' AND facility > 5) ")

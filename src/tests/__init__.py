@@ -30,3 +30,5 @@ from aggregator_test import *
 from multiaggregator_test import *
 from modifier_processor_test import *
 from command_processor_test import *
+from mailreceptor_test import *
+from mailtransformer_test import *

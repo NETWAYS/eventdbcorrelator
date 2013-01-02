@@ -159,6 +159,7 @@ class PipeReceptorTestCase(unittest.TestCase):
             
         finally:            
             testlog.close()
+            os.close(pipeFd)
             pr.stop()
             
     def test_pipe_reopen(self):
