@@ -28,7 +28,11 @@ class MailReceptor(PipeReceptor):
     """
 
     def _get_messages_from_raw_stream(self, data_packet):
-        return data_packet.split("\nFrom ")
+        messages = data_packet.split("\nFrom ")
+        if len(messages) > 1:
+            for i in range(1,len(messages)):
+                messages[i] = "From "+messages[i]
+        return messages
 
 
 
