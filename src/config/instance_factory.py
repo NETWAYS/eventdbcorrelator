@@ -41,11 +41,11 @@ class InstanceFactory(object):
         self.deferred = {}
         instanceDefs = self.config.get_instance_definitions()
         self.instances = { "all": {} }
-        for id in instanceDefs:
-            if id == "global":
+        for instance_id in instanceDefs:
+            if instance_id == "global":
                 continue
-            cfg_object = instanceDefs[id]
-            self.register(id, cfg_object)
+            cfg_object = instanceDefs[instance_id]
+            self.register(instance_id, cfg_object)
             
         logging.debug("Registered %i instances", len (self.instances["all"]))
 
@@ -54,6 +54,7 @@ class InstanceFactory(object):
         """ If an instance can' t be registered, because dependencies are missing
             registration will be deferred until the dependencies are met
         """
+        logging.debug()
         if not required in self.deferred:
             self.deferred[required] = []
 
@@ -131,21 +132,21 @@ class InstanceFactory(object):
         self.handle_unresolved(instance_id)
         return True
         
-    def handle_unresolved(self, id):
+    def handle_unresolved(self, instance_id):
         """ Checks if deferred registrations can now be completed and completes them if so
         
         """          
-        if "@"+id in self.deferred:
+        if "@"+instance_id in self.deferred:
 
             unmatched = []
-            while self.deferred["@"+id]:
-                item = self.deferred["@"+id].pop()
+            while self.deferred["@"+instance_id]:
+                item = self.deferred["@"+instance_id].pop()
                 if not self.register(item[0], item[1], item[2]):
                     unmatched.append(item)
             if unmatched:
-                self.deferred["@"+id] = unmatched
+                self.deferred["@"+instance_id] = unmatched
             else:
-                del self.deferred["@"+id]
+                del self.deferred["@"+instance_id]
     
         
     def has_unmatched_dependencies(self):
@@ -185,16 +186,16 @@ class InstanceFactory(object):
         getter.__name__ = "getAll"+classname.capitalize()+"Instances"
         setattr(self, getter.__name__, getter)
         
-    def __getitem__(self, id):
+    def __getitem__(self, instance_id):
         """
         Returns the object instance that can be found under the id "id"
     """
-        if id[0] == '@':
-            id = id[1:]
-        if id in self.instances:
-            return self.instances[id]
-        if id in self.instances["all"]:
-            return self.instances["all"][id]
+        if instance_id[0] == '@':
+            instance_id = instance_id[1:]
+        if instance_id in self.instances:
+            return self.instances[instance_id]
+        if instance_id in self.instances["all"]:
+            return self.instances["all"][instance_id]
         return None
         
     
