@@ -89,7 +89,7 @@ class ChainFactory(object):
         for i in self.config_reader.options(_id):
             chain_def[i] = self.config_reader.get(_id, i)
         logging.debug("Registering chain %s", _id)
-        self.instances.register(id,chain_def,self.create_chain)
+        self.instances.register(_id,chain_def,self.create_chain)
  
         
     def create_chain(self, _id, config):
