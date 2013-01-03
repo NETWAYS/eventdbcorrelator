@@ -48,6 +48,6 @@ format:         @syslog
 ##############################################################
 [syslog-aggregator]
 class:          processor
-type:           multiaggregator
+type:           multiaggregation
 config:         @prefix@/etc/rules/syslog.rules
 datasource:     @mysql

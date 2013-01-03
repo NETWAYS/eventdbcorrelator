@@ -37,6 +37,6 @@ format:     @snmp-transformer
 ##############################################################
 [syslog-aggregator]
 class:      processor
-type:       multiaggregator
+type:       multiaggregation
 config:     @prefix@/etc/rules/snmp.rules
 datasource: @mysql
