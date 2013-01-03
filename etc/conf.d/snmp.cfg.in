@@ -38,5 +38,5 @@
 [snmp-aggregator]
 class:      processor
 type:       multiaggregation
-config:     @prefix@/etc/rules/snmp.rules
+ruleset:     @prefix@/etc/rules/snmp.rules
 datasource: @mysql

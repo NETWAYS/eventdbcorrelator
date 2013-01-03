@@ -303,12 +303,12 @@ Multiaggregation processors allows to define and bundle several aggregation proc
     [example-multiaggregator]
     class: processor
     type: multiaggregation
-    config: /usr/local/edbc/etc/rules/event.rules
+    ruleset: /usr/local/edbc/etc/rules/event.rules
     datasource: @mysql
 
 #. **Parameters**
 	* **datasource**: A :ref:`datasource-ref` that is required to process aggregation groups
-	* **config**: A path pointing to the rule configuration file
+	* **ruleset**: A path pointing to the rule configuration file
 	* **acknowledge_on_clear**: (optional) Acknowledges the group after the clear message is received
 	* **maxcount**: (optional) Define a limit how many events can be in a group
 	* **maxdelay**: (optional) The aggregation will be automatically cleared when a group does not get a new event for maxdelay seconds (default: 24 hours)
