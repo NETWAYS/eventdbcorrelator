@@ -41,8 +41,7 @@ class Controller:
         
     
     def __setup_receptors(self):
-        """ Creates all receptors defined in the snmp.cfg
-
+        """ Creates all receptors defined in the *.cfg files
         """
 
         logging.debug("Receptors registered: %s", self.instances["receptor"])

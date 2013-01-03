@@ -36,7 +36,6 @@ AC_SUBST(bin_user)
 AC_SUBST(bin_group)
 
 
-
 AC_ARG_WITH([bin_user],
     AS_HELP_STRING([--with-bin-user=USER], [user for all other files (default root)]),
     bin_user=$withval,
@@ -86,6 +85,9 @@ AC_CONFIG_FILES([
     src/config/config.py
     src/receptors/snmp_receptor.py
     etc/conf.d/database.cfg
+    etc/conf.d/mail.cfg
+    etc/conf.d/snmp.cfg
+    etc/conf.d/syslog.cfg
     etc/edbc.cfg
     bin/edbc
 ])

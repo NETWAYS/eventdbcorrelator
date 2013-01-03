@@ -23,15 +23,24 @@ installdirs:
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/libexec
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/etc/chains
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/etc/rules
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/etc/mail
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/etc/conf.d
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/etc/conf.d/base
 
 install-base-config:
 	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/edbc.cfg $(prefix)/etc/edbc.cfg
 	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/database.cfg $(prefix)/etc/conf.d/database.cfg
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/base_processors.cfg $(prefix)/etc/conf.d/base_processors.cfg
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/receptors.cfg $(prefix)/etc/conf.d/receptors.cfg
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/chains/example.chain $(prefix)/etc/chains/example.chain
-		
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/base/base_processors.cfg $(prefix)/etc/conf.d/base/base_processors.cfg
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/mail.cfg $(prefix)/etc/conf.d/mail.cfg
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/snmp.cfg $(prefix)/etc/conf.d/snmp.cfg
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/syslog.cfg $(prefix)/etc/conf.d/syslog.cfg
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/mail/default.filter $(prefix)/etc/mail/default.filter
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/rules/mail.rules $(prefix)/etc/rules/mail.rules
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/rules/snmp.rules $(prefix)/etc/rules/snmp.rules
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/rules/syslog.rules $(prefix)/etc/rules/syslog.rules
+    $(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/chains/example.chain $(prefix)/etc/chains/example.chain
+    $(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/chains/base.chain $(prefix)/etc/chains/base.chain
+
 test:
 	cd $(prefix)/lib && python ./runtests.py
 	
