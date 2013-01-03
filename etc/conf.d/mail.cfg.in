@@ -22,7 +22,7 @@ rules: /usr/local/edbc/etc/mail/default.filter
 ##############################################################
 [mail-receptor]
 class:receptor
-type:pipe
+type:mail
 path:/var/lib/edbc-mail.pipe
 format:@mail-default
 
