@@ -13,7 +13,7 @@
 [syslog-chain]
 in:     @syslog-receptor
 to_1:   @syslog-aggregator
-to_2:   @mysqldb
+to_2:   @mysql
 
 
 ###############################################################
@@ -26,7 +26,7 @@ to_2:   @mysqldb
 #[snmp-chain]
 #in:    @snmp-receptor
 #to_1:  @snmp-aggregator
-#to_2:  @mysqldb
+#to_2:  @mysql
 
 
 ################################################################
@@ -39,4 +39,4 @@ to_2:   @mysqldb
 [mail-chain]
 in:    @mail-receptor
 to_1:  @mail-aggregator
-to_2:  @mysqldb
+to_2:  @mysql
