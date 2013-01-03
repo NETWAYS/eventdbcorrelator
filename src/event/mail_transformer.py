@@ -114,6 +114,8 @@ class MailTransformer(object):
 
                 item_dict = {}
                 for item in items:
+                    if item[0] == "matcher":
+                        continue
                     item_dict[item[0]] = item[1]
 
                 # parse default section
@@ -121,7 +123,10 @@ class MailTransformer(object):
                     self.default = item_dict
                     continue
 
-                ev_matcher = matcher.Matcher(section)
+                ev_matcher = matcher.TrueMatcher
+                if parser.has_option(section,"matcher"):
+                    ev_matcher = matcher.Matcher(parser.get(section,"matcher"))
+
                 self.rules.append((ev_matcher, item_dict))
         finally:
             hdl.close()
