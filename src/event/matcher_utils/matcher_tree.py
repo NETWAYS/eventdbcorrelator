@@ -189,7 +189,7 @@ COMPILED: IPAdress(event["HOST_ADDRESS"]). event["PRIORITY"] >= 4   HOST_NAME   
         splitted = self.operator_splitter.split(exp)
         
         if len(splitted) != 3:
-            raise "Invalid expression %s " % exp
+            raise Exception("Invalid expression %s " % exp)
 
         return (splitted[0],splitted[1],splitted[2])
         
