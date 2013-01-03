@@ -54,7 +54,6 @@ class InstanceFactory(object):
         """ If an instance can' t be registered, because dependencies are missing
             registration will be deferred until the dependencies are met
         """
-        logging.debug()
         if not required in self.deferred:
             self.deferred[required] = []
 
