@@ -23,10 +23,10 @@ to_2:   @mysqldb
 # to see how to set up snmp
 ###############################################################
 
-[snmp-chain]
-in:    @snmp-receptor
-to_1:  @snmp-aggregator
-to_2:  @mysqldb
+#[snmp-chain]
+#in:    @snmp-receptor
+#to_1:  @snmp-aggregator
+#to_2:  @mysqldb
 
 
 ################################################################

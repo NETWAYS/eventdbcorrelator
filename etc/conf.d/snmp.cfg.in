@@ -10,11 +10,11 @@
 # SNMP Transformer use the mibs created by snmpttconvertmib
 # to parse events
 #############################################################
-[snmp-transformer]
-class:      transformer
-type:       snmp
-mib_dir:    /usr/share/snmptt/mibs
-fixed:      Priority=3,Facility=5,program=snmp
+#[snmp-transformer]
+#class:      transformer
+#type:       snmp
+#mib_dir:    /usr/share/snmptt/mibs
+#fixed:      Priority=3,Facility=5,program=snmp
 
 
 
@@ -22,20 +22,20 @@ fixed:      Priority=3,Facility=5,program=snmp
 # Sets up an snmp handler and a pipe for snmp events to
 # forward snmp traps to edbc
 #############################################################
-[snmp-receptor]
-class:      receptor
-type:       snmp
-handler:    @prefix@/var/edbc_snmp_handler
-path:       @prefix@/var/snmp.pipe
-template:   @prefix@/libexec/snmp_handler_template
-format:     @snmp-transformer
+#[snmp-receptor]
+#class:      receptor
+#type:       snmp
+#handler:    @prefix@/var/edbc_snmp_handler
+#path:       @prefix@/var/snmp.pipe
+#template:   @prefix@/libexec/snmp_handler_template
+#format:     @snmp-transformer
 
 
 
 ##############################################################
 # Aggregation rules for the snmp events
 ##############################################################
-[syslog-aggregator]
+[snmp-aggregator]
 class:      processor
 type:       multiaggregation
 config:     @prefix@/etc/rules/snmp.rules
