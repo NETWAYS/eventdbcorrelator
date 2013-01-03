@@ -22,7 +22,7 @@ from ConfigParser import ConfigParser
 from processors import AggregationProcessor 
 import logging 
 
-CONFIG_DIRECTIVES = ("clear","matcher","aggregatemessage")
+CONFIG_DIRECTIVES = ("clear","matcher","aggregatemessage","matcherfield")
 
 class MultiaggregationProcessor(object):
     """ MultiaggregationProcessor act upon normal AggregationProcessors

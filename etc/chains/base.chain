@@ -1,0 +1,42 @@
+################################################################
+#
+#   Default configuration file, set up for syslog, snmp and
+#   mail
+#
+################################################################
+
+
+###############################################################
+# Chain for syslog events
+###############################################################
+
+[syslog-chain]
+in:     @syslog-receptor
+to_1:   @syslog-aggregator
+to_2:   @mysqldb
+
+
+###############################################################
+# Chain for snmp events
+#
+# Refer to the quickstart guide in the documentation in order
+# to see how to set up snmp
+###############################################################
+
+[snmp-chain]
+in:    @snmp-receptor
+to_1:  @snmp-aggregator
+to_2:  @mysqldb
+
+
+################################################################
+# Chain for mail events
+#
+# Refer to the quickstart guide in the documentation in order to
+# see how to set up postfix with edbc
+################################################################
+
+[mail-chain]
+in:    @mail-receptor
+to_1:  @mail-aggregator
+to_2:  @mysqldb

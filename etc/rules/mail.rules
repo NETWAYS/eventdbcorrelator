@@ -1,0 +1,15 @@
+##########################################################
+#
+# Rules for mail message aggregation
+# These examples are just for syntax demonstration, refer
+# to the quickstart guide on how to define them
+#
+#########################################################
+
+#[rule1]
+#match: message REGEXP 'ERROR: (?P<HOST_NAME>[^ ]+) : (?P<PROBLEM>.*)$
+#clear: message CONTAINS 'CLEAR'
+#aggregateMessage: #MESSAGE ($_COUNT)
+
+#[rule2]
+#matcherfield: priority, host

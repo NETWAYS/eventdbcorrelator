@@ -1,7 +1,7 @@
 
-
+********
 Overview
-========
+********
 
 This section provides a few information about how edbc is structured and a short overview of the configuration. Configuration topics are discussed in depth in :ref:Configuration. 
 

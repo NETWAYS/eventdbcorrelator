@@ -1,8 +1,9 @@
 
 .. _event_format:
 
-EventDB Event
-=============
+**************
+EventDB Events
+**************
 
 Events in the eventdb have the following properties that will be persisted in the database and can be set by :ref:`transformer-ref` or :ref:`processor-ref`:
 

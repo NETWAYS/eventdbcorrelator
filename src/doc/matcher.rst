@@ -1,7 +1,8 @@
 .. _matcher-syn:
 
+*******************
 EDBC Matcher syntax
-===================
+*******************
 
 Syntax definition
 -----------------

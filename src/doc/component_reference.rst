@@ -1,7 +1,7 @@
 
-
+*******************
 Component Reference
-===================
+*******************
 
 .. _transformer-ref:
 
@@ -28,6 +28,7 @@ String transformers take raw string input and convert them events using a regula
 #. **Parameters**
 
 	* **defaultmessage**: If no message is defined, this message (normally 'No message given') is used
+	* **dateformat**: The format to use for the date string
 	* **format**: A regular expression extracting the important event properties of an event with named matching groups. You can define any property you want, but persisted properties are per default:
 		* MESSAGE 
 		* HOST    
@@ -39,13 +40,44 @@ String transformers take raw string input and convert them events using a regula
 		* MODIFIED
 	* **fixed**: A comma seperated key=value list defining which properties are set as constants
 
+.. _split-transformer-ref:
+
+SplitTransformer *(type: split)*
+``````````````````````````````````
+
+Split transformers take a string and separate them by a delimiter string:
+
+#. **Example**::
+
+	[syslog_reader]
+	class:transformer
+	type:split
+    delimiter: ';'
+    group_order: CREATED HOST HOST_ADDRESS PROGRAM FACILITY PRIORITY MESSAGE
+
+#. **Parameters**
+
+	* **defaultmessage**: If no message is defined, this message (normally 'No message given') is used
+	* **dateformat**: The format to use for the date string
+	* **delimiter**: The string to use for delimiting the input (default: \t)
+	* **group_order**: A space separated list of the following values, defining in which order they appear
+		* MESSAGE
+		* HOST
+		* HOST_ADDRESS
+		* PRIORITY
+		* FACILITY
+		* PROGRAM
+		* CREATED
+		* MODIFIED
+	* **fixed**: A comma seperated key=value list defining which properties are set as constants
+
 
 .. _snmp-transformer-ref:
 
 SNMPTransformer *(type: snmp)*
 ``````````````````````````````
 
-SNMP Transformer are able to read MIB files produced by `snmpttconvertmib <http://snmptt.sourceforge.net/docs/snmpttconvertmib.shtml>`_ and parse their EVENT and FORMAT directives. It expects snmptraps to be received with numerical OIDs.
+SNMP Transformer are able to read MIB files produced by `snmpttconvertmib <http://snmptt.sourceforge.net/docs/snmpttconvertmib.shtml>`_ and parse their EVENT, FORMAT and REGEXP directives. It expects snmptraps to be received with numerical OIDs.
 
 #. **Example**::
 	
@@ -76,6 +108,55 @@ SNMP Transformer are able to read MIB files produced by `snmpttconvertmib <http:
  
 	* **fixed**: A comma seperated key=value list defining which properties are set as constants
 
+.. _mail-transformer-ref:
+
+MailTransformer *(type: mail)*
+``````````````````````````````
+
+Mailtransformers are tightly coupled to :ref:`mailreceptor-ref` and allow to interpret incoming mails as events, depending on a previously defined ruleset.
+
+#. **Example**::
+
+    [mail_reader]
+    class: transformer
+    type:  mail
+    rules: /usr/local/edbc/etc/mail.def
+
+#. **Parameters**::
+
+    * **rules**:  The file that contains the rule definitions.
+
+The mail rule definition has a similar configuration syntax as the other configuration files. It usually consists of one default section::
+
+    [default]
+    ignore: true
+    facility: 1
+    priority: 1
+    program: mail
+    host: #From
+    message: #Message
+
+This example defines that all events that come via mail have the facility 1, priority 1, the program field set to 'mail'. The # directives
+say, a field from the mail header should be used (#Message is a special case, as it uses the mail body instead of a header). The ignore:true says that all
+mails that only match the default rule and no other should not be written to mail (remove this if you want all mails forwarded to you  to appear in the eventdb).
+
+You can now use additional rules to match the specific mails that are interesting for you. The matcher ist defined in the matcher field and follows the :ref:`matcher-syn` ::
+
+    [rule1]
+    matcher: FROM CONTAINS 'localhost'
+    facility: 3
+    host: 'srv-mail'
+
+    [rule2]
+    matcher: MESSAGE REGEXP 'Host (?P<HOST_NAME>\w*) is down'
+    priority: 6
+    host: $HOST_NAME
+
+Here we defined two rules: rule1 says that all mails that contain 'localhost' in its from field get facility 3 and the hostname 'srv-mail' (in addition to the values defined in the
+'default' section). The second rule says that if the message is for example 'Host test ist down', it matches the regexp, the priority is set to 6 and the hostname is substituted to 'test'.
+($ means that the regular expression matching group from the matcher is used).
+
+Please note that only the first matching rule is being used.
 
 .. _receptors-ref:
 
@@ -111,6 +192,29 @@ A pipe receptor opens a pipe upon creation and receives events
 	* **source_type**: The source name given to the event (default: syslog)
 
 
+Mail Receptor *(type:mail)*
+```````````````````````````
+
+Mail receptors are almost the same as pipe receptors, but only work with :ref:`mailtransformer_ref` definitions.
+
+#. **Example**::
+
+	[pipe]
+	class:receptor
+	type:mail
+	path:/tmp/mail.pipe
+	format:@mail_transformer
+
+#. **Parameters**
+
+	* **mod** : The permission mask which will be used for the created pipe (default: 0666)
+	* **owner** : The owner of the pipe (default: The process owner)
+	* **group** : The group of the pipe (default: The process owner's group)
+	* **path** : An existing, writable path to create the pipe at (default /usr/local/var/edbc.pipe)
+	* **bufferSize** : The input buffer of this receptor (default 2KB)
+	* **format** : (required) An :ref:`transformer-ref` instance that will be used to format the raw event data to a normalized event
+	* **source_type**: The source name given to the event (default: syslog)
+
 .. _snmpreceptor-ref:
 
 SNMP Receptor *(type:snmp)*
@@ -128,6 +232,7 @@ The SNMP Receptors opens a pipe where it listens on and creates a bash script wh
 	class:receptor
 	type:snmp
 	handler:/usr/local/edbc/var/edbc_snmp_handler
+	pipe: /tmp/snmp.pipe
 	format:@snmp_reader
 
 #. **Parameters**
@@ -156,7 +261,8 @@ Processors are components that perform arbitary actions on your events, like alt
 Aggregation Processor *(type:aggregation)*
 ``````````````````````````````````````````
 
-Aggregators try to match events by using the :ref:`matcher-syn` and groups them. The usage is described in detail under :ref:`aggregator-example`.
+Aggregators try to match events by using the :ref:`matcher-syn` and groups them. The usage is described in detail under :ref:`aggregator-example`. In most cases, you
+will prefer the :ref'`multiaggregationprocessor-ref`, as this provides a more convenient interface.
 
 #. **Example**::
 
@@ -174,7 +280,10 @@ Aggregators try to match events by using the :ref:`matcher-syn` and groups them.
 	* **aggregatemessage**: The message to use for the group. Can reference matcher groups by $NAME tokens and event properties by #PROPERTY tokens. $_COUNT is a special variable resolved by the frontend
 	* **clear**: A :ref:`matcher-syn` triggering a clear message. This is used **after** the matcher field is processed, so if the matcher doesn't contain the clear message, this is never processed
 	* **datasource**: A :ref:`datasource-ref` that is required to process aggregation groups
-	* **maxdelay**: The aggregation will be automatically cleared when a group does not get a new event for maxdelay seconds (default: 24 hours)
+	* **maxdelay**: (optional) The aggregation will be automatically cleared when a group does not get a new event for maxdelay seconds (default: 24 hours)
+	* **maxcount**: (optional) Define a limit how many events can be in a group
+	* **matcherfield**: (optional) Comma separated list of event fields that must be equal for grouping (e.g. only group events with the same hostname would be matcherfield: host)
+	* **acknowledge_on_clear**: (optional) Acknowledges this group after the clear message is received
 
 
 #. **Return codes**
@@ -184,6 +293,48 @@ Aggregators try to match events by using the :ref:`matcher-syn` and groups them.
 	* **CLEAR**: Returned when an event clears an aggregation group because of the clear matcher (maxdelay doesn't cause this)
 	* **PASS** : Returned when the matcher doesn't match the event
 
+Multiaggregation Processor *(type:multiaggregation)*
+````````````````````````````````````````````````````
+
+Multiaggregation processors allows to define and bundle several aggregation processors in a configuration file.
+
+# **Example**::
+
+    [example-multiaggregator]
+    class: processor
+    type: multiaggregation
+    config: /usr/local/edbc/etc/rules/event.rules
+    datasource: @mysql
+
+#. **Parameters**
+	* **datasource**: A :ref:`datasource-ref` that is required to process aggregation groups
+	* **config**: A path pointing to the rule configuration file
+	* **acknowledge_on_clear**: (optional) Acknowledges the group after the clear message is received
+	* **maxcount**: (optional) Define a limit how many events can be in a group
+	* **maxdelay**: (optional) The aggregation will be automatically cleared when a group does not get a new event for maxdelay seconds (default: 24 hours)
+
+#. **Return codes**
+
+    The return code of the first aggregator that matches is returned.
+
+	* **AGGR**: Returned when an event is added to an *existing* aggregation group
+	* **NEW** : Returned when an event creates a new aggregation group
+	* **CLEAR**: Returned when an event clears an aggregation group because of the clear matcher (maxdelay doesn't cause this)
+	* **PASS** : Returned when no processor matched the event
+
+#. **Event rule files**
+
+    Event rule files consist of entries in the following format::
+
+        [rule1]
+        match: message REGEXP '(CLEAR|SET) (?P<name> .*)'
+        clear: message CONTAINS 'CLEAR'
+
+        [rule2]
+        match: message STARTS WITH 'voice alert'
+        aggregateMessage: #message ($_COUNT)
+
+    A rule can have the 'match', 'clear' and aggregateMessage directives. The clear expression must match *additionally* to the match expression
 
 .. _commandprocessor-ref:
 
@@ -204,7 +355,7 @@ This processor writes a "[TIME] MESSAGE" string into a defined pipe and can be u
 
 	* **matcher**: A :ref:`matcher-syn` that determines if the processor is called 
 	* **format** : The format of the message to fire, ($NAME is replaced with matcher tokens, #NAME with event fields)
-	* **pipe**   : The pipe to write the message to
+	* **pipe**   : The pipe to write the message to. If seperated by ';', multiple pipes can be defined
 
 #. **Return codes**
 	

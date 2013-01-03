@@ -1,7 +1,8 @@
 .. _about_label:
 
+*************
 What is EDBC?
-=============
+*************
 
 EDBC (EventDB Correlator) is an agent for `EventDB <https://www.netways.org/projects/eventdb/wiki>`, our tool for integrating passive monitoring (like snmp, syslog or mail events) into icinga (or similar) monioring enviromnents. 
 EDBC offers a lot of features that are required to cover advanced monitoring use cases:
@@ -15,7 +16,7 @@ EDBC offers a lot of features that are required to cover advanced monitoring use
 
 
 Basic concept
--------------
+=============
 
 EDBC consists of three elements:
 

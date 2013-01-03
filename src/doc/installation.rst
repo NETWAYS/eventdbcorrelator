@@ -1,9 +1,10 @@
 
+************
 Installation
-============
+************
 
 Prerequisites
--------------
+=============
 
 You only need a minimal python setup in order to use edbc:
 
@@ -14,7 +15,9 @@ You only need a minimal python setup in order to use edbc:
 .. _configure-label:
 
 Installing the executables 
---------------------------
+==========================
+
+
 EDBC can be installed via make::
 
 	./configure --with-db-user=eventdb --with-db-pass=%YOUR DB PASSWORD&
@@ -27,7 +30,7 @@ the --prefix option in configure.
 
 
 Setting up the database
------------------------
+=======================
 
 Currently, only MySQL is supported. You can find the .sql schema files under etc/schema. call::
 	

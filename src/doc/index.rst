@@ -12,6 +12,7 @@ EventDB Correlator
    about
    installation
    overview
+   quick_guide
    configuration
    matcher
    component_reference

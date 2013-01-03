@@ -1,12 +1,17 @@
 .. _Configuration:
 
+*************
 Configuration
-=============
+*************
 
 .. _basecfg:
 
 Basic configuration syntax
 --------------------------
+
+.. note:: This section intends to give you a good understanding how edbc works. Especially step 2 and step 3 are way more comprehensive
+          than normally needed and simplified in the last step. If you just need a quick overview, refer to the quickstart guide.
+
 
 A component always starts with the id of the object in brackets, followed by a set of key: value pairs.
 For example the database configuration found in your etc/conf.d/database.cfg looks like this::
@@ -248,8 +253,7 @@ There's one thing you have to do now: As the matcher defines which group the eve
 	[example-aggregator]
 	class: processor
 	type:  aggregation
-	matcher: message REGEXP 'The server (?P<HOSTNAME>\w+) just went down. Errorcode (?P<CODE>\d+)' or message REGEXP 'Server (?P<HOSTNAME>\w+) is up again \(Error (?P<CODE>\d+)\)' 
-
+	matcher: message REGEXP 'The server (?P<HOSTNAME>\w+) just went down. Errorcode (?P<CODE>\d+)' or message REGEXP 'Server (?P<HOSTNAME>\w+) is up again \(Error (?P<CODE>\d+)\)'
 	aggregateMessage: Server $HOSTNAME is down (Code : $CODE) ($_COUNT events)
 	datasource: @mysql
 	clear: message REGEXP 'Server \w+ is up again \(Error \d+\)' 
@@ -365,4 +369,78 @@ Using the same test as in the last section, our EventDB frontend looks like this
 
 As you see, the group has been acknowledged after the clear event
 
- 
+
+Step by step: 4. Simplify it
+-----------------------------
+
+Currently, the setup covers most needs, but is rather complicated. If you want to change aggregators, you need a lot of knowledge and modify a lot of files. Also the autoacknwoledge
+is very complicated for the rather simple action you want to perform.
+EDBC has a few shortcuts for the usual setups:
+
+1. Directly acknowledge in the aggregator
+`````````````````````````````````````````
+
+The whole Step 3 can be skipped when you add the acknowledge_on_clear directive your aggregation processor::
+
+	[example-aggregator]
+	class: processor
+	type:  aggregation
+	matcher: message REGEXP 'The server (?P<HOSTNAME>\w+) just went down. Errorcode (?P<CODE>\d+)' or message REGEXP 'Server (?P<HOSTNAME>\w+) is up again \(Error (?P<CODE>\d+)\)'
+	acknowledge_on_clear: True,
+	aggregateMessage: Server $HOSTNAME is down (Code : $CODE) ($_COUNT events)
+	datasource: @mysql
+	clear: message REGEXP 'Server \w+ is up again \(Error \d+\)'
+
+You can then remve the example-acknowledger definition and cut down your chain to::
+
+    [example-chain]
+	in: @example-pipe
+	to_1: @example-aggregator
+	to_2: @mysql
+
+2. Use the multiaggregation processor for defining rules
+````````````````````````````````````````````````````````
+
+If you now want to add a new aggregator, you would have to perform two steps:
+
+    #. Add the aggregation processor with the new rule in your example_config.cfg
+    #. Add the aggregation processor to your chain
+
+Wouldn't it be easier to have one configuration file, where all aggregation rules are defined ?
+
+This is possible with the multiaggregation processor. This processor reads additional *.rules files and creates and manages the aggregators according to
+this file. So let's add a multiaggregator to our config::
+
+	[example-multiaggregator]
+	class: processor
+	type:  aggregation
+	ruleset: /usr/local/edbc/etc/rules/example.rules
+	acknowldge_on_clear: True
+	datasource: @mysql
+
+This aggregator reads the (to be created) example.rules file and sets up the aggregators.
+The rules file may look like this::
+
+    [rule1]
+	match: message REGEXP 'The server (?P<HOSTNAME>\w+) just went down. Errorcode (?P<CODE>\d+)' or message REGEXP 'Server (?P<HOSTNAME>\w+) is up again \(Error (?P<CODE>\d+)\)'
+	clear: message REGEXP 'Server \w+ is up again \(Error \d+\)'
+    aggregateMessage: Server $HOSTNAME is down (Code : $CODE) ($_COUNT events)
+
+    [rule2]
+    match: message STARTS WITH 'voice alert'
+
+    [rule3]
+    ...
+
+Now we need to change the chain so the multiaggregator is used instead of the simple aggregator:
+
+You can then remve the example-acknowledger definition and cut down your chain to::
+
+    [example-chain]
+	in: @example-pipe
+	to_1: @example-multiaggregator
+	to_2: @mysql
+
+And we're set. If you now want to add a rule, you can define it in the example.rules file and just reload edbc.
+
+

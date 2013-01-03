@@ -1,0 +1,21 @@
+############################################################
+# Example for mail event filters
+# These are used to determine if a mail should be considered
+# as an event and how the event is defined
+#
+############################################################
+
+[localhost]
+matcher: FROM contains '@localhost'
+priority: 1
+facility: 1
+host: localhost
+host_address: 127.0.0.1
+
+[default]
+ignore: True
+program: Mail
+host: #FROM
+message: #MESSAGE
+priority: 1
+facility: 1

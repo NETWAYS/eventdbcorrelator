@@ -15,12 +15,12 @@
 # 
 ###############################################################################
 
-[SimplePersisterChain_SYSLOG]
+#[SimplePersisterChain_SYSLOG]
 
 ##############################################################################
 # The 'in' directive defines where this chain gathers it's data from.
 ##############################################################################
-in: @pipe 
+#in: @pipe
 
 ##############################################################################
 # A processor target is always defined by to_ following the position of 
@@ -48,7 +48,7 @@ in: @pipe
 # not a datasource (like aggregators need them). Refer to the documentation for
 # more information
 ##############################################################################
-to_2:@mysqldb
+#to_2:@mysqldb
 
 
 
