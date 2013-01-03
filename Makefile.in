@@ -38,8 +38,8 @@ install-base-config:
 	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/rules/mail.rules $(prefix)/etc/rules/mail.rules
 	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/rules/snmp.rules $(prefix)/etc/rules/snmp.rules
 	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/rules/syslog.rules $(prefix)/etc/rules/syslog.rules
-    $(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/chains/example.chain $(prefix)/etc/chains/example.chain
-    $(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/chains/base.chain $(prefix)/etc/chains/base.chain
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/chains/example.chain $(prefix)/etc/chains/example.chain
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/chains/base.chain $(prefix)/etc/chains/base.chain
 
 test:
 	cd $(prefix)/lib && python ./runtests.py
