@@ -221,6 +221,7 @@ class SnmpTransformer(object):
         event["host_name"] = groups["HOST"]
         if groups["IP"].startswith("UDP") or groups["IP"].startswith("TCP"):
             event["host_address"] = self.ip_regexp.search(groups["IP"]).group(1)
+            logging.debug("IP is %s", event["host_address"])
         
         
         mib_vars = groups["VARS"].split(" ; ")
