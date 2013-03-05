@@ -210,6 +210,7 @@ class SnmpTransformer(object):
         """
         groups = self.trap_matcher.match(string)
         if not groups:
+            logging.debug("String %s didn't match the expected format ", string)
             return None
         event = Event()
         groups = groups.groupdict()
@@ -238,6 +239,7 @@ class SnmpTransformer(object):
             variables.append((oid, value))
         mib = self.get_mib_for(meta["oid"])
         if not mib:
+            logging.debug("No mib found for %s ", meta["oid"])
             return None
         event["priority"] = mib["priority"]
         event["created"] = time.time
