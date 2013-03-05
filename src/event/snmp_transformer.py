@@ -95,7 +95,7 @@ class SnmpTransformer(object):
         else: 
             self.trap_format = "HOST:(?P<HOST>.*);IP:(?P<IP>.*);VARS:(?P<VARS>.*)"
         self.mib_dir = config["mib_dir"]
-        self.ip_regexp = re.compile(r"\[(.*)\]")
+        self.ip_regexp = re.compile(r"\[(.*?)\]")
         self.trap_matcher = re.compile(self.trap_format)
         self.fixed = {}
         
