@@ -243,7 +243,9 @@ class SnmpTransformer(object):
             if oid in STATIC_OIDS:
                 meta[STATIC_OIDS[oid]] = value
                 continue
+            event["snmp_var_"+oid] = value
             variables.append((oid, value))
+
         mib = self.get_mib_for(meta["oid"])
         if not mib:
             logging.debug("No mib found for %s ", meta["oid"])

@@ -71,7 +71,16 @@ class MatcherTestCase(unittest.TestCase):
         current_matcher = Matcher("(message REGEXP '(?P<Group1>.*) AM A Testmessage' )")
         assert current_matcher.matches(test_event) == True
         assert current_matcher["Group1"] == "test123"
-   
+
+    def test_number_in_field(self):
+        test_event = Event("test123")
+        test_event["snmp_var_.1.3.4.0.5"] = "blobb"
+
+        current_matcher = Matcher("(snmp_var_.1.3.4.0.5 is 'blobb')")
+
+        assert current_matcher.matches(test_event) == True
+
+
     def test_simple_message_negate(self):
         """ Same like simple message tests, but negated
 
