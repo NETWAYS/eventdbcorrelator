@@ -200,7 +200,7 @@ class SnmpTransformer(object):
                 self._parse_format_line(line, mib)
             if line.startswith("REGEX"):
                 self._parse_regexp_expression(line, mib)
-            
+        logging.debug("Loaded mib %s ", mib);
         return mib
     
     
