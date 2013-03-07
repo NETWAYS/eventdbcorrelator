@@ -129,7 +129,7 @@ class SnmpTransformer(object):
                 if not mibfile.endswith("txt") and not mibfile.endswith("mib"):
                     continue
                 else:
-                    self.load_mib(mibdir[0]+mibfile)
+                    self.load_mib(os.path.join(mibdir[0],mibfile))
         
         logging.debug("%s registered %i mibs ", self.id, len(self.registered_mibs))
         if len(self.registered_mibs) < 1:
