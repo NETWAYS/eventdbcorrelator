@@ -131,7 +131,7 @@ class SnmpTransformer(object):
                 else:
                     self.load_mib(os.path.join(mibdir[0],mibfile))
         
-        logging.debug("%s registered %i mibs ", self.id, len(self.registered_mibs))
+        logging.debug("%s registered %i oids ", self.id, len(self.registered_mibs))
         if len(self.registered_mibs) < 1:
             logging.warn("Warning: %s couldn't find any event definitions registered underneath %s, no events will be persisted", self.id, self.mib_dir)
 
@@ -251,7 +251,7 @@ class SnmpTransformer(object):
         event["priority"] = mib["priority"]
         event["created"] = time.time
         event["message"] = self.get_formatted_message(meta, variables, mib)
-
+        logging.debug("Received SNMP trap: %s",event)
         return event
 
     def get_formatted_message(self, meta, variables,mib):
