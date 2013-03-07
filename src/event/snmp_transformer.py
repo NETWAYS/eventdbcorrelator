@@ -180,7 +180,8 @@ class SnmpTransformer(object):
         mibfile = open(path)
         mib = self.parse_file(mibfile)
         mibfile.close()
-        self.registered_mibs.append(mib)
+        if "oid" in mib:
+            self.registered_mibs.append(mib)
     
     
     def parse_file(self, lines):
