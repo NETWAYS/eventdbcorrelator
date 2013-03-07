@@ -110,5 +110,5 @@ class MailTransformerTest(unittest.TestCase):
 
         """
         transformer = MailTransformer()
-        transformer.setup('test', {"rules": './tests/mailtest.def'})
+        transformer.setup('test', {"rules": './mailtest.def'})
         assert len(transformer.rules) == 1

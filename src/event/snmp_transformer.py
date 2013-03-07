@@ -178,10 +178,11 @@ class SnmpTransformer(object):
 
         """
         mibfile = open(path)
-        mib = self.parse_file(mibfile)
+        mibs = self.parse_file(mibfile)
         mibfile.close()
-        if "oid" in mib:
-            self.registered_mibs.append(mib)
+        for mib in mibs:
+            if "oid" in mib:
+                self.registered_mibs.append(mib)
     
     
     def parse_file(self, lines):
@@ -190,19 +191,23 @@ class SnmpTransformer(object):
         """
         # It doesn't matter if 'lines' is a FileObject or just an array,
         # this makes testing easier
+        mibs = []
         mib = {}
         for line in lines:
             if line.strip().startswith("#"):
                 continue
             if line.startswith("EVENT"):
+                if "oid" in mib:
+                    mibs.append(mib)
+                    mib = {}
                 self._parse_event_line(line, mib)
                 continue
             if line.startswith("FORMAT"):
                 self._parse_format_line(line, mib)
             if line.startswith("REGEX"):
                 self._parse_regexp_expression(line, mib)
-        logging.debug("Loaded mib %s ", mib);
-        return mib
+        mibs.append(mib)
+        return mibs
     
     
     def transform(self, string):

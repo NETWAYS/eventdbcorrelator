@@ -124,7 +124,7 @@ class SNMPTransformerTest(unittest.TestCase):
             "mib_dir" : "/dev/null"
         })
         # Example from
-        mib = transformer.parse_file({
+        mibs = transformer.parse_file({
             "EVENT test_event 0.1.4.* \"test category\" severity" : 0,
             "FORMAT test format  $* $_ #": 1,
             "REGEX (Building alarm 3)(Computer room high temperature)": 2,
@@ -134,6 +134,8 @@ class SNMPTransformerTest(unittest.TestCase):
             "REGEX (\s+)( )g" : 6,
             "REGEX (tes(t))$" : 7  #invalid line
         })
+        assert(len(mibs) == 1)
+        mib = mibs[0]
         transformer.registered_mibs.append(mib)
         assert mib["event_name"] == "test_event"
         assert mib["oid"] == "0.1.4.*"
@@ -146,8 +148,27 @@ class SNMPTransformerTest(unittest.TestCase):
         assert len(mib["regexp"]) == 5
         assert transformer.get_mib_for("0.1.4.5.6.7") != None
         assert transformer.get_mib_for("0.1.4.5.6.7") == mib
-        
-        
+
+    def test_multiple_traps_in_one_file(self):
+
+        transformer = SnmpTransformer()
+        transformer.setup("test",{
+            "mib_dir" : "/dev/null"
+        })
+        # Example from
+        mibs = transformer.parse_file({
+            "EVENT test_event 0.1.4.* \"test category\" severity" : 0,
+            "FORMAT test format  $* $_ #": 1,
+            "EVENT test_event 0.1.5.* \"test category2\" severity" : 2,
+            "FORMAT test format  $* $_ #": 3,
+            "EVENT test_event 0.1.6.* \"test category2\" severity" : 4,
+            "FORMAT test format  $* $_ #": 5
+        })
+
+        assert(len(mibs) == 3)
+
+
+
     def test_transform_simple(self):
         """ Simple (non substituted) message transformation
 
@@ -156,7 +177,7 @@ class SNMPTransformerTest(unittest.TestCase):
         transformer.setup("test",{
             "mib_dir" : "/dev/null"
         })
-        transformer.registered_mibs.append(transformer.parse_file({
+        transformer.registered_mibs += (transformer.parse_file({
             "EVENT test_event .1.3.6.1.4.1.2021.13.990.0.17 \"test category\" severity" : 0,
             "FORMAT $*" : 1
         }))
@@ -176,7 +197,7 @@ class SNMPTransformerTest(unittest.TestCase):
         transformer.setup("test",{
             "mib_dir" : "/dev/null"
         })
-        transformer.registered_mibs.append(transformer.parse_file({
+        transformer.registered_mibs += (transformer.parse_file({
             "EVENT test_event .1.3.6.1.4.1.2021.13.990.0.17 \"test category\" severity" : 0,
             "FORMAT $*" : 1,
             r"REGEX (Building alarm 3)(Computer room high temperature)": 2,
@@ -200,7 +221,7 @@ class SNMPTransformerTest(unittest.TestCase):
         transformer.setup("test",{
             "mib_dir" : "/dev/null"
         })
-        transformer.registered_mibs.append(transformer.parse_file({
+        transformer.registered_mibs += (transformer.parse_file({
             "EVENT test_event .1.3.6.1.4.1.2021.13.990.0.17 \"test category\" severity" : 0,
             "FORMAT $*" : 1,
             r"REGEX (\(1\))(One)" : 2,
@@ -221,7 +242,7 @@ class SNMPTransformerTest(unittest.TestCase):
         transformer.setup("test",{
             "mib_dir" : "/dev/null"
         })
-        transformer.registered_mibs.append(transformer.parse_file({
+        transformer.registered_mibs += (transformer.parse_file({
             "EVENT test_event .1.3.6.1.4.1.2021.13.990.0.17 \"test category\" severity" : 0,
             "FORMAT $*" : 1,
             r"REGEX (The system has logged exception error (\d+) for the service (\w+))(Service \2 generated error \1)" : 2
