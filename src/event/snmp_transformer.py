@@ -126,7 +126,7 @@ class SnmpTransformer(object):
         self.registered_mibs = []
         for mibdir in os.walk(self.mib_dir):
             for mibfile in mibdir[2]:
-                if not mibfile.endswith("txt") and not mibfile.endswith("mib"):
+                if not mibfile.endswith("conf"):
                     continue
                 else:
                     self.load_mib(os.path.join(mibdir[0],mibfile))
@@ -321,6 +321,9 @@ class SnmpTransformer(object):
 
         """
         for mib in self.registered_mibs:
+            if not "oid" in mib:
+                logging.warn("No oid registered for mib %s", mib)
+                continue
             if re.match("^%s$" % mib["oid"], oid):
                 return mib
         
