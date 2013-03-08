@@ -36,8 +36,8 @@ Currently, only MySQL is supported. You can find the .sql schema files under etc
 	
 	mysql -u root -p
 	mysql> CREATE DATABASE eventdb;
-	mysql> CREATE USER eventdb IDENTFIED BY '%YOUR PASSWORD%';
-	mysql> GRANT SELECT, INSERT, UPDATE, DELETE OM eventdb.* TO eventdb;
+	mysql> CREATE USER eventdb IDENTIFIED BY '%YOUR PASSWORD%';
+	mysql> GRANT SELECT, INSERT, UPDATE, DELETE ON eventdb.* TO eventdb;
 	mysql> FLUSH PRIVILEGES;
 	mysql> quit;
 
