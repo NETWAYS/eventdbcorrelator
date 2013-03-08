@@ -94,6 +94,12 @@ class SnmpTransformer(object):
             self.trap_format = config["trap_format"]
         else: 
             self.trap_format = "HOST:(?P<HOST>.*);IP:(?P<IP>.*);VARS:(?P<VARS>.*)"
+
+        if "strip_domain" in config:
+            self.domains = config["strip_domain"].split(",")
+        else:
+            self.domains = []
+
         self.mib_dir = config["mib_dir"]
         self.ip_regexp = re.compile(r"\[(.*?)\]")
         self.trap_matcher = re.compile(self.trap_format)
@@ -214,6 +220,7 @@ class SnmpTransformer(object):
         """ Transformer method as called by the receptor - Transforms a raw snmptt trap to an Event object 
 
         """
+        logging.debug("Raw snmp event: %s", string);
         groups = self.trap_matcher.match(string)
         if not groups:
             logging.debug("String %s didn't match the expected format ", string)
@@ -225,6 +232,11 @@ class SnmpTransformer(object):
             event[i] = self.fixed[i]
 
         event["host_name"] = groups["HOST"]
+        for domain in self.domains:
+            if(event["host_name"].endswith(domain)):
+                event["host_name"] = event["host_name"].partition(domain)[0].strip(".")
+                break
+
         if groups["IP"].startswith("UDP") or groups["IP"].startswith("TCP"):
             event["host_address"] = self.ip_regexp.search(groups["IP"]).group(1)
             logging.debug("IP is %s", event["host_address"])

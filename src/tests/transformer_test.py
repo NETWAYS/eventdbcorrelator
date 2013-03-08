@@ -216,6 +216,33 @@ class SNMPTransformerTest(unittest.TestCase):
         assert event["host_name"] == "testhost.localdomain"
         assert event["message"] == "The big UPS has detected a building alarm. Cause: UPS1 Alarm #14: Computer ROOM high temperature"
 
+    def test_strip_domain(self):
+        """ First example of http://snmptt.sourceforge.net/docs/snmptt.shtml#SNMPTT.CONF-REGEX
+
+        """
+        transformer = SnmpTransformer()
+        transformer.setup("test",{
+            "mib_dir" : "/dev/null",
+            "strip_domain": 'localdomain.int'
+        })
+        transformer.registered_mibs += (transformer.parse_file({
+            "EVENT test_event .1.3.6.1.4.1.2021.13.990.0.17 \"test category\" severity" : 0,
+            "FORMAT $*" : 1,
+            r"REGEX (Building alarm 3)(Computer room high temperature)": 2,
+            r"REGEX (Building alarm 4)(Moisture detection alarm)" : 3,
+            r"REGEX (roOm)(ROOM)ig" : 4,
+            r"REGEX (UPS)(The big UPS)" : 5,
+            r"REGEX (\s+)( )g" : 6,
+            }))
+        str = 'HOST:testhost.localdomain.int;IP:UDP: [127.0.5.1]:50935;VARS:.1.3.6.1.2.1.1.3.0 = 2:22:16:27.46 ; .1.3.6.1.6.3.1.1.4.1.0 = .1.3.6.1.4.1.2021.13.990.0.17 ; .1.3.6.1.2.1.1.6.0 = UPS has       detected a      building alarm.       Cause: UPS1 Alarm #14: Building alarm 3 ; .1.3.6.1.6.3.18.1.3.0 = 127.0.0.1 ; .1.3.6.1.6.3.18.1.4.0 = "public" ; .1.3.6.1.6.3.1.1.4.3.0 = .1.3.6.1.4.1.2021.13.990'
+        event = transformer.transform(str)
+
+        assert event["host_address"] == "127.0.5.1"
+
+        assert event["host_name"] == "testhost"
+        assert event["message"] == "The big UPS has detected a building alarm. Cause: UPS1 Alarm #14: Computer ROOM high temperature"
+
+
     def test_regexp_execution_2(self):
         """ Second example of http://snmptt.sourceforge.net/docs/snmptt.shtml#SNMPTT.CONF-REGEX
 
