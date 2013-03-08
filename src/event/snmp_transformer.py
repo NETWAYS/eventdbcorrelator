@@ -237,13 +237,13 @@ class SnmpTransformer(object):
         
         for var in mib_vars:
             (oid,value) = var.split(" = ")
+            event["snmp_var_"+oid] = value
             if expected:
                 meta[expected.pop(0)] = value
                 continue
             if oid in STATIC_OIDS:
                 meta[STATIC_OIDS[oid]] = value
                 continue
-            event["snmp_var_"+oid] = value
             variables.append((oid, value))
 
         mib = self.get_mib_for(meta["oid"])
@@ -253,7 +253,7 @@ class SnmpTransformer(object):
         event["priority"] = mib["priority"]
         event["created"] = time.time
         event["message"] = self.get_formatted_message(meta, variables, mib)
-        logging.debug("Received SNMP trap: %s",event)
+        logging.debug("Received SNMP trap: %s",event.data)
         return event
 
     def get_formatted_message(self, meta, variables,mib):
