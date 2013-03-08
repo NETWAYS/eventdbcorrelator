@@ -39,7 +39,12 @@ class MockDataSource(object):
         if group_id in self.groups:
             return (self.groups[group_id], time.time())
         return (None, time.time())
-        
+
+    def deactivate_group(self,group_id):
+        pass
+
+    def acknowledge_group(self,arg1,arg2):
+        pass
 
 class AggregatorTestCase(unittest.TestCase):
     """ Tests for the AggregationProcessor
@@ -216,4 +221,25 @@ class AggregatorTestCase(unittest.TestCase):
         
         assert event2["group_id"] == event1["group_id"]
         
-        
+
+    def test_use_case_AIC(self):
+
+        processor = AggregationProcessor()
+        ds = MockDataSource()
+
+        processor.setup("test", {
+            "matcher" : "snmp_var_.1.3.6.1.6.3.1.1.4.1.0 is '.1.3.6.1.4.1.192.6.4.19.0.1' OR snmp_var_.1.3.6.1.6.3.1.1.4.1.0 is '.1.3.6.1.4.1.192.6.4.19.0.2'",
+            "matcherfield" : "snmp_var_.1.3.6.1.4.1.192.6.4.19.1.2",
+            "clear" : "snmp_var_.1.3.6.1.6.3.1.1.4.1.0 is '.1.3.6.1.4.1.192.6.4.19.0.2'",
+            "datasource" : ds
+        })
+        event1 = {'message' : '','snmp_var_.1.3.6.1.4.1.192.6.4.19.1.6': 'Login to AIC system and restart process.', 'ack': 0, 'facility': '5', 'snmp_var_.1.3.6.1.4.1.192.6.4.19.1.5': '../log/snmp_test_20130308<br><A href="https://wiki.materna-com.de/index.php/Trap_MT-MT-BC-GSMC-MIB::mtMtBcGSMCProcessError>further&#32;details</A>', 'priority': 2, 'snmp_var_.1.3.6.1.2.1.1.3.0': '0:0:00:00.10', 'snmp_var_.1.3.6.1.4.1.192.6.4.19.1.4': "Can't connect to 127.0.0.1:12345", 'program': 'snmp', 'snmp_var_.1.3.6.1.4.1.192.6.4.19.1.2': 'TEST0', 'host_name': 'test-xymon-client.materna-com.de', 'snmp_var_.1.3.6.1.4.1.192.6.4.19.1.1': 'An error occured at AIC system, process <TEST0>', 'snmp_var_.1.3.6.1.6.3.1.1.4.1.0': '.1.3.6.1.4.1.192.6.4.19.0.1'}
+        event2 = {'message' : '','snmp_var_.1.3.6.1.4.1.192.6.4.19.1.6': 'Login to AIC system and restart process.', 'ack': 0, 'facility': '5', 'snmp_var_.1.3.6.1.4.1.192.6.4.19.1.5': '../log/snmp_test_20130308<br><A href="https://wiki.materna-com.de/index.php/Trap_MT-MT-BC-GSMC-MIB::mtMtBcGSMCProcessError>further&#32;details</A>', 'priority': 2, 'snmp_var_.1.3.6.1.2.1.1.3.0': '0:0:00:00.10', 'snmp_var_.1.3.6.1.4.1.192.6.4.19.1.4': "Can't connect to 127.0.0.1:12345", 'program': 'snmp', 'snmp_var_.1.3.6.1.4.1.192.6.4.19.1.2': 'TEST0', 'host_name': 'test-xymon-client.materna-com.de', 'snmp_var_.1.3.6.1.4.1.192.6.4.19.1.1': 'An error occured at AIC system, process <TEST0>', 'snmp_var_.1.3.6.1.6.3.1.1.4.1.0': '.1.3.6.1.4.1.192.6.4.19.0.1'}
+        event3 = {'message' : '','snmp_var_.1.3.6.1.4.1.192.6.4.19.1.6': 'Login to AIC system and restart process.', 'ack': 0, 'facility': '5', 'snmp_var_.1.3.6.1.4.1.192.6.4.19.1.5': '../log/snmp_test_20130308<br><A href="https://wiki.materna-com.de/index.php/Trap_MT-MT-BC-GSMC-MIB::mtMtBcGSMCProcessError>further&#32;details</A>', 'priority': 2, 'snmp_var_.1.3.6.1.2.1.1.3.0': '0:0:00:00.10', 'snmp_var_.1.3.6.1.4.1.192.6.4.19.1.4': "Can't connect to 127.0.0.1:12345", 'program': 'snmp', 'snmp_var_.1.3.6.1.4.1.192.6.4.19.1.2': 'TEST0', 'host_name': 'test-xymon-client.materna-com.de', 'snmp_var_.1.3.6.1.4.1.192.6.4.19.1.1': 'An error occured at AIC system, process <TEST0>', 'snmp_var_.1.3.6.1.6.3.1.1.4.1.0': '.1.3.6.1.4.1.192.6.4.19.0.1'}
+        event4 = {'message' : '','snmp_var_.1.3.6.1.4.1.192.6.4.19.1.6': 'Login to AIC system and restart process.', 'ack': 0, 'facility': '5', 'snmp_var_.1.3.6.1.4.1.192.6.4.19.1.5': '../log/snmp_test_20130308<br><A href="https://wiki.materna-com.de/index.php/Trap_MT-MT-BC-GSMC-MIB::mtMtBcGSMCProcessError>further&#32;details</A>', 'priority': 2, 'snmp_var_.1.3.6.1.2.1.1.3.0': '0:0:00:00.10', 'snmp_var_.1.3.6.1.4.1.192.6.4.19.1.4': "Can't connect to 127.0.0.1:12345", 'program': 'snmp', 'snmp_var_.1.3.6.1.4.1.192.6.4.19.1.2': 'TEST0', 'host_name': 'test-xymon-client.materna-com.de', 'snmp_var_.1.3.6.1.4.1.192.6.4.19.1.1': 'An error occured at AIC system, process <TEST0>', 'snmp_var_.1.3.6.1.6.3.1.1.4.1.0': '.1.3.6.1.4.1.192.6.4.19.0.2'}
+        assert processor.process(event1) == "NEW"
+        ds.groups[event1["group_id"]] = event1
+
+        assert processor.process(event2) == "AGGR"
+        assert processor.process(event3) == "AGGR"
+        assert processor.process(event4) == "CLEAR"
