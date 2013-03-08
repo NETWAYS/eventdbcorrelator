@@ -190,7 +190,6 @@ class SNMPTransformerTest(unittest.TestCase):
         assert event["host_address"] == "127.0.5.1"
         assert event["host_name"] == "testhost.localdomain"
 
-        assert False == True
         assert event["message"] == "Argument 1"
 
     def test_regexp_execution_1(self):
