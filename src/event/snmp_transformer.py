@@ -263,7 +263,7 @@ class SnmpTransformer(object):
             logging.debug("No mib found for %s ", meta["oid"])
             return None
         event["priority"] = mib["priority"]
-        event["created"] = time.time
+        event["created"] = time.ctime()
         event["message"] = self.get_formatted_message(meta, variables, mib)
         logging.debug("Received SNMP trap: %s",event.data)
         return event
