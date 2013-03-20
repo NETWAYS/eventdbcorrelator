@@ -184,12 +184,9 @@ class SNMPTransformerTest(unittest.TestCase):
         }))
         str = 'HOST:testhost.localdomain;IP:UDP: [127.0.5.1]:50935;VARS:.1.3.6.1.2.1.1.3.0 = 2:22:16:27.46 ; .1.3.6.1.6.3.1.1.4.1.0 = .1.3.6.1.4.1.2021.13.990.0.17 ; .1.3.6.1.2.1.1.6.0 = Argument 1 ; .1.3.6.1.6.3.18.1.3.0 = 127.0.0.1 ; .1.3.6.1.6.3.18.1.4.0 = "public" ; .1.3.6.1.6.3.1.1.4.3.0 = .1.3.6.1.4.1.2021.13.990'
         event = transformer.transform(str)
-        import logging
-        from pprint import pprint
-
+        assert event["trap_oid"] == ".1.3.6.1.4.1.2021.13.990.0.17"
         assert event["host_address"] == "127.0.5.1"
         assert event["host_name"] == "testhost.localdomain"
-
         assert event["message"] == "Argument 1"
 
     def test_regexp_execution_1(self):

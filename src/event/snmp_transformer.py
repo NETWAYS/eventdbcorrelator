@@ -31,7 +31,8 @@ STATIC_OIDS = {
     ".1.3.6.1.6.3.10.2.1.1.0"   : "securityEngineID",
     ".1.3.6.1.6.3.18.1.1.1.3"   : "securityName",
     ".1.3.6.1.6.3.18.1.1.1.4"   : "contextEngineID",
-    ".1.3.6.1.6.3.18.1.1.1.5"   : "contextName"
+    ".1.3.6.1.6.3.18.1.1.1.5"   : "contextName",
+    ".1.3.6.1.6.3.1.1.4.1.0"    : "trap_oid"
 }
 
 STATIC_STRING_REPLACEMENTS = {
@@ -251,7 +252,9 @@ class SnmpTransformer(object):
             (oid,value) = var.split(" = ")
             event["snmp_var_"+oid] = value
             if expected:
-                meta[expected.pop(0)] = value
+                varname = expected.pop(0)
+                meta[varname] = value
+                event["trap_"+varname] = value
                 continue
             if oid in STATIC_OIDS:
                 meta[STATIC_OIDS[oid]] = value
