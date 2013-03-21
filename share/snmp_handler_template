@@ -14,4 +14,4 @@ do
   fi
 done
 
-echo 'HOST:$host;IP:$ip;UPTIME:VARS:$vars \n' >> %(PIPE)s
+echo 'HOST:$host;IP:$ip;VARS:$vars \n' >> %(PIPE)s
