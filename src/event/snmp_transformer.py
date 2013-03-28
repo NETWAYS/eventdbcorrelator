@@ -297,7 +297,7 @@ class SnmpTransformer(object):
         mibformat = mibformat.replace("$#", str(int(len(variables))))
         mibformat = mibformat.replace("$*", " ".join(map(lambda x : x[1], variables)))
         mibformat = mibformat.replace("$+*", " ".join(map(lambda x : "%s:%s" % x, variables)))
-        mibformat = mibformat.replace("$_*", " ".join(map(lambda x : "%s:%s\n" % x, variables)))
+        mibformat = mibformat.replace("$_*", " ".join(map(lambda x : "\n%s:%s" % x, variables)))
 
         for i in range(1, len(variables)+1):
             mibformat = mibformat.replace("$%i" % i, variables[i-1][1])
