@@ -187,13 +187,10 @@ class PipeReceptorTestCase(unittest.TestCase):
                 linectr = linesInFile
                 os.write(pipeFd, bigstr)
                 queueString = ""
-                try:
-                    while linectr > 0:
-                        queueString = queueString + queue.get(True, 2)+"\n"
-                        linectr = linectr-1
-                except Exception, e:
-                    print e
-                    pass
+                while linectr > 0:
+                    queueString = queueString + queue.get(True, 2)+"\n"
+                    linectr = linectr-1
+
                 
                 os.close(pipeFd)
                 assert linectr == 0
