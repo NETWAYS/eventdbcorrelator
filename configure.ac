@@ -82,6 +82,7 @@ AC_ARG_WITH([db_pass],
 AC_CONFIG_FILES([
     Makefile
     src/Makefile
+    src/doc/Makefile
     src/config/config.py
     src/receptors/snmp_receptor.py
     etc/conf.d/database.cfg
