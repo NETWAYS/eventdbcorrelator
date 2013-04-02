@@ -191,7 +191,8 @@ class PipeReceptorTestCase(unittest.TestCase):
                     while linectr > 0:
                         queueString = queueString + queue.get(True, 2)+"\n"
                         linectr = linectr-1
-                except:
+                except Exception, e:
+                    print e
                     pass
                 
                 os.close(pipeFd)
