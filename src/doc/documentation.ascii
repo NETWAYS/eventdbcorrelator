@@ -5,6 +5,7 @@ Netways GmbH
 :icons:
 :numbered:
 :website: https://www.netways.org/projects/edbc/
+:version: 0.1.0rc
 
 What is EDBC?
 ------------
@@ -723,6 +724,7 @@ Split transformers take a string and separate them by a delimiter string:
 .SNMPTransformer *(type: snmp)*
 
 SNMP Transformer are able to read MIB files produced by `snmpttconvertmib <http://snmptt.sourceforge.net/docs/snmpttconvertmib.shtml>`_ and parse their EVENT, FORMAT and REGEXP directives. It expects snmptraps to be received with numerical OIDs.
+Additionally, the "$_*" operator was added to FORMAT, which prepends a newline to each key=value pair.
 
 **Example**
 
