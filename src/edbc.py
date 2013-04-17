@@ -18,6 +18,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
+from resource import RLIMIT_NOFILE
 
 from config import DaemonConfiguration,InstanceFactory;
 
@@ -25,6 +26,7 @@ import logging
 import controller
 import socket
 import sys
+import resource
 import os
 
 class Edbc(object):
@@ -56,14 +58,16 @@ class Edbc(object):
         if not pid > 0:
             cpid = os.fork()
 
-
             if cpid > 0:
                 sys.exit(0)
 
             os.setsid();
+            (nr_of_fds,ignore) = resource.getrlimit(RLIMIT_NOFILE)
             sys.stdin.close();
             sys.stdout.close();
             sys.stderr.close();
+            for i in range(0,nr_of_fds):
+                os.close(i)
         else:
             sys.exit(0)
 
