@@ -63,11 +63,12 @@ class Edbc(object):
 
             os.setsid();
             (nr_of_fds,ignore) = resource.getrlimit(RLIMIT_NOFILE)
-            sys.stdin.close();
-            sys.stdout.close();
-            sys.stderr.close();
+
             for i in range(0,nr_of_fds):
-                os.close(i)
+                try:
+                    os.close(i)
+                except OSError:
+                    pass
         else:
             sys.exit(0)
 
