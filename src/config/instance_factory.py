@@ -160,6 +160,8 @@ class InstanceFactory(object):
 
         """
         for i in cfgobject:
+            if not isinstance(cfgobject[i], basestring):
+                continue
             if cfgobject[i].startswith('@'):
                 resolved = self.__getitem__(cfgobject[i])
                 if not resolved:
@@ -184,7 +186,8 @@ class InstanceFactory(object):
         logging.debug("Registering %s ", "getAll"+classname.capitalize()+"Instances")
         getter.__name__ = "getAll"+classname.capitalize()+"Instances"
         setattr(self, getter.__name__, getter)
-        
+
+
     def __getitem__(self, instance_id):
         """
         Returns the object instance that can be found under the id "id"
