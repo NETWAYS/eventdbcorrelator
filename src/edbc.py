@@ -55,6 +55,11 @@ class Edbc(object):
         pid = os.fork()
         if not pid > 0:
             cpid = os.fork()
+
+            os.setsid();
+            sys.stdin.close();
+            sys.stdout.close();
+            sys.stderr.close();
             if cpid > 0:
                 sys.exit(0)
         else:
