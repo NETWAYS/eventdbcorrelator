@@ -325,11 +325,11 @@ class MysqlDatasource(object):
                 for i in range(0, MAX_INSERT_TRIES):        
                     try: 
                         query = "INSERT INTO "+self.table+\
-                            " (id, host_name,host_address,type,facility,"+\
+                            " ( host_name,host_address,type,facility,"+\
                             "priority,program,message,alternative_message,ack"+\
                             ",created,modified,group_active,group_id,"+\
                             "group_autoclear,group_leader) VALUES "+\
-                            "(%(id)s,%(host_name)s,%(host_address)s,%(type)s,"+\
+                            "(%(host_name)s,%(host_address)s,%(type)s,"+\
                             "%(facility)s,%(priority)s,%(program)s,"+\
                             "%(message)s,%(alternative_message)s,%(ack)s,"+\
                             "NOW(),NOW(),%(group_active)s,%(group_id)s,"+\
@@ -341,7 +341,8 @@ class MysqlDatasource(object):
                         # maybe another process wrote to the db and now
                         # there's primary key confusion
                         # Refreshing the id from the db should fix that
-                        self.fetch_last_id(cursor=cursor, step=i*MAX_INSERT_TRIES)
+                        #
+                        # self.fetch_last_id(cursor=cursor, step=i*MAX_INSERT_TRIES)
                         if i >= MAX_INSERT_TRIES-1:
                             raise exc
                         continue
@@ -351,7 +352,7 @@ class MysqlDatasource(object):
                 else:
                     self.group_cache.add({
                         "active" : 1,
-                        "group_leader" : event["id"],
+                        "group_leader" : conn.last_insert_id(),
                         "group_id" : event.group_id,
                         "dirty" : True,
                         "group_autoclear" : event["group_autoclear"]
