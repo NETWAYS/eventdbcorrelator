@@ -352,7 +352,7 @@ class MysqlDatasource(object):
                 else:
                     self.group_cache.add({
                         "active" : 1,
-                        "group_leader" : conn.last_insert_id(),
+                        "group_leader" : conn.insert_id(),
                         "group_id" : event.group_id,
                         "dirty" : True,
                         "group_autoclear" : event["group_autoclear"]
