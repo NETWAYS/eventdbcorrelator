@@ -50,7 +50,7 @@ class PipeReceptor(AbstractReceptor):
             "format" : None
         }
         
-        self.run_flags = os.O_RDONLY|os.O_NONBLOCK
+        self.run_flags = os.O_RDONLY
         for key in config.keys():
             if key == 'owner':
                 config[key] = pwd.getpwnam(config[key]).pw_uid

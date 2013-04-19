@@ -52,6 +52,7 @@ class Controller:
             receptor.start()
 
             self.threads.append(receptor)
+            self.__restart(receptor)
 
     def __read_chain_definitions(self):
         """ Sets up the chainfactory and loads the chain config files underneath the chain_dir
@@ -87,7 +88,7 @@ class Controller:
                 logging.warn("Unmatched dependencies found : %s",self.instances.deferred)
             while True:
                 for thread in self.threads:
-                    if not thread.is_alive():
+                    if not thread.isAlive():
                         self.__restart(thread)
 
                     thread.join(5)
