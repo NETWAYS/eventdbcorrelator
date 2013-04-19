@@ -52,7 +52,6 @@ class Controller:
             receptor.start()
 
             self.threads.append(receptor)
-            self.__restart(receptor)
 
     def __read_chain_definitions(self):
         """ Sets up the chainfactory and loads the chain config files underneath the chain_dir
