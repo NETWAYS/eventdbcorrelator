@@ -1005,14 +1005,15 @@ The return code of the first aggregator that matches will be returned.
 
 This processor writes a "[TIME] MESSAGE" string into a defined pipe and can be used e.g. to trigger external commands in your monitoring environment.
 
-**Example**::
-
+**Example**
+-------------------------------------------------------
 	[example-command]
 	class: processor
 	type: command
 	format: SCHEDULE_FORCED_HOST_CHECK;#HOST;#CREATED
 	pipe: /usr/local/icinga-web/var/rw/icinga.cmd
-	
+-------------------------------------------------------
+
 **Parameters**
 
 	* **matcher**: A <<matcher-syn>> that determines if the processor is called 
