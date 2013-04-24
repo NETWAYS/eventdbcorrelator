@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT('EDBC', 0.1.0, 'jannis.mosshammer@netways.de')
+AC_INIT('EDBC', 0.1.0beta, 'jannis.mosshammer@netways.de')
 AC_PREFIX_DEFAULT(/usr/local/edbc)
 
 
