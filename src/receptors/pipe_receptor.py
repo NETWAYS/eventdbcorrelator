@@ -127,20 +127,26 @@ class PipeReceptor(AbstractReceptor):
         """
         tr = self.config["transformer"]
         buffersize = self.config["bufferSize"]
-        pipe = None
         self.last_part = ""
-        transformed = None
         while self.running:
             inPipes, pout, pex = select.select([self.pipe], [], [], 3)
 
             if len(inPipes) > 0:
                 pipe = inPipes[0]
-                data_packet = os.read(pipe, buffersize)
+                try:
+                    data_packet = os.read(pipe, buffersize)
+                except OSError, e:
+                    # EAGAIN means the pipe would block
+                    # on reading, so try again later
+                    if e.errno == 11:
+                        continue
+                    else:
+                        raise e
                 if len(data_packet) == 0:
                     self.__reopen_pipe()
                     continue
                 messages = self._get_messages_from_raw_stream(data_packet)
-                
+
                 for message in messages:                         
                     if message == "": 
                         continue
@@ -180,13 +186,9 @@ class PipeReceptor(AbstractReceptor):
         try :
             self.__reopen_pipe()
             self.running = True
-            try :                
-                self._read()
-            except OSError, e:
-                logging.warn("Error %s", e)
-            self.running = False
-
+            self._read()
         finally:
+            self.running = False
             logging.debug("Finished Receptor %s", self.id)
     
     def setup_pipe(self):

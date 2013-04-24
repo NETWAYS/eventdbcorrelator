@@ -5,6 +5,7 @@ Netways GmbH
 :icons:
 :numbered:
 :website: https://www.netways.org/projects/edbc/
+:version: 0.1.0rc
 
 What is EDBC?
 ------------
@@ -128,6 +129,59 @@ Setting up the database connection
 If you need to change the database connection (although it can be defined in the ./configure flags) go to the etc/conf.d/database.cfg
 file. The values should be self-explanatory, but are discussed in detail in <<datasource-ref>>.
 
+Setting up Syslog
+~~~~~~~~~~~~~~~~~
+
+When edbc is installed, a running syslog agent is enabled which creates a pipe at ./edbc/var/edbc-syslog.pipe. You now need
+to configure two files:
+- Your syslog config, so messages are forwarded to this pipe
+- The syslog transformer underneath edbc/etc/conf.d/syslog.cfg
+
+There are two transformer types that can typically be used: <<string-transformer-ref, string>> or <<split-transformer-ref,split>>.
+While the split transformer expects a character seperated message (per default tab seperated), the string transformer allows you to
+define a (python flavour) regular expression that extracts the parts from the message. Also, date formats differ from system to
+system, so make sure you configure the dateformat parameter correctly. Take a look at the syslog.conf for a few examples or
+dive into the <<transformer-ref, transformer reference>>!
+
+
+Setting up SNMP
+~~~~~~~~~~~~~~~~
+
+In order to write SNMP Traps into the eventdb you first need to following tools installed:
+
+- net-snmp (including a running snmptrapd)
+- the snmpttconvertmib script (<<http://www.snmptt.org/, can be found here>>)
+
+Now follow the following steps:
+
+* Uncomment the snmp sections in etc/conf.d/snmp.cfg and etc/chains/base.chain
+* In your etc/conf.d/snmp.cfg configuration is section called 'snmp-receptor'. The 'handler' directive defines where the trap handler
+can be found after starting edbc. If you're not happy with the default ($prefix/edbc/var/edbc_snmp_handler), you can modify the
+path (you edbc process must only be able to create a file here).
+* Add this path in your snmptrapd configuration as a traphandler. Often you can only add
+-------------------------------------------------
+    traphandle default %the path you just read%
+-------------------------------------------------
+and restart your snmptrapd.
+
+* Convert your mib files using snmpttconvertmib. If you're already using snmptt and migrate to edbc you can skip this section.
+* In etc/conf.d/snmp.cfg your snmp-transformer's mib_dir directive must point to the folder containing your (converted) mibs
+* Restart the eventdb correlator
+
+Setting up mail (experimental)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Mail reception is currently experimental.
+
+* In your etc/conf-d/mail.cfg is a path directive in the receptor definition. This points to a path where a pipe will be created for
+ incoming mails. Change this path if you like to and remember ist
+* Add the following line to your /etc/aliases, assuming you want eventdb@HOST.DOMAIN to be the recipient of event mails:
+---------------------------------------------------------------------------
+ eventdb: |cat > %the path from step 1%
+---------------------------------------------------------------------------
+* By default, eventdbcorrelator ignores all incoming mails except from localhost. Update your etc/mail/default.filter or create a new one
+to define how specific mails should be taken in account. See <<mail-transformer-ref>> for more information
+* Restart the eventdb correlator
+
 [[Configuration]]
 
 Configuration
@@ -157,10 +211,10 @@ Let's look at this configuration more in depth:
 
 * [mysql] only defines that this component has the id mysql - and can be referenced with @mysql in other components (we'll see this later)
 * class: datasource defines the type of the component. Possible types are:
-	* datasource: 	A component which can execute SQL commands and is able to persist data
-	* processor: 	A generic processor that performs arbitary actions on an event
-	* receptor: 	A component which is able to receive arbitary events and normalizes themfor further processing
-	* transformer:  A component that defines how the raw event data from a receptor is transformed to normalized events
+	** datasource: 	A component which can execute SQL commands and is able to persist data
+	** processor: 	A generic processor that performs arbitary actions on an event
+	** receptor: 	A component which is able to receive arbitary events and normalizes themfor further processing
+	** transformer:  A component that defines how the raw event data from a receptor is transformed to normalized events
 * type: Defines the concrete component type to use
 * template: Optional definition of a parent configuration which is used as the base configuration for the new template. *class* and *type* can be omitted when using this definition
 
@@ -637,14 +691,14 @@ String transformers take raw string input and convert them events using a regula
 	* **defaultmessage**: If no message is defined, this message (normally 'No message given') is used
 	* **dateformat**: The format to use for the date string
 	* **format**: A regular expression extracting the important event properties of an event with named matching groups. You can define any property you want, but persisted properties are per default:
-		* MESSAGE 
-		* HOST    
-		* HOST_ADDRESS
-		* PRIORITY
-		* FACILITY
-		* PROGRAM
-		* CREATED 
-		* MODIFIED
+		** MESSAGE
+		** HOST
+		** HOST_ADDRESS
+		** PRIORITY
+		** FACILITY
+		** PROGRAM
+		** CREATED
+		** MODIFIED
 	* **fixed**: A comma seperated key=value list defining which properties are set as constants
 
 [[split-transformer-ref]]
@@ -669,14 +723,14 @@ Split transformers take a string and separate them by a delimiter string:
 	* **dateformat**: The format to use for the date string
 	* **delimiter**: The string to use for delimiting the input (default: \t)
 	* **group_order**: A space separated list of the following values, defining in which order they appear
-		* MESSAGE
-		* HOST
-		* HOST_ADDRESS
-		* PRIORITY
-		* FACILITY
-		* PROGRAM
-		* CREATED
-		* MODIFIED
+		** MESSAGE
+		** HOST
+		** HOST_ADDRESS
+		** PRIORITY
+		** FACILITY
+		** PROGRAM
+		** CREATED
+		** MODIFIED
 	* **fixed**: A comma seperated key=value list defining which properties are set as constants
 
 
@@ -685,6 +739,7 @@ Split transformers take a string and separate them by a delimiter string:
 .SNMPTransformer *(type: snmp)*
 
 SNMP Transformer are able to read MIB files produced by `snmpttconvertmib <http://snmptt.sourceforge.net/docs/snmpttconvertmib.shtml>`_ and parse their EVENT, FORMAT and REGEXP directives. It expects snmptraps to be received with numerical OIDs.
+Additionally, the "$_*" operator was added to FORMAT, which prepends a newline to each key=value pair.
 
 **Example**
 
@@ -701,21 +756,24 @@ SNMP Transformer are able to read MIB files produced by `snmpttconvertmib <http:
 	* **mib_dir**: The directory to load the mib files snmpttconvertmib created. This is a required field
 	* **trap_format**: **Only define this if you create a modified trap handler** Define how to parse the string data received from the traphandler
 	* **prioritymap**: Define a comma seperated severity=priority mapping. The event's severity needn't to match the whole string, if it only begins with the string defined in your map it will be mapped to the priority, too. Per default the map looks like this:
-		* emer = 0
-		* aler = 1
-		* crit = 2
-		* majo = 2
-		* erro = 3
-		* warn = 4
-		* noti = 5
-		* mino = 5
-		* ok   = 5
-		* info = 6
-		* norm = 6
-		* debu = 7 
+		** emer = 0
+		** aler = 1
+		** crit = 2
+		** majo = 2
+		** erro = 3
+		** warn = 4
+		** noti = 5
+		** mino = 5
+		** ok   = 5
+		** info = 6
+		** norm = 6
+		** debu = 7
 
  
 	* **fixed**: A comma seperated key=value list defining which properties are set as constants
+
+NOTE: The oids of the trap can be accessed in the matcher via snmp_var_.x.y.z... and the trap oid can be accessed via trap_oid, so an aggregator could use
+for example 'trap_oid IS "0.1.2.3.4.5.6.7.8" and snmp_var_.6.4.23.6.3.7.8. CONTAINS "switch" '.
 
 [[mail-transformer-ref]]
 
@@ -728,7 +786,7 @@ Mailtransformers are tightly coupled to <<mailreceptor-ref>> and allow to interp
     [mail_reader]
     class: transformer
     type:  mail
-    rules: /usr/local/edbc/etc/mail.def
+    rules: /usr/local/edbc/etc/mail/default.filter
 ------------------------------------------------
 
 **Parameters**
@@ -962,14 +1020,15 @@ The return code of the first aggregator that matches will be returned.
 
 This processor writes a "[TIME] MESSAGE" string into a defined pipe and can be used e.g. to trigger external commands in your monitoring environment.
 
-**Example**::
-
+**Example**
+-------------------------------------------------------
 	[example-command]
 	class: processor
 	type: command
 	format: SCHEDULE_FORCED_HOST_CHECK;#HOST;#CREATED
 	pipe: /usr/local/icinga-web/var/rw/icinga.cmd
-	
+-------------------------------------------------------
+
 **Parameters**
 
 	* **matcher**: A <<matcher-syn>> that determines if the processor is called 
@@ -1181,12 +1240,12 @@ Writing processors
 
 Processors can be easily written and  added to edbc, here is a short guide:
 
-. add a new processor file to the lib/processor package and give it the name %type%_processor.py (where type is the name of your processor). define a class called %type%Processor (where type starts with a capital letter). You can use the NullProcessor as an template here.
+* add a new processor file to the lib/processor package and give it the name %type%_processor.py (where type is the name of your processor). define a class called %type%Processor (where type starts with a capital letter). You can use the NullProcessor as an template here.
  
-. Setup your class:
-        * Define a setup(self,id,config={}) method. 'id' will be the id defined in the component configuration (the one in the brackets) and config will be a dict of the key=value definitions that are set in the compontents configuration. You're free to setup your processor here
-        * Define a process(self,event) method. This will be called with the event when the chain containing your custom processor is executed. You can do anything you want with the event. 
-        * Add your file to the __init__.py of the processor package 
+* Setup your class:
+        ** Define a setup(self,id,config={}) method. 'id' will be the id defined in the component configuration (the one in the brackets) and config will be a dict of the key=value definitions that are set in the compontents configuration. You're free to setup your processor here
+        ** Define a process(self,event) method. This will be called with the event when the chain containing your custom processor is executed. You can do anything you want with the event.
+        ** Add your file to the __init__.py of the processor package
 
 
 NOTE: If you're writing a lot to the database, use the execute_after_flush method of the datasource. This delays the actual query write for a few ms and executes all queries that

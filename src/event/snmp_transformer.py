@@ -101,6 +101,17 @@ class SnmpTransformer(object):
         else:
             self.domains = []
 
+        if "persist_unknown" in config:
+            self.persist_unknown = True
+            if "unknown_priority" in config:
+                self.unknown_priority = config.unknown_priority
+            else:
+                self.unknown_priority = 6
+            if "unknown_format" in config:
+                self.unknown_format = config.unknown_format
+            else:
+                self.unknown_format  = "Unknown Trap: $+*"
+
         self.mib_dir = config["mib_dir"]
         self.ip_regexp = re.compile(r"\[(.*?)\]")
         self.trap_matcher = re.compile(self.trap_format)
@@ -263,8 +274,14 @@ class SnmpTransformer(object):
 
         mib = self.get_mib_for(meta["oid"])
         if not mib:
-            logging.debug("No mib found for %s ", meta["oid"])
-            return None
+            if not self.persist_unknown:
+                logging.debug("No mib found for %s and persist_unknown is false", meta["oid"])
+                return None
+            mib = {
+                "priority"  : self.unknown_priority,
+                "format"    : self.unknown_format
+            }
+
         event["priority"] = mib["priority"]
         event["created"] = int(time.time())
         event["message"] = self.get_formatted_message(meta, variables, mib)

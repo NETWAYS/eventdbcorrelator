@@ -1,0 +1,2752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="generator" content="AsciiDoc 8.6.7">
+<title>EventDB Correlator Documentation</title>
+<style type="text/css">
+/* Shared CSS for AsciiDoc xhtml11 and html5 backends */
+
+/* Default font. */
+body {
+  font-family: Georgia,serif;
+}
+
+/* Title font. */
+h1, h2, h3, h4, h5, h6,
+div.title, caption.title,
+thead, p.table.header,
+#toctitle,
+#author, #revnumber, #revdate, #revremark,
+#footer {
+  font-family: Arial,Helvetica,sans-serif;
+}
+
+body {
+  margin: 1em 5% 1em 5%;
+}
+
+a {
+  color: blue;
+  text-decoration: underline;
+}
+a:visited {
+  color: fuchsia;
+}
+
+em {
+  font-style: italic;
+  color: navy;
+}
+
+strong {
+  font-weight: bold;
+  color: #083194;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #527bbd;
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+}
+
+h1, h2, h3 {
+  border-bottom: 2px solid silver;
+}
+h2 {
+  padding-top: 0.5em;
+}
+h3 {
+  float: left;
+}
+h3 + * {
+  clear: left;
+}
+h5 {
+  font-size: 1.0em;
+}
+
+div.sectionbody {
+  margin-left: 0;
+}
+
+hr {
+  border: 1px solid silver;
+}
+
+p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+ul, ol, li > p {
+  margin-top: 0;
+}
+ul > li     { color: #aaa; }
+ul > li > * { color: black; }
+
+pre {
+  padding: 0;
+  margin: 0;
+}
+
+#author {
+  color: #527bbd;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+#email {
+}
+#revnumber, #revdate, #revremark {
+}
+
+#footer {
+  font-size: small;
+  border-top: 2px solid silver;
+  padding-top: 0.5em;
+  margin-top: 4.0em;
+}
+#footer-text {
+  float: left;
+  padding-bottom: 0.5em;
+}
+#footer-badges {
+  float: right;
+  padding-bottom: 0.5em;
+}
+
+#preamble {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+}
+div.imageblock, div.exampleblock, div.verseblock,
+div.quoteblock, div.literalblock, div.listingblock, div.sidebarblock,
+div.admonitionblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+div.admonitionblock {
+  margin-top: 2.0em;
+  margin-bottom: 2.0em;
+  margin-right: 10%;
+  color: #606060;
+}
+
+div.content { /* Block element content. */
+  padding: 0;
+}
+
+/* Block element titles. */
+div.title, caption.title {
+  color: #527bbd;
+  font-weight: bold;
+  text-align: left;
+  margin-top: 1.0em;
+  margin-bottom: 0.5em;
+}
+div.title + * {
+  margin-top: 0;
+}
+
+td div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content + div.title {
+  margin-top: 0.0em;
+}
+
+div.sidebarblock > div.content {
+  background: #ffffee;
+  border: 1px solid #dddddd;
+  border-left: 4px solid #f0f0f0;
+  padding: 0.5em;
+}
+
+div.listingblock > div.content {
+  border: 1px solid #dddddd;
+  border-left: 5px solid #f0f0f0;
+  background: #f8f8f8;
+  padding: 0.5em;
+}
+
+div.quoteblock, div.verseblock {
+  padding-left: 1.0em;
+  margin-left: 1.0em;
+  margin-right: 10%;
+  border-left: 5px solid #f0f0f0;
+  color: #888;
+}
+
+div.quoteblock > div.attribution {
+  padding-top: 0.5em;
+  text-align: right;
+}
+
+div.verseblock > pre.content {
+  font-family: inherit;
+  font-size: inherit;
+}
+div.verseblock > div.attribution {
+  padding-top: 0.75em;
+  text-align: left;
+}
+/* DEPRECATED: Pre version 8.2.7 verse style literal block. */
+div.verseblock + div.attribution {
+  text-align: left;
+}
+
+div.admonitionblock .icon {
+  vertical-align: top;
+  font-size: 1.1em;
+  font-weight: bold;
+  text-decoration: underline;
+  color: #527bbd;
+  padding-right: 0.5em;
+}
+div.admonitionblock td.content {
+  padding-left: 0.5em;
+  border-left: 3px solid #dddddd;
+}
+
+div.exampleblock > div.content {
+  border-left: 3px solid #dddddd;
+  padding-left: 0.5em;
+}
+
+div.imageblock div.content { padding-left: 0; }
+span.image img { border-style: none; }
+a.image:visited { color: white; }
+
+dl {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+dt {
+  margin-top: 0.5em;
+  margin-bottom: 0;
+  font-style: normal;
+  color: navy;
+}
+dd > *:first-child {
+  margin-top: 0.1em;
+}
+
+ul, ol {
+    list-style-position: outside;
+}
+ol.arabic {
+  list-style-type: decimal;
+}
+ol.loweralpha {
+  list-style-type: lower-alpha;
+}
+ol.upperalpha {
+  list-style-type: upper-alpha;
+}
+ol.lowerroman {
+  list-style-type: lower-roman;
+}
+ol.upperroman {
+  list-style-type: upper-roman;
+}
+
+div.compact ul, div.compact ol,
+div.compact p, div.compact p,
+div.compact div, div.compact div {
+  margin-top: 0.1em;
+  margin-bottom: 0.1em;
+}
+
+tfoot {
+  font-weight: bold;
+}
+td > div.verse {
+  white-space: pre;
+}
+
+div.hdlist {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+div.hdlist tr {
+  padding-bottom: 15px;
+}
+dt.hdlist1.strong, td.hdlist1.strong {
+  font-weight: bold;
+}
+td.hdlist1 {
+  vertical-align: top;
+  font-style: normal;
+  padding-right: 0.8em;
+  color: navy;
+}
+td.hdlist2 {
+  vertical-align: top;
+}
+div.hdlist.compact tr {
+  margin: 0;
+  padding-bottom: 0;
+}
+
+.comment {
+  background: yellow;
+}
+
+.footnote, .footnoteref {
+  font-size: 0.8em;
+}
+
+span.footnote, span.footnoteref {
+  vertical-align: super;
+}
+
+#footnotes {
+  margin: 20px 0 20px 0;
+  padding: 7px 0 0 0;
+}
+
+#footnotes div.footnote {
+  margin: 0 0 5px 0;
+}
+
+#footnotes hr {
+  border: none;
+  border-top: 1px solid silver;
+  height: 1px;
+  text-align: left;
+  margin-left: 0;
+  width: 20%;
+  min-width: 100px;
+}
+
+div.colist td {
+  padding-right: 0.5em;
+  padding-bottom: 0.3em;
+  vertical-align: top;
+}
+div.colist td img {
+  margin-top: 0.3em;
+}
+
+@media print {
+  #footer-badges { display: none; }
+}
+
+#toc {
+  margin-bottom: 2.5em;
+}
+
+#toctitle {
+  color: #527bbd;
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-top: 1.0em;
+  margin-bottom: 0.1em;
+}
+
+div.toclevel0, div.toclevel1, div.toclevel2, div.toclevel3, div.toclevel4 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+div.toclevel2 {
+  margin-left: 2em;
+  font-size: 0.9em;
+}
+div.toclevel3 {
+  margin-left: 4em;
+  font-size: 0.9em;
+}
+div.toclevel4 {
+  margin-left: 6em;
+  font-size: 0.9em;
+}
+
+span.aqua { color: aqua; }
+span.black { color: black; }
+span.blue { color: blue; }
+span.fuchsia { color: fuchsia; }
+span.gray { color: gray; }
+span.green { color: green; }
+span.lime { color: lime; }
+span.maroon { color: maroon; }
+span.navy { color: navy; }
+span.olive { color: olive; }
+span.purple { color: purple; }
+span.red { color: red; }
+span.silver { color: silver; }
+span.teal { color: teal; }
+span.white { color: white; }
+span.yellow { color: yellow; }
+
+span.aqua-background { background: aqua; }
+span.black-background { background: black; }
+span.blue-background { background: blue; }
+span.fuchsia-background { background: fuchsia; }
+span.gray-background { background: gray; }
+span.green-background { background: green; }
+span.lime-background { background: lime; }
+span.maroon-background { background: maroon; }
+span.navy-background { background: navy; }
+span.olive-background { background: olive; }
+span.purple-background { background: purple; }
+span.red-background { background: red; }
+span.silver-background { background: silver; }
+span.teal-background { background: teal; }
+span.white-background { background: white; }
+span.yellow-background { background: yellow; }
+
+span.big { font-size: 2em; }
+span.small { font-size: 0.6em; }
+
+span.underline { text-decoration: underline; }
+span.overline { text-decoration: overline; }
+span.line-through { text-decoration: line-through; }
+
+div.unbreakable { page-break-inside: avoid; }
+
+
+/*
+ * xhtml11 specific
+ *
+ * */
+
+tt {
+  font-family: "Courier New", Courier, monospace;
+  font-size: inherit;
+  color: navy;
+}
+
+div.tableblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+div.tableblock > table {
+  border: 3px solid #527bbd;
+}
+thead, p.table.header {
+  font-weight: bold;
+  color: #527bbd;
+}
+p.table {
+  margin-top: 0;
+}
+/* Because the table frame attribute is overriden by CSS in most browsers. */
+div.tableblock > table[frame="void"] {
+  border-style: none;
+}
+div.tableblock > table[frame="hsides"] {
+  border-left-style: none;
+  border-right-style: none;
+}
+div.tableblock > table[frame="vsides"] {
+  border-top-style: none;
+  border-bottom-style: none;
+}
+
+
+/*
+ * html5 specific
+ *
+ * */
+
+.monospaced {
+  font-family: "Courier New", Courier, monospace;
+  font-size: inherit;
+  color: navy;
+}
+
+table.tableblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+thead, p.tableblock.header {
+  font-weight: bold;
+  color: #527bbd;
+}
+p.tableblock {
+  margin-top: 0;
+}
+table.tableblock {
+  border-width: 3px;
+  border-spacing: 0px;
+  border-style: solid;
+  border-color: #527bbd;
+  border-collapse: collapse;
+}
+th.tableblock, td.tableblock {
+  border-width: 1px;
+  padding: 4px;
+  border-style: solid;
+  border-color: #527bbd;
+}
+
+table.tableblock.frame-topbot {
+  border-left-style: hidden;
+  border-right-style: hidden;
+}
+table.tableblock.frame-sides {
+  border-top-style: hidden;
+  border-bottom-style: hidden;
+}
+table.tableblock.frame-none {
+  border-style: hidden;
+}
+
+th.tableblock.halign-left, td.tableblock.halign-left {
+  text-align: left;
+}
+th.tableblock.halign-center, td.tableblock.halign-center {
+  text-align: center;
+}
+th.tableblock.halign-right, td.tableblock.halign-right {
+  text-align: right;
+}
+
+th.tableblock.valign-top, td.tableblock.valign-top {
+  vertical-align: top;
+}
+th.tableblock.valign-middle, td.tableblock.valign-middle {
+  vertical-align: middle;
+}
+th.tableblock.valign-bottom, td.tableblock.valign-bottom {
+  vertical-align: bottom;
+}
+
+
+/*
+ * manpage specific
+ *
+ * */
+
+body.manpage h1 {
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  border-top: 2px solid silver;
+  border-bottom: 2px solid silver;
+}
+body.manpage h2 {
+  border-style: none;
+}
+body.manpage div.sectionbody {
+  margin-left: 3em;
+}
+
+@media print {
+  body.manpage div#toc { display: none; }
+}
+</style>
+<script type="text/javascript">
+/*<![CDATA[*/
+var asciidoc = {  // Namespace.
+
+/////////////////////////////////////////////////////////////////////
+// Table Of Contents generator
+/////////////////////////////////////////////////////////////////////
+
+/* Author: Mihai Bazon, September 2002
+ * http://students.infoiasi.ro/~mishoo
+ *
+ * Table Of Content generator
+ * Version: 0.4
+ *
+ * Feel free to use this script under the terms of the GNU General Public
+ * License, as long as you do not remove or alter this notice.
+ */
+
+ /* modified by Troy D. Hanson, September 2006. License: GPL */
+ /* modified by Stuart Rackham, 2006, 2009. License: GPL */
+
+// toclevels = 1..4.
+toc: function (toclevels) {
+
+  function getText(el) {
+    var text = "";
+    for (var i = el.firstChild; i != null; i = i.nextSibling) {
+      if (i.nodeType == 3 /* Node.TEXT_NODE */) // IE doesn't speak constants.
+        text += i.data;
+      else if (i.firstChild != null)
+        text += getText(i);
+    }
+    return text;
+  }
+
+  function TocEntry(el, text, toclevel) {
+    this.element = el;
+    this.text = text;
+    this.toclevel = toclevel;
+  }
+
+  function tocEntries(el, toclevels) {
+    var result = new Array;
+    var re = new RegExp('[hH]([1-'+(toclevels+1)+'])');
+    // Function that scans the DOM tree for header elements (the DOM2
+    // nodeIterator API would be a better technique but not supported by all
+    // browsers).
+    var iterate = function (el) {
+      for (var i = el.firstChild; i != null; i = i.nextSibling) {
+        if (i.nodeType == 1 /* Node.ELEMENT_NODE */) {
+          var mo = re.exec(i.tagName);
+          if (mo && (i.getAttribute("class") || i.getAttribute("className")) != "float") {
+            result[result.length] = new TocEntry(i, getText(i), mo[1]-1);
+          }
+          iterate(i);
+        }
+      }
+    }
+    iterate(el);
+    return result;
+  }
+
+  var toc = document.getElementById("toc");
+  if (!toc) {
+    return;
+  }
+
+  // Delete existing TOC entries in case we're reloading the TOC.
+  var tocEntriesToRemove = [];
+  var i;
+  for (i = 0; i < toc.childNodes.length; i++) {
+    var entry = toc.childNodes[i];
+    if (entry.nodeName.toLowerCase() == 'div'
+     && entry.getAttribute("class")
+     && entry.getAttribute("class").match(/^toclevel/))
+      tocEntriesToRemove.push(entry);
+  }
+  for (i = 0; i < tocEntriesToRemove.length; i++) {
+    toc.removeChild(tocEntriesToRemove[i]);
+  }
+
+  // Rebuild TOC entries.
+  var entries = tocEntries(document.getElementById("content"), toclevels);
+  for (var i = 0; i < entries.length; ++i) {
+    var entry = entries[i];
+    if (entry.element.id == "")
+      entry.element.id = "_toc_" + i;
+    var a = document.createElement("a");
+    a.href = "#" + entry.element.id;
+    a.appendChild(document.createTextNode(entry.text));
+    var div = document.createElement("div");
+    div.appendChild(a);
+    div.className = "toclevel" + entry.toclevel;
+    toc.appendChild(div);
+  }
+  if (entries.length == 0)
+    toc.parentNode.removeChild(toc);
+},
+
+
+/////////////////////////////////////////////////////////////////////
+// Footnotes generator
+/////////////////////////////////////////////////////////////////////
+
+/* Based on footnote generation code from:
+ * http://www.brandspankingnew.net/archive/2005/07/format_footnote.html
+ */
+
+footnotes: function () {
+  // Delete existing footnote entries in case we're reloading the footnodes.
+  var i;
+  var noteholder = document.getElementById("footnotes");
+  if (!noteholder) {
+    return;
+  }
+  var entriesToRemove = [];
+  for (i = 0; i < noteholder.childNodes.length; i++) {
+    var entry = noteholder.childNodes[i];
+    if (entry.nodeName.toLowerCase() == 'div' && entry.getAttribute("class") == "footnote")
+      entriesToRemove.push(entry);
+  }
+  for (i = 0; i < entriesToRemove.length; i++) {
+    noteholder.removeChild(entriesToRemove[i]);
+  }
+
+  // Rebuild footnote entries.
+  var cont = document.getElementById("content");
+  var spans = cont.getElementsByTagName("span");
+  var refs = {};
+  var n = 0;
+  for (i=0; i<spans.length; i++) {
+    if (spans[i].className == "footnote") {
+      n++;
+      var note = spans[i].getAttribute("data-note");
+      if (!note) {
+        // Use [\s\S] in place of . so multi-line matches work.
+        // Because JavaScript has no s (dotall) regex flag.
+        note = spans[i].innerHTML.match(/\s*\[([\s\S]*)]\s*/)[1];
+        spans[i].innerHTML =
+          "[<a id='_footnoteref_" + n + "' href='#_footnote_" + n +
+          "' title='View footnote' class='footnote'>" + n + "</a>]";
+        spans[i].setAttribute("data-note", note);
+      }
+      noteholder.innerHTML +=
+        "<div class='footnote' id='_footnote_" + n + "'>" +
+        "<a href='#_footnoteref_" + n + "' title='Return to text'>" +
+        n + "</a>. " + note + "</div>";
+      var id =spans[i].getAttribute("id");
+      if (id != null) refs["#"+id] = n;
+    }
+  }
+  if (n == 0)
+    noteholder.parentNode.removeChild(noteholder);
+  else {
+    // Process footnoterefs.
+    for (i=0; i<spans.length; i++) {
+      if (spans[i].className == "footnoteref") {
+        var href = spans[i].getElementsByTagName("a")[0].getAttribute("href");
+        href = href.match(/#.*/)[0];  // Because IE return full URL.
+        n = refs[href];
+        spans[i].innerHTML =
+          "[<a href='#_footnote_" + n +
+          "' title='View footnote' class='footnote'>" + n + "</a>]";
+      }
+    }
+  }
+},
+
+install: function(toclevels) {
+  var timerId;
+
+  function reinstall() {
+    asciidoc.footnotes();
+    if (toclevels) {
+      asciidoc.toc(toclevels);
+    }
+  }
+
+  function reinstallAndRemoveTimer() {
+    clearInterval(timerId);
+    reinstall();
+  }
+
+  timerId = setInterval(reinstall, 500);
+  if (document.addEventListener)
+    document.addEventListener("DOMContentLoaded", reinstallAndRemoveTimer, false);
+  else
+    window.onload = reinstallAndRemoveTimer;
+}
+
+}
+asciidoc.install(2);
+/*]]>*/
+</script>
+</head>
+<body class="article">
+<div id="header">
+<h1>EventDB Correlator Documentation</h1>
+<span id="author">Netways GmbH</span><br>
+<div id="toc">
+  <div id="toctitle">Table of Contents</div>
+  <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_what_is_edbc">1. What is EDBC?</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>EDBC (EventDB Correlator) is an agent for <a href="https://www.netways.org/projects/eventdb/wiki">EventDB</a>, our tool for integrating passive monitoring (like snmp, syslog or mail events) into icinga (or similar) monitoring enviromnents.
+EDBC offers a lot of features that are required to cover advanced monitoring use cases:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Pipe based event collection with the possibility to define your own input formats
+</p>
+</li>
+<li>
+<p>
+Basic support for acting as a snmp_agent by parsing and using SNMPTT mib files
+</p>
+</li>
+<li>
+<p>
+Aggregation of events based on advanced matcher patterns
+</p>
+</li>
+<li>
+<p>
+Clearance of aggregations via clear matchers or by timeout
+</p>
+</li>
+<li>
+<p>
+Extensible and easy to understand event processor mechanismn for writing your own processors
+</p>
+</li>
+</ul></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_basic_concept">2. Basic concept</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>EDBC consists of three elements:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Receptors : These are the inputs of edbc. For example, the PipeReceptor creates a pipe and listens for events on this pipe
+</p>
+</li>
+<li>
+<p>
+Processors: Processors take your events and perform logic on them. For example a AggregationProcessor takes your event, looks if it fits into a definition of an aggregation group and adds them to existing groups (or creates a new one) if so. Or a DatabasePersister takes your event and writes it into a database.
+</p>
+</li>
+<li>
+<p>
+Chains: Chains glue Processors and receptors together. For example, a simple chain (as shown in the image below) takes an event from a pipe, directs it to the aggregationprocessor and - if the event clears an aggregation - calls a ModifierProcessor that triggers an acknowledgement.
+</p>
+</li>
+</ul></div>
+<div class="imageblock">
+<div class="content">
+<img src="res/chain_simple.png" alt="res/chain_simple.png">
+</div>
+</div>
+<div class="paragraph"><p>This is indeed a very simple example, you can create more complex chains, customize your messages or even create your own processors.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_installation">3. Installation</h2>
+<div class="sectionbody">
+<div class="paragraph"><div class="title">Prerequisites</div><p>You only need a minimal python setup in order to use edbc:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Python 2.4+ (no Python 3 support)
+</p>
+</li>
+<li>
+<p>
+MySQLdb
+</p>
+</li>
+</ul></div>
+<div class="paragraph" id="configure-label"><div class="title">Installing the executables</div><p>EDBC can be installed via make:</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>./configure --with-db-user=eventdb --with-db-pass=%YOUR DB PASSWORD&amp;
+make</pre>
+</div></div>
+<div class="paragraph"><p>This installs EDBC under /usr/local/edbc. If you prefer a different path, use
+the --prefix option in configure.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">For additional configuration options, call ./configure --help.</td>
+</tr></table>
+</div>
+<div class="paragraph"><div class="title">Setting up the database</div><p>Currently, only MySQL is supported. You can find the .sql schema files under etc/schema.
+Call:</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>mysql -u root -p
+mysql&gt; CREATE DATABASE eventdb;
+mysql&gt; CREATE USER eventdb IDENTIFIED BY '%YOUR PASSWORD%';
+mysql&gt; GRANT SELECT, INSERT, UPDATE, DELETE ON eventdb.* TO eventdb;
+mysql&gt; FLUSH PRIVILEGES;
+mysql&gt; quit;
+
+cd etc/schema/mysql
+mysql -u root -p eventdb &lt; mysql_create.sql</pre>
+</div></div>
+<div class="paragraph"><p>Your password should be the one defined in your configure call (see <a href="#configure-label">the configure call</a>).</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">If you change your database credentials afterwards, you can modify the etc/conf.d/database.cfg in your installation path.</td>
+</tr></table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_overview">4. Overview</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>This section provides a few information about how edbc is structured and a short overview of the configuration. Configuration topics are discussed in depth in :ref:Configuration.</p></div>
+<div class="sect2">
+<h3 id="_file_layout">4.1. File layout</h3>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>bin/</strong>: Contains the edbc binary, which just calls lib/edbc.py
+</p>
+</li>
+<li>
+<p>
+<strong>lib/</strong>: Contains the source code
+</p>
+</li>
+<li>
+<p>
+<strong>libexec/</strong>: Contains executable templates, for example the snmp_handler
+</p>
+</li>
+<li>
+<p>
+<strong>etc/</strong>: Configuration and chain files are defined here
+</p>
+</li>
+</ul></div>
+</div>
+<div class="sect2">
+<h3 id="_configuration_files">4.2. Configuration files</h3>
+<div class="paragraph"><p>There are two types of configuration files: *.cfg files and *.chain files</p></div>
+<div class="paragraph"><div class="title">cfg files</div><p>*.cfg can be found underneath etc/conf.d (or another path if you modify your edbc.cfg file&#8217;s <strong>configdir</strong> directive. In this documentation we assume that configurations are under etc/conf.d) and define resources the chains can work with. These files are in the <a href="http://docs.python.org/2/library/configparser.html">ConfigParser Format</a> and therefore rather simple:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+[Brackets] define identifiers. These can later be referenced with @, but this will be discussed in <a href="#Configuration">Configuration section</a>
+</p>
+</li>
+<li>
+<p>
+Values for components are just defined using a "Key: Value" Syntax
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><div class="title">chain files</div><p></p></div>
+</div>
+<div class="sect2">
+<h3 id="_other_important_files">4.3. Other Important files</h3>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>etc/edbc.cfg</strong> contains the <em>global</em> section and defines, in which directories
+</p>
+</li>
+<li>
+<p>
+In a default setup, <strong>etc/conf.d/database.cfg</strong> contains the database credentials.
+</p>
+</li>
+<li>
+<p>
+<strong>etc/conf.d/base_processors.cfg</strong> contains a few processors and examples for some use cases
+</p>
+</li>
+</ul></div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_quick_start_guide">5. Quick start guide</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>After edbc is installed, it already provides a basic configuration that should be suitable for all needs. In this chapter we explain how to perform a few common tasks without going to much into detail.</p></div>
+<div class="sect2">
+<h3 id="_setting_up_the_database_connection">5.1. Setting up the database connection</h3>
+<div class="paragraph"><p>If you need to change the database connection (although it can be defined in the ./configure flags) go to the etc/conf.d/database.cfg
+file. The values should be self-explanatory, but are discussed in detail in <a href="#datasource-ref">[datasource-ref]</a>.</p></div>
+</div>
+<div class="sect2">
+<h3 id="_setting_up_snmp">5.2. Setting up SNMP</h3>
+<div class="paragraph"><p>In order to write SNMP Traps into the eventdb you first need to following tools installed:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+net-snmp (including a running snmptrapd)
+</p>
+</li>
+<li>
+<p>
+the snmpttconvertmib script (<a href="#http://www.snmptt.org/">can be found here</a>)
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Now follow the following steps:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Uncomment the snmp sections in etc/conf.d/snmp.cfg and etc/chains/base.chain
+</p>
+</li>
+<li>
+<p>
+In your etc/conf.d/snmp.cfg configuration is section called <em>snmp-receptor</em>. The <em>handler</em> directive defines where the trap handler
+can be found after starting edbc. If you&#8217;re not happy with the default ($prefix/edbc/var/edbc_snmp_handler), you can modify the
+path (you edbc process must only be able to create a file here).
+</p>
+</li>
+<li>
+<p>
+Add this path in your snmptrapd configuration as a traphandler. Often you can only add
+</p>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>    traphandle default %the path you just read%</pre>
+</div></div>
+<div class="paragraph"><p>and restart your snmptrapd.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Convert your mib files using snmpttconvertmib. If you&#8217;re already using snmptt and migrate to edbc you can skip this section.
+</p>
+</li>
+<li>
+<p>
+In etc/conf.d/snmp.cfg your snmp-transformer&#8217;s mib_dir directive must point to the folder containing your (converted) mibs
+</p>
+</li>
+<li>
+<p>
+Restart the eventdb correlator
+</p>
+</li>
+</ul></div>
+</div>
+<div class="sect2">
+<h3 id="_setting_up_mail_experimental">5.3. Setting up mail (experimental)</h3>
+<div class="paragraph"><p>Mail reception is currently experimental.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+In your etc/conf-d/mail.cfg is a path directive in the receptor definition. This points to a path where a pipe will be created for
+ incoming mails. Change this path if you like to and remember ist
+</p>
+</li>
+<li>
+<p>
+Add the following line to your /etc/aliases, assuming you want <a href="mailto:eventdb@HOST.DOMAIN">eventdb@HOST.DOMAIN</a> to be the recipient of event mails:
+</p>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre> eventdb: |cat &gt; %the path from step 1%</pre>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+By default, eventdbcorrelator ignores all incoming mails except from localhost. Update your etc/mail/default.filter or create a new one
+to define how specific mails should be taken in account. See <a href="#mail-transformer-ref">[mail-transformer-ref]</a> for more information
+</p>
+</li>
+<li>
+<p>
+Restart the eventdb correlator
+</p>
+</li>
+</ul></div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="Configuration">6. Configuration</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="basecfg">6.1. Basic configuration syntax</h3>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">This section intends to give you a good understanding how edbc works. Especially step 2 and step 3 are way more comprehensive than normally needed and simplified in the last step. If you just need a quick overview, refer to the quickstart guide.</td>
+</tr></table>
+</div>
+<div class="paragraph"><p>A component always starts with the id of the object in brackets, followed by a set of key: value pairs.
+For example the database configuration found in your etc/conf.d/database.cfg looks like this:</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [mysql]
+        class:          datasource
+        type:           mysql
+        host:           localhost
+        port:           3306
+        table:          event
+        database:       eventdb
+        user:           eventdb
+        password:       eventdb</pre>
+</div></div>
+<div class="paragraph"><p>Let&#8217;s look at this configuration more in depth:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+[mysql] only defines that this component has the id mysql - and can be referenced with @mysql in other components (we&#8217;ll see this later)
+</p>
+</li>
+<li>
+<p>
+class: datasource defines the type of the component. Possible types are:
+</p>
+<div class="ulist"><ul>
+<li>
+<p>
+datasource:  A component which can execute SQL commands and is able to persist data
+</p>
+</li>
+<li>
+<p>
+processor:   A generic processor that performs arbitary actions on an event
+</p>
+</li>
+<li>
+<p>
+receptor:    A component which is able to receive arbitary events and normalizes themfor further processing
+</p>
+</li>
+<li>
+<p>
+transformer:  A component that defines how the raw event data from a receptor is transformed to normalized events
+</p>
+</li>
+</ul></div>
+</li>
+<li>
+<p>
+type: Defines the concrete component type to use
+</p>
+</li>
+<li>
+<p>
+template: Optional definition of a parent configuration which is used as the base configuration for the new template. <strong>class</strong> and <strong>type</strong> can be omitted when using this definition
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Any further settings are component specific.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">If you&#8217;re a developer and curious: The class/type definition is used to determine the class name of the objects: %type%_%class%</td>
+</tr></table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_by_step_1_the_most_minimal_setup">6.2. Step by step: 1. The most minimal setup</h3>
+<div class="paragraph"><p>In the first place, the configuration looks more complicated then it is, so let&#8217;s start by setting up a simple chain that just receives messages through a pipe and writes them to the EventDB database.</p></div>
+<div class="paragraph"><p>The following image shows how our chaining will look like:</p></div>
+<div class="paragraph"><p><span class="image">
+<img src="res/smallsteps_chain1.png" alt="res/smallsteps_chain1.png">
+</span></p></div>
+<div class="ulist"><div class="title">General setup</div><ul>
+<li>
+<p>
+Make sure your etc/conf.d/database.cfg has the correct credentials set
+</p>
+</li>
+<li>
+<p>
+Create a file called example_config.cfg in your etc/conf.d/database.cfg. We&#8217;ll define every component we need here
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><div class="title">Setting up a receptor</div><p>The first component we have to care for is the receptor. As we want our events to be received on a pipe, we use a <a href="#pipereceptor-ref">[pipereceptor-ref]</a> that creates and listens at the pipe <strong>/usr/local/var/edbc_example.pipe</strong>. So let&#8217;s add it to our example_config.cfg and give it the id <strong>example-pipe</strong> :</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [example-pipe]
+        class: receptor
+        type: pipe
+        path: /usr/local/var/edbc_example.pipe</pre>
+</div></div>
+<div class="paragraph"><p>One important thing is missing here: Only receptors must define how a <a href="#event_format">[event_format]</a> is created. In <a href="#basecfg">[basecfg]</a>, we already heard that components called <strong>transformers</strong> are responsible for this. In this case you want a <a href="#string-transformer-ref">[string-transformer-ref]</a> to format your message input, so we create one, called <strong>simple-transformer</strong> :</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [simple-transformer]
+        class: transformer
+        type:  string
+        format: (?P&lt;PRIORITY&gt;\d+) (?P&lt;FACILITY&gt;\d+) (?P&lt;MESSAGE&gt;.*)$
+        fixed: program=example</pre>
+</div></div>
+<div class="paragraph"><p>Here, two directives are important:
+* format: This is a python regular expression that maps parts of the message to event descriptors. A message with the format <em>5 4 A testmessage</em> would create an event with priority of 5, facility 4 and message text <em>A testmessage</em>
+* fixed: a comma separated key=value list defining event parameters that are constant. Here our event will always have the program <em>example</em>.
+.. note:: (?P&lt;NAME&gt;&#8230;) are named matching groups in python, see `Pythons re documentation <a href="http://docs.python.org/2/library/re.html">http://docs.python.org/2/library/re.html</a>`_ for additional information</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+Now we only need to tell our receptor that it uses the simple-transformer for parsing events. This is done by adding a format property that contains the simple-transformer instance. Instances always have the prefix @, so our example_config.cfg now looks like this
+</dt>
+<dd>
+</dd>
+</dl></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [example-pipe]
+        class: receptor
+        type:  pipe
+        path: /usr/local/var/edbc_example.pipe
+        format: @simple-transformer
+
+
+        [simple-transformer]
+        class: transformer
+        type:  string
+        format: (?P&lt;PRIORITY&gt;\d+) (?P&lt;FACILITY&gt;\d+) (?P&lt;MESSAGE&gt;.*)$
+        fixed: program=example</pre>
+</div></div>
+<div class="paragraph"><p>That&#8217;s it, now we can proceed to the last step</p></div>
+<div class="paragraph"><div class="title">Creating a chain</div><p>No we only have to create a simple chain that takes the events from our <strong>example-pipe</strong> Receptor and writes them to our database. For this, simple create a example_config.chain file under etc/chains/.</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+We&#8217;ll call our chain <strong>example-chain</strong>, so we&#8217;re starting with
+</dt>
+<dd>
+</dd>
+</dl></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [example-chain]</pre>
+</div></div>
+<div class="paragraph"><p>Now we have to define the input of the chain by adding an <strong>in</strong> directive referencing the example-pipe instance:</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [example-chain]
+        in: @example-pipe</pre>
+</div></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+And now, we add our only chain component, the datasource by adding a <strong>to</strong> directive pointing to our datasource
+</dt>
+<dd>
+</dd>
+</dl></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [example-chain]
+        in: @example-pipe
+        to_1: @mysql</pre>
+</div></div>
+<div class="olist loweralpha"><ol class="loweralpha">
+<li>
+<p>
+note:: The number after to\_ is mandatory and defines the position in the chain in which the processor is executed. We see later that we can also use the return code of a chain component as a condition for other chain components.
+</p>
+</li>
+</ol></div>
+<div class="dlist"><div class="title">Test it</div><dl>
+<dt class="hdlist1">
+Now we can start edbc
+</dt>
+<dd>
+</dd>
+</dl></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        /usr/local/edbc/bin/edbc</pre>
+</div></div>
+<div class="paragraph"><p>If everything went fine, there should be a pipe at /usr/local/var/edbc_example.pipe.</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+Let&#8217;s fire a test event to see if it works
+</dt>
+<dd>
+</dd>
+</dl></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        # echo "5 4 testmessage" &gt; /usr/local/var/edbc_example.pipe</pre>
+</div></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+We now should have an event in our database with priority 5, facility 4 and testmessage as the message
+</dt>
+<dd>
+</dd>
+</dl></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        # mysql -u eventdb -p eventdb
+        mysql&gt; SELECT facility,priority,message,program FROM event ORDER BY id desc limit 1;
+        +----------+----------+-------------+---------+
+        | facility | priority | message     | program |
+        +----------+----------+-------------+---------+
+        |        4 |        5 | testmessage | example |
+        +----------+----------+-------------+---------+
+        1 row in set (0.00 sec)</pre>
+</div></div>
+</div>
+<div class="sect2">
+<h3 id="aggregator-example">6.3. Step by step: 2. Adding aggregators</h3>
+<div class="paragraph"><p>Until now, there&#8217;s nothing special about our setup, we just accept events and write them to the database. We will now add some logic. Let&#8217;s say we want to take events with a message like <em>The server &#8230; just went down. Errorcode xyz</em> and aggregate them if the server name and the errorcode is the same, so we have for example 'Server mysql1-ad is down (Code : 1152) (10 Events) in our frontend. This can be accomplished with the aggregator processor, which we have to add to our chain.</p></div>
+<div class="paragraph"><p>So our old chain:</p></div>
+<div class="imageblock">
+<div class="content">
+<img src="res/smallsteps_chain1.png" alt="res/smallsteps_chain1.png">
+</div>
+</div>
+<div class="paragraph"><p>Will at the end of this chapter look like this:</p></div>
+<div class="imageblock">
+<div class="content">
+<img src="res/smallsteps_chain2.png" alt="res/smallsteps_chain2.png">
+</div>
+</div>
+<div class="paragraph"><div class="title">Define the aggregation processor component</div><p>First we will again look in our example_config.cfg and add an aggregation processor with the id example-aggregator:</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [example-aggregator]
+        class: processor
+        type:  aggregator</pre>
+</div></div>
+<div class="paragraph"><p>In order to recognize if a message should be aggregated, we have to define a matcher directive:</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [example-aggregator]
+        class: processor
+        type:  aggregator
+        matcher: message REGEXP 'The server (?P&lt;HOSTNAME&gt;\w+) just went down. Errorcode (?P&lt;CODE&gt;\d+)'</pre>
+</div></div>
+<div class="paragraph"><p>The matched groups are, together with the id, used to create a group identifier. If an event starts a new aggregation group, it becomes a group leader. Every event with the same group identifier will be added to the aggregation group of the group leader.</p></div>
+<div class="paragraph"><p>Now we want to add an aggregated message. This is the message that will be written to the group leaders <strong>alternative_message</strong> field in the database and can reference fields from the matcher:</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [example-aggregator]
+        class: processor
+        type:  aggregation
+        matcher: message REGEXP 'The server (?P&lt;HOSTNAME&gt;\w+) just went down. Errorcode (?P&lt;CODE&gt;\d+)'
+        aggregateMessage: 'Server $HOSTNAME is down (Code : $CODE) ($_COUNT events)</pre>
+</div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">$NAME resolves to the matcher field called name, #XYZ resolves to the event property XYZ. So #message would resolve to the (group leaders) message, $_COUNT is just a hint for the eventdb frontend and will be replaced with the actual group count</td>
+</tr></table>
+</div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+Additionally, we need to tell our aggregator from which datasource it can gather group information, this is normally the database you&#8217;re writing to
+</dt>
+<dd>
+</dd>
+</dl></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [example-aggregator]
+        class: processor
+        type:  aggregation
+        matcher: message REGEXP 'The server (?P&lt;HOSTNAME&gt;\w+) just went down. Errorcode (?P&lt;CODE&gt;\d+)'
+        aggregateMessage: Server $HOSTNAME is down (Code : $CODE) ($_COUNT events)
+        datasource: @mysql</pre>
+</div></div>
+<div class="dlist"><div class="title">Update the chain</div><dl>
+<dt class="hdlist1">
+Our chain now only needs the aggregator being added between the input and the database
+</dt>
+<dd>
+</dd>
+</dl></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [example-chain]
+        in: @example-pipe
+        to_1: @example-aggregator
+        to_2: @mysql</pre>
+</div></div>
+<div class="dlist"><div class="title">Test it</div><dl>
+<dt class="hdlist1">
+To test it, we can write a few similar messages to the pipe, like
+</dt>
+<dd>
+</dd>
+</dl></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        # echo '2 5 The server mysql just went down. Errorcode 1434' &gt;&gt; /usr/local/var/edbc_example.pipe
+        # echo '2 5 The server mysql just went down. Errorcode 1434' &gt;&gt; /usr/local/var/edbc_example.pipe
+        .,,
+        # echo '2 5 The server mysql just went down. Errorcode 1434' &gt;&gt; /usr/local/var/edbc_example.pipe</pre>
+</div></div>
+<div class="paragraph"><p>And a few messaages with a different errorcode:</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        # echo '2 5 The server mysql just went down. Errorcode 1454' &gt;&gt; /usr/local/var/edbc_example.pipe
+        ...
+        # echo '2 5 The server mysql just went down. Errorcode 1434' &gt;&gt; /usr/local/var/edbc_example.pipe
+        # echo '2 5 The server mysql just went down. Errorcode 1439' &gt;&gt; /usr/local/var/edbc_example.pipe</pre>
+</div></div>
+<div class="paragraph"><p>In the frontend, this should result in a resultset like this:</p></div>
+<div class="imageblock">
+<div class="content">
+<img src="res/ui1.png" alt="res/ui1.png">
+</div>
+</div>
+<div class="paragraph" id="clear-message-example"><div class="title">One step further:  Adding a clear message</div><p>Sometimes, you receive a clear message for previous events which tell you that the problem is fixed now. After receiveing such an event, continuing to summarize events doesn&#8217;t make sense, as new events belong to a new problem. To realize this, our aggregation processor can be extended with a clear field</p></div>
+<div class="paragraph"><p>First we add the clear message:</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [example-aggregator]
+        class: processor
+        type:  aggregation
+        matcher: message REGEXP 'The server (?P&lt;HOSTNAME&gt;\w+) just went down. Errorcode (?P&lt;CODE&gt;\d+)'
+        aggregateMessage: 'Server $HOSTNAME is down (Code : $CODE) ($_COUNT events)
+        datasource: @mysql
+        clear: message REGEXP 'Server \w+ is up again (Error \d+)'</pre>
+</div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/warning.png" alt="Warning">
+</td>
+<td class="content">This example won&#8217;t work! Read on.</td>
+</tr></table>
+</div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+There&#8217;s one thing you have to do now: As the matcher defines which group the event belongs to and the clear message should only clear this specific group, you have to add the clear message to the matcher (sounds complicated, but is simple)
+</dt>
+<dd>
+</dd>
+</dl></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [example-aggregator]
+        class: processor
+        type:  aggregation
+        matcher: message REGEXP 'The server (?P&lt;HOSTNAME&gt;\w+) just went down. Errorcode (?P&lt;CODE&gt;\d+)' or message REGEXP 'Server (?P&lt;HOSTNAME&gt;\w+) is up again \(Error (?P&lt;CODE&gt;\d+)\)'
+        aggregateMessage: Server $HOSTNAME is down (Code : $CODE) ($_COUNT events)
+        datasource: @mysql
+        clear: message REGEXP 'Server \w+ is up again \(Error \d+\)'</pre>
+</div></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+Now the clear message will be processed by the aggregator and the group will be cleared
+</dt>
+<dd>
+</dd>
+</dl></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        # echo '2 5 The server mysql1 just went down. Errorcode 1439' &gt;&gt; /usr/local/var/edbc_example.pipe
+        ...
+        # echo '2 5 The server mysql1 just went down. Errorcode 1439' &gt;&gt; /usr/local/var/edbc_example.pipe
+
+        # echo '2 5 Server mysql1 is up again (Error 1439)' &gt;&gt; /usr/local/var/edbc_example.pipe
+
+        # echo '2 5 The server mysql1 just went down. Errorcode 1439' &gt;&gt; /usr/local/var/edbc_example.pipe
+        # echo '2 5 The server mysql1 just went down. Errorcode 1439' &gt;&gt; /usr/local/var/edbc_example.pipe
+        # echo '2 5 The server mysql1 just went down. Errorcode 1439' &gt;&gt; /usr/local/var/edbc_example.pipe</pre>
+</div></div>
+<div class="paragraph"><p>The result in the frontend looks like this:</p></div>
+<div class="imageblock">
+<div class="content">
+<img src="res/ui2.png" alt="res/ui2.png">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_by_step_3_conditional_processing_autoacknowledge_events">6.4. Step by step: 3. Conditional processing - Autoacknowledge events</h3>
+<div class="paragraph"><p>In the last part of this ste by step guide, we show how to execute processors only if a previous processor finished
+with a certain return code. A common use case of this is to acknowledge events after a clear event comes.</p></div>
+<div class="paragraph"><p>Our chain will now get an additional component, called modification processor, that only processes the event if a group has been cleared.</p></div>
+<div class="paragraph"><p><span class="image">
+<img src="res/smallsteps_chain3.png" alt="res/smallsteps_chain3.png">
+</span></p></div>
+<div class="dlist" id="mod-processor"><div class="title">Defining a modification processor</div><dl>
+<dt class="hdlist1">
+We&#8217;ll continue where we left in step <a href="#clear-message-example">[clear-message-example]</a>. When we clear our group, all previous <em>server down</em> events should be automatically acknowledged. For this, we need to define a <a href="#modifierprocessor-ref">[modifierprocessor-ref]</a> with the id <em>example-acknowledger</em> in our example-config.cfg
+</dt>
+<dd>
+</dd>
+</dl></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [example-acknowledger]
+        class: processor
+        type: modifier</pre>
+</div></div>
+<div class="paragraph"><p>A modifier can have two targets:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>group</strong> defines that this modifier acts upon the whole group. If you use target: group you always need to add a datasource, too (like in the aggregator)
+</p>
+</li>
+<li>
+<p>
+<strong>event</strong> defines that this modifier only defines the event that it currently processes.
+</p>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+We want our whole group to be cleared, so we use target: group and add our mysql datasource
+</dt>
+<dd>
+</dd>
+</dl></div>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [example-acknowledger]
+        class: processor
+        type: modifier
+        target: group
+        datasource: @mysql</pre>
+</div></div>
+<div class="paragraph"><p>And now we define which modifications will be performed upon the group. This can be done with two directives:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+overwrites: is a key=value;key=value string that defines which fields will be overwritten (e.g. priority=1;facility=9 would overwrite the priority and the facility of the event)
+</p>
+</li>
+<li>
+<p>
+acknowledge: This is the same like ack=1 in the overwrite field and triggers an acknowledge of the whole group (or event, depending on your target setting)
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>We only want to acknowledge our aggregated group, so we add a <strong>acknowledge: true</strong> setting:</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [example-acknowledger]
+        class: processor
+        type: modifier
+        target: group
+        datasource: @mysql
+        acknowledge: true</pre>
+</div></div>
+<div class="paragraph"><p>That&#8217;s it, our acknowledger is ready and we can update our chain</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">A default installation already has acknowledge_event and acknowledge_group processors defined that you can use, but we defined it here to see how it works</td>
+</tr></table>
+</div>
+<div class="dlist"><div class="title">Updating the chain</div><dl>
+<dt class="hdlist1">
+Let&#8217;s recall our chain
+</dt>
+<dd>
+</dd>
+</dl></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [example-chain]
+        in: @example-pipe
+        to_1: @example-aggregator
+        to_2: @mysql</pre>
+</div></div>
+<div class="paragraph"><p>You see that every event is being processed by every event in our chain. We defined components by to\_ followed by an arbitary number, while lower numbers are executed first. In order to direct our event only if a certain condition applies, we have to extend the syntax a bit: You can define a processor target with to\_ followed by a set of conditions, followed by a number that determines the position.</p></div>
+<div class="paragraph"><p>Conditions are in the syntax <strong>%processor_number%</strong>\[<strong>%return value%</strong>\]. Every processor returns a string like <em>OK</em>, <em>PASS</em>, etc.
+We&#8217;re interested in our aggregation processor, which returns one of the following values:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>PASS</strong>: The matcher didn&#8217;t match the current event, it is not processed by the aggregator
+</p>
+</li>
+<li>
+<p>
+<strong>AGGR</strong>: The event is added to an existing group
+</p>
+</li>
+<li>
+<p>
+<strong>NEW</strong> : The event started a new aggregation group, future matching events will be added to this group
+</p>
+</li>
+<li>
+<p>
+<strong>CLEAR</strong>: The <em>clear</em> matcher matched this event and cleared an aggregation group
+</p>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+Our aggregator has the position 1 and we now want the event to be directed to the modification processor we created in <a href="#mod-processor">[mod-processor]</a> only if the aggregator return CLEAR. so our condition looks like this
+</dt>
+<dd>
+</dd>
+</dl></div>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        1[CLEAR]</pre>
+</div></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+Now we add our conditional processor to the example chain and end up with the following definition
+</dt>
+<dd>
+</dd>
+</dl></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [example-chain]
+        in:             @example-pipe
+        to_1:           @example-aggregator
+        to_1[CLEAR]_2:  @example-acknowledger
+        to_3:           @mysql</pre>
+</div></div>
+<div class="paragraph"><div class="title">Test it</div><p>Using the same test as in the last section, our EventDB frontend looks like this:</p></div>
+<div class="paragraph"><p><span class="image">
+<img src="res/ui3_ack.png" alt="res/ui3_ack.png">
+</span></p></div>
+<div class="paragraph"><p>As you see, the group has been acknowledged after the clear event</p></div>
+</div>
+<div class="sect2">
+<h3 id="_step_by_step_4_simplify_it">6.5. Step by step: 4. Simplify it</h3>
+<div class="paragraph"><p>Currently, the setup covers most needs, but is rather complicated. If you want to change aggregators, you need a lot of knowledge and modify a lot of files. Also the autoacknwoledge
+is very complicated for the rather simple action you want to perform.
+EDBC has a few shortcuts for the usual setups:</p></div>
+<div class="dlist"><div class="title">Directly acknowledge in the aggregator</div><dl>
+<dt class="hdlist1">
+The whole Step 3 can be skipped when you add the acknowledge_on_clear directive your aggregation processor
+</dt>
+<dd>
+</dd>
+</dl></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [example-aggregator]
+        class: processor
+        type:  aggregation
+        matcher: message REGEXP 'The server (?P&lt;HOSTNAME&gt;\w+) just went down. Errorcode (?P&lt;CODE&gt;\d+)' or message REGEXP 'Server (?P&lt;HOSTNAME&gt;\w+) is up again \(Error (?P&lt;CODE&gt;\d+)\)'
+        acknowledge_on_clear: True,
+        aggregateMessage: Server $HOSTNAME is down (Code : $CODE) ($_COUNT events)
+        datasource: @mysql
+        clear: message REGEXP 'Server \w+ is up again \(Error \d+\)'
+
+You can then remve the example-acknowledger definition and cut down your chain to::
+
+    [example-chain]
+        in: @example-pipe
+        to_1: @example-aggregator
+        to_2: @mysql</pre>
+</div></div>
+<div class="paragraph"><div class="title">Use the multiaggregation processor for defining rules</div><p>If you now want to add a new aggregator, you would have to perform two steps:</p></div>
+<div class="olist arabic"><ol class="arabic">
+<li>
+<p>
+Add the aggregation processor with the new rule in your example_config.cfg
+</p>
+</li>
+<li>
+<p>
+Add the aggregation processor to your chain
+</p>
+</li>
+</ol></div>
+<div class="paragraph"><p>Wouldn&#8217;t it be easier to have one configuration file, where all aggregation rules are defined ?</p></div>
+<div class="paragraph"><p>This is possible with the multiaggregation processor. This processor reads additional *.rules files and creates and manages the aggregators according to
+this file. So let&#8217;s add a multiaggregator to our config::</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [example-multiaggregator]
+        class: processor
+        type:  aggregation
+        ruleset: /usr/local/edbc/etc/rules/example.rules
+        acknowldge_on_clear: True
+        datasource: @mysql</pre>
+</div></div>
+<div class="paragraph"><p>This aggregator reads the (to be created) example.rules file and sets up the aggregators.
+The rules file may look like this::</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>    [rule1]
+        match: message REGEXP 'The server (?P&lt;HOSTNAME&gt;\w+) just went down. Errorcode (?P&lt;CODE&gt;\d+)' or message REGEXP 'Server (?P&lt;HOSTNAME&gt;\w+) is up again \(Error (?P&lt;CODE&gt;\d+)\)'
+        clear: message REGEXP 'Server \w+ is up again \(Error \d+\)'
+    aggregateMessage: Server $HOSTNAME is down (Code : $CODE) ($_COUNT events)
+
+    [rule2]
+    match: message STARTS WITH 'voice alert'
+
+    [rule3]
+    ...</pre>
+</div></div>
+<div class="paragraph"><p>Now we need to change the chain so the multiaggregator is used instead of the simple aggregator:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+You can then remve the example-acknowledger definition and cut down your chain to
+</dt>
+<dd>
+</dd>
+</dl></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>    [example-chain]
+        in: @example-pipe
+        to_1: @example-multiaggregator
+        to_2: @mysql</pre>
+</div></div>
+<div class="paragraph"><p>And we&#8217;re set. If you now want to add a rule, you can define it in the example.rules file and just reload edbc.</p></div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_component_reference">7. Component Reference</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="transformer-ref">7.1. Transformer <strong>(class: transformer)</strong></h3>
+<div class="paragraph"><p>Transformers take the raw event input (mostly strings) and convert them into normalized events</p></div>
+<div class="paragraph" id="string-transformer-ref"><div class="title">StringTransformer <strong>(type: string)</strong></div><p>String transformers take raw string input and convert them events using a regular expression or fixed settings</p></div>
+<div class="paragraph"><p><strong>Example</strong></p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [rsyslog_reader]
+        class:transformer
+        type:string
+        format:^(?P&lt;CREATED&gt;[a-zA-Z]{2,3} \d\d \d\d:\d\d:\d\d) (?P&lt;HOST&gt;[^ ]+)( (?P&lt;PROGRAM&gt;[^:]+):)? (?P&lt;MESSAGE&gt;.*)$
+        fixed: Priority=1,Facility=1</pre>
+</div></div>
+<div class="paragraph"><p><strong>Parameters</strong>
+        * <strong>defaultmessage</strong>: If no message is defined, this message (normally <em>No message given</em>) is used
+        * <strong>dateformat</strong>: The format to use for the date string
+        * <strong>format</strong>: A regular expression extracting the important event properties of an event with named matching groups. You can define any property you want, but persisted properties are per default:
+                <strong> MESSAGE
+                </strong> HOST
+                <strong> HOST_ADDRESS
+                </strong> PRIORITY
+                <strong> FACILITY
+                </strong> PROGRAM
+                <strong> CREATED
+                </strong> MODIFIED
+        * <strong>fixed</strong>: A comma seperated key=value list defining which properties are set as constants</p></div>
+<div class="paragraph" id="split-transformer-ref"><div class="title">SplitTransformer <strong>(type: split)</strong></div><p>Split transformers take a string and separate them by a delimiter string:</p></div>
+<div class="paragraph"><p><strong>Example</strong></p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [syslog_reader]
+        class:transformer
+        type:split
+    delimiter: ';'
+    group_order: CREATED HOST HOST_ADDRESS PROGRAM FACILITY PRIORITY MESSAGE</pre>
+</div></div>
+<div class="paragraph"><p><strong>Parameters</strong></p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>defaultmessage</strong>: If no message is defined, this message (normally <em>No message given</em>) is used
+</p>
+</li>
+<li>
+<p>
+<strong>dateformat</strong>: The format to use for the date string
+</p>
+</li>
+<li>
+<p>
+<strong>delimiter</strong>: The string to use for delimiting the input (default: \t)
+</p>
+</li>
+<li>
+<p>
+<strong>group_order</strong>: A space separated list of the following values, defining in which order they appear
+</p>
+<div class="ulist"><ul>
+<li>
+<p>
+MESSAGE
+</p>
+</li>
+<li>
+<p>
+HOST
+</p>
+</li>
+<li>
+<p>
+HOST_ADDRESS
+</p>
+</li>
+<li>
+<p>
+PRIORITY
+</p>
+</li>
+<li>
+<p>
+FACILITY
+</p>
+</li>
+<li>
+<p>
+PROGRAM
+</p>
+</li>
+<li>
+<p>
+CREATED
+</p>
+</li>
+<li>
+<p>
+MODIFIED
+</p>
+</li>
+</ul></div>
+</li>
+<li>
+<p>
+<strong>fixed</strong>: A comma seperated key=value list defining which properties are set as constants
+</p>
+</li>
+</ul></div>
+<div class="paragraph" id="snmp-transformer-ref"><div class="title">SNMPTransformer <strong>(type: snmp)</strong></div><p>SNMP Transformer are able to read MIB files produced by `snmpttconvertmib <a href="http://snmptt.sourceforge.net/docs/snmpttconvertmib.shtml">http://snmptt.sourceforge.net/docs/snmpttconvertmib.shtml</a>`_ and parse their EVENT, FORMAT and REGEXP directives. It expects snmptraps to be received with numerical OIDs.</p></div>
+<div class="paragraph"><p><strong>Example</strong></p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [snmp_reader]
+        class: transformer
+        type:  snmp
+        mib_dir: /usr/share/snmptt/mibs
+        fixed: Priority=3,Facility=5,program=snmp</pre>
+</div></div>
+<div class="paragraph"><p><strong>Parameters</strong></p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>mib_dir</strong>: The directory to load the mib files snmpttconvertmib created. This is a required field
+</p>
+</li>
+<li>
+<p>
+<strong>trap_format</strong>: <strong>Only define this if you create a modified trap handler</strong> Define how to parse the string data received from the traphandler
+</p>
+</li>
+<li>
+<p>
+<strong>prioritymap</strong>: Define a comma seperated severity=priority mapping. The event&#8217;s severity needn&#8217;t to match the whole string, if it only begins with the string defined in your map it will be mapped to the priority, too. Per default the map looks like this:
+</p>
+<div class="ulist"><ul>
+<li>
+<p>
+emer = 0
+</p>
+</li>
+<li>
+<p>
+aler = 1
+</p>
+</li>
+<li>
+<p>
+crit = 2
+</p>
+</li>
+<li>
+<p>
+majo = 2
+</p>
+</li>
+<li>
+<p>
+erro = 3
+</p>
+</li>
+<li>
+<p>
+warn = 4
+</p>
+</li>
+<li>
+<p>
+noti = 5
+</p>
+</li>
+<li>
+<p>
+mino = 5
+</p>
+</li>
+<li>
+<p>
+ok   = 5
+</p>
+</li>
+<li>
+<p>
+info = 6
+</p>
+</li>
+<li>
+<p>
+norm = 6
+</p>
+</li>
+<li>
+<p>
+debu = 7
+</p>
+</li>
+</ul></div>
+</li>
+<li>
+<p>
+<strong>fixed</strong>: A comma seperated key=value list defining which properties are set as constants
+</p>
+</li>
+</ul></div>
+<div class="paragraph" id="mail-transformer-ref"><div class="title">MailTransformer <strong>(type: mail)</strong></div><p>Mailtransformers are tightly coupled to <a href="#mailreceptor-ref">[mailreceptor-ref]</a> and allow to interpret incoming mails as events, depending on a previously defined ruleset.</p></div>
+<div class="paragraph"><p><strong>Example</strong></p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>    [mail_reader]
+    class: transformer
+    type:  mail
+    rules: /usr/local/edbc/etc/mail/default.filter</pre>
+</div></div>
+<div class="paragraph"><p><strong>Parameters</strong></p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>rules</strong>:  The file that contains the rule definitions.
+</p>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+The mail rule definition has a similar configuration syntax as the other configuration files. It usually consists of one default section
+</dt>
+<dd>
+</dd>
+</dl></div>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>    [default]
+    ignore: true
+    facility: 1
+    priority: 1
+    program: mail
+    host: #From
+    message: #Message</pre>
+</div></div>
+<div class="paragraph"><p>This example defines that all events that come via mail have the facility 1, priority 1, the program field set to <em>mail</em>. The # directives
+say, a field from the mail header should be used (#Message is a special case, as it uses the mail body instead of a header). The ignore:true says that all
+mails that only match the default rule and no other should not be written to mail (remove this if you want all mails forwarded to you  to appear in the eventdb).</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+You can now use additional rules to match the specific mails that are interesting for you. The matcher ist defined in the matcher field and follows the <a href="#matcher-syn">[matcher-syn]</a> 
+</dt>
+<dd>
+</dd>
+</dl></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>    [rule1]
+    matcher: FROM CONTAINS 'localhost'
+    facility: 3
+    host: 'srv-mail'
+
+    [rule2]
+    matcher: MESSAGE REGEXP 'Host (?P&lt;HOST_NAME&gt;\w*) is down'
+    priority: 6
+    host: $HOST_NAME</pre>
+</div></div>
+<div class="paragraph"><p>Here we defined two rules: rule1 says that all mails that contain <em>localhost</em> in its from field get facility 3 and the hostname <em>srv-mail</em> (in addition to the values defined in the
+<em>default</em> section). The second rule says that if the message is for example <em>Host test ist down</em>, it matches the regexp, the priority is set to 6 and the hostname is substituted to <em>test</em>.
+($ means that the regular expression matching group from the matcher is used).</p></div>
+<div class="paragraph"><p>Please note that only the first matching rule is being used.</p></div>
+</div>
+<div class="sect2">
+<h3 id="receptors-ref">7.2. Receptors <strong>(class:receptor)</strong></h3>
+<div class="paragraph"><p>Receptors are the components that receive raw events and therefore the interface of edbc to the world. They are usually coupled with a <a href="#transformer-ref">[transformer-ref]</a> and at the start of every event chain.</p></div>
+<div class="paragraph" id="pipereceptor-ref"><div class="title">Pipe Receptor <strong>(type:pipe)</strong></div><p>A pipe receptor opens a pipe upon creation and receives events</p></div>
+<div class="paragraph"><p><strong>Example</strong></p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [pipe]
+        class:receptor
+        type:pipe
+        path:/tmp/edbc.pipe
+        format:@simple_pipe_in</pre>
+</div></div>
+<div class="paragraph"><p><strong>Parameters</strong></p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>mod</strong> : The permission mask which will be used for the created pipe (default: 0666)
+</p>
+</li>
+<li>
+<p>
+<strong>owner</strong> : The owner of the pipe (default: The process owner)
+</p>
+</li>
+<li>
+<p>
+<strong>group</strong> : The group of the pipe (default: The process owner&#8217;s group)
+</p>
+</li>
+<li>
+<p>
+<strong>path</strong> : An existing, writable path to create the pipe at (default /usr/local/var/edbc.pipe)
+</p>
+</li>
+<li>
+<p>
+<strong>bufferSize</strong> : The input buffer of this receptor (default 2KB)
+</p>
+</li>
+<li>
+<p>
+<strong>format</strong> : (required) An <a href="#transformer-ref">[transformer-ref]</a> instance that will be used to format the raw event data to a normalized event
+</p>
+</li>
+<li>
+<p>
+<strong>source_type</strong>: The source name given to the event (default: syslog)
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><div class="title">Mail Receptor <strong>(type:mail)</strong></div><p>Mail receptors are almost the same as pipe receptors, but only work with <a href="#mailtransformer_ref">[mailtransformer_ref]</a> definitions.</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<strong>Example</strong>
+</dt>
+<dd>
+</dd>
+</dl></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [pipe]
+        class:receptor
+        type:mail
+        path:/tmp/mail.pipe
+        format:@mail_transformer</pre>
+</div></div>
+<div class="paragraph"><p><strong>Parameters</strong></p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>mod</strong> : The permission mask which will be used for the created pipe (default: 0666)
+</p>
+</li>
+<li>
+<p>
+<strong>owner</strong> : The owner of the pipe (default: The process owner)
+</p>
+</li>
+<li>
+<p>
+<strong>group</strong> : The group of the pipe (default: The process owner&#8217;s group)
+</p>
+</li>
+<li>
+<p>
+<strong>path</strong> : An existing, writable path to create the pipe at (default /usr/local/var/edbc.pipe)
+</p>
+</li>
+<li>
+<p>
+<strong>bufferSize</strong> : The input buffer of this receptor (default 2KB)
+</p>
+</li>
+<li>
+<p>
+<strong>format</strong> : (required) An <a href="#transformer-ref">[transformer-ref]</a> instance that will be used to format the raw event data to a normalized event
+</p>
+</li>
+<li>
+<p>
+<strong>source_type</strong>: The source name given to the event (default: syslog)
+</p>
+</li>
+</ul></div>
+<div class="paragraph" id="snmpreceptor-ref"><div class="title">SNMP Receptor <strong>(type:snmp)</strong></div><p>SNMP Receptors are basically pipe receptors which receive snmp traps from a snmp handler.</p></div>
+<div class="paragraph"><p>Image::res/snmphandler.png[]</p></div>
+<div class="paragraph"><p>The SNMP Receptors opens a pipe where it listens on and creates a bash script which can be set as a traphandler in your snmptrapd.conf. The bash script just forwards the trap in a string format to the pipe, which then transforms it to an event with an <a href="#snmp-transformer-ref">[snmp-transformer-ref]</a>.</p></div>
+<div class="paragraph"><p><strong>Example</strong></p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [snmp]
+        class:receptor
+        type:snmp
+        handler:/usr/local/edbc/var/edbc_snmp_handler
+        pipe: /tmp/snmp.pipe
+        format:@snmp_reader</pre>
+</div></div>
+<div class="paragraph"><p><strong>Parameters</strong></p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>mod</strong> : The permission mask which will be used for the created pipe and snmp handler (default: 0774)
+</p>
+</li>
+<li>
+<p>
+<strong>owner</strong> : The owner of the pipe and snmp trap handler (default: The process owner)
+</p>
+</li>
+<li>
+<p>
+<strong>group</strong> : The group of the pipe and snmp trap handler (default: The process owner&#8217;s group)
+</p>
+</li>
+<li>
+<p>
+<strong>path</strong> : An existing, writable path to create the pipe at (default /usr/local/var/edbc.pipe)
+</p>
+</li>
+<li>
+<p>
+<strong>bufferSize</strong> : The input buffer of this receptor (default 2KB)
+</p>
+</li>
+<li>
+<p>
+<strong>format</strong> : (required) An <a href="#transformer-ref">[transformer-ref]</a> instance that will be used to format the raw event data to a normalized event
+</p>
+</li>
+<li>
+<p>
+<strong>source_type</strong>: The source name given to the event (default: snmp)
+</p>
+</li>
+<li>
+<p>
+<strong>handler</strong> : The location to write the handler script to (default: /usr/local/var/edb_traphandler)
+</p>
+</li>
+<li>
+<p>
+<strong>handler_tpl</strong> : The template to use for the handler (default : %INSTALL_PATH%/libexec/snmp_handler_template)
+</p>
+</li>
+</ul></div>
+</div>
+<div class="sect2">
+<h3 id="processor-ref">7.3. Processors <strong>(class:processor)</strong>:</h3>
+<div class="paragraph"><p>Processors are components that perform arbitary actions on your events, like altering them, aggergating them or writing them to a database.</p></div>
+<div class="paragraph" id="aggregationprocessor-ref"><div class="title">Aggregation Processor <strong>(type:aggregation)</strong></div><p>Aggregators try to match events by using the <a href="#matcher-syn">[matcher-syn]</a> and groups them. The usage is described in detail under <a href="#aggregator-example">[aggregator-example]</a>. In most cases, you
+will prefer the <a href="#multiaggregationprocessor-ref">[multiaggregationprocessor-ref]</a>, as this provides a more convenient interface.</p></div>
+<div class="paragraph"><p><strong>Example</strong></p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [example-aggregator]
+        class: processor
+        type:  aggregation
+        matcher: message REGEXP 'The server (?P&lt;HOSTNAME&gt;\w+) just went down. Errorcode (?P&lt;CODE&gt;\d+)' OR  message REGEXP 'Server (?P&lt;HOSTNAME&gt;\w+) is up again \(Error (?P&lt;CODE&gt;\d+)\)'
+        aggregateMessage: Server $HOSTNAME is down (Code : $CODE) ($_COUNT events)
+        clear: message REGEXP 'Server \w+ is up again \(Error \d+\)'
+        datasource: @mysql</pre>
+</div></div>
+<div class="paragraph"><p><strong>Parameters</strong></p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>matcher</strong>: An <a href="#matcher-syn">[matcher-syn]</a> defining every message (clear and aggregate message) that this aggregator processes. Matching groups are used to identify the group.
+</p>
+</li>
+<li>
+<p>
+<strong>aggregatemessage</strong>: The message to use for the group. Can reference matcher groups by $NAME tokens and event properties by #PROPERTY tokens. $_COUNT is a special variable resolved by the frontend
+</p>
+</li>
+<li>
+<p>
+<strong>clear</strong>: A <a href="#matcher-syn">[matcher-syn]</a> triggering a clear message. This is used <strong>after</strong> the matcher field is processed, so if the matcher doesn&#8217;t contain the clear message, this is never processed
+</p>
+</li>
+<li>
+<p>
+<strong>datasource</strong>: A <a href="#datasource-ref">[datasource-ref]</a> that is required to process aggregation groups
+</p>
+</li>
+<li>
+<p>
+<strong>maxdelay</strong>: (optional) The aggregation will be automatically cleared when a group does not get a new event for maxdelay seconds (default: 24 hours)
+</p>
+</li>
+<li>
+<p>
+<strong>maxcount</strong>: (optional) Define a limit how many events can be in a group
+</p>
+</li>
+<li>
+<p>
+<strong>matcherfield</strong>: (optional) Comma separated list of event fields that must be equal for grouping (e.g. only group events with the same hostname would be matcherfield: host)
+</p>
+</li>
+<li>
+<p>
+<strong>acknowledge_on_clear</strong>: (optional) Acknowledges this group after the clear message is received
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p><strong>Return codes</strong></p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>AGGR</strong>: Returned when an event is added to an <strong>existing</strong> aggregation group
+</p>
+</li>
+<li>
+<p>
+<strong>NEW</strong> : Returned when an event creates a new aggregation group
+</p>
+</li>
+<li>
+<p>
+<strong>CLEAR</strong>: Returned when an event clears an aggregation group because of the clear matcher (maxdelay doesn&#8217;t cause this)
+</p>
+</li>
+<li>
+<p>
+<strong>PASS</strong> : Returned when the matcher doesn&#8217;t match the event
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><div class="title">Multiaggregation Processor <strong>(type:multiaggregation)</strong></div><p>Multiaggregation processors allows to define and bundle several aggregation processors in a configuration file.</p></div>
+<div class="paragraph"><p><strong>Example</strong></p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>    [example-multiaggregator]
+    class: processor
+    type: multiaggregation
+    ruleset: /usr/local/edbc/etc/rules/event.rules
+    datasource: @mysql</pre>
+</div></div>
+<div class="paragraph"><p><strong>Parameters</strong></p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>datasource</strong>: A <a href="#datasource-ref">[datasource-ref]</a> that is required to process aggregation groups
+</p>
+</li>
+<li>
+<p>
+<strong>ruleset</strong>: A path pointing to the rule configuration file
+</p>
+</li>
+<li>
+<p>
+<strong>acknowledge_on_clear</strong>: (optional) Acknowledges the group after the clear message is received
+</p>
+</li>
+<li>
+<p>
+<strong>maxcount</strong>: (optional) Define a limit how many events can be in a group
+</p>
+</li>
+<li>
+<p>
+<strong>maxdelay</strong>: (optional) The aggregation will be automatically cleared when a group does not get a new event for maxdelay seconds (default: 24 hours)
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p><strong>Return codes</strong></p></div>
+<div class="paragraph"><p>The return code of the first aggregator that matches will be returned.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>AGGR</strong>: Returned when an event is added to an <strong>existing</strong> aggregation group
+</p>
+</li>
+<li>
+<p>
+<strong>NEW</strong> : Returned when an event creates a new aggregation group
+</p>
+</li>
+<li>
+<p>
+<strong>CLEAR</strong>: Returned when an event clears an aggregation group because of the clear matcher (maxdelay doesn&#8217;t cause this)
+</p>
+</li>
+<li>
+<p>
+<strong>PASS</strong> : Returned when no processor matched the event
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p><strong>Event rule files</strong></p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+Event rule files consist of entries in the following format
+</dt>
+<dd>
+</dd>
+</dl></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [rule1]
+        match: message REGEXP '(CLEAR|SET) (?P&lt;name&gt; .*)'
+        clear: message CONTAINS 'CLEAR'
+
+        [rule2]
+        match: message STARTS WITH 'voice alert'
+        aggregateMessage: #message ($_COUNT)</pre>
+</div></div>
+<div class="literalblock">
+<div class="content monospaced">
+<pre>A rule can have the 'match', 'clear' and aggregateMessage directives. The clear expression must match *additionally* to the match expression</pre>
+</div></div>
+<div class="paragraph" id="commandprocessor-ref"><div class="title">Command Processor <strong>(type:command)</strong></div><p>This processor writes a "[TIME] MESSAGE" string into a defined pipe and can be used e.g. to trigger external commands in your monitoring environment.</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<strong>Example</strong>
+</dt>
+<dd>
+<p>
+        [example-command]
+        class: processor
+        type: command
+        format: SCHEDULE_FORCED_HOST_CHECK;#HOST;#CREATED
+        pipe: /usr/local/icinga-web/var/rw/icinga.cmd
+</p>
+</dd>
+</dl></div>
+<div class="paragraph"><p><strong>Parameters</strong></p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>matcher</strong>: A <a href="#matcher-syn">[matcher-syn]</a> that determines if the processor is called
+</p>
+</li>
+<li>
+<p>
+<strong>format</strong> : The format of the message to fire, ($NAME is replaced with matcher tokens, #NAME with event fields)
+</p>
+</li>
+<li>
+<p>
+<strong>pipe</strong>   : The pipe to write the message to. If seperated by <em>;</em>, multiple pipes can be defined
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p><strong>Return codes</strong></p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>PASS</strong> : The matcher didn&#8217;t match the event or there was a setup error (no format or pipe)
+</p>
+</li>
+<li>
+<p>
+<strong>OK</strong>   : Command has been send to the pipe
+</p>
+</li>
+<li>
+<p>
+<strong>FAIL</strong> : The command couldn&#8217;t be send for some reason
+</p>
+</li>
+</ul></div>
+<div class="paragraph" id="modifierprocessor-ref"><div class="title">Modifier Process <strong>(type:modifier)</strong></div><p>A processor that acts upon events or event groups and modifies their properties. See <a href="#mod-processor">[mod-processor]</a> for an in depth explanation</p></div>
+<div class="paragraph"><p><strong>Example</strong></p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [example-acknowledger]
+        class: processor
+        type: modifier
+        target: group
+        acknowledge: true
+        datasource: @mysql</pre>
+</div></div>
+<div class="paragraph"><p><strong>Parameters</strong></p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>matcher</strong>: A <a href="#matcher-syn">[matcher-syn]</a> that determines if the processor is called
+</p>
+</li>
+<li>
+<p>
+<strong>overwrite</strong>: static overwrites in key1=value1;key2=value2;&#8230; format
+</p>
+</li>
+<li>
+<p>
+<strong>acknowledge</strong>: Set to true if you want to acknowledge the event/group
+</p>
+</li>
+<li>
+<p>
+<strong>target</strong>: group or event, defines if the modifier acts only on the event or the whole group
+</p>
+</li>
+<li>
+<p>
+<strong>datasource</strong>: if target is group you must use define a datasource here
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p><strong>Return codes</strong></p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>PASS</strong> : The matcher didn&#8217;t match the event
+</p>
+</li>
+<li>
+<p>
+<strong>OK</strong>   : The event has been processed
+</p>
+</li>
+</ul></div>
+</div>
+<div class="sect2">
+<h3 id="datasource-ref">7.4. Datasources <strong>(class:datasource)</strong></h3>
+<div class="paragraph"><p>Datasources are a subset of processors that can write or read to/from a persistent datasource.</p></div>
+<div class="paragraph" id="mysql-datasource-ref"><div class="title">MySQL Datasource <strong>(type:mysql)</strong></div><p>A connector writing to mysql using MySQLdb</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<strong>Example</strong>
+</dt>
+<dd>
+</dd>
+</dl></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [mysql]
+        class:          datasource
+        type:           mysql
+        host:           localhost
+        port:           3306
+        table:          event
+        database:       eventdb
+        user:           eventdb
+        password:       eventdb</pre>
+</div></div>
+<div class="paragraph"><p><strong>Parameters</strong></p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>host</strong>: The host the database is located
+</p>
+</li>
+<li>
+<p>
+<strong>port</strong>: The port of the database
+</p>
+</li>
+<li>
+<p>
+<strong>table</strong> : The table of eventdb (it&#8217;s best to use event here)
+</p>
+</li>
+<li>
+<p>
+<strong>database</strong>: The name of the database this source works onb
+</p>
+</li>
+<li>
+<p>
+<strong>user</strong> : The user credential
+</p>
+</li>
+<li>
+<p>
+<strong>password</strong> : The password of the db user
+</p>
+</li>
+<li>
+<p>
+<strong>flush_interval</strong> : Interval in ms which is used to flush the internal db cache (100ms and don&#8217;t change it if you don&#8217;t need to) after changes
+</p>
+</li>
+<li>
+<p>
+<strong>spool</strong>: A datasource to use for spooling when the db is down or errors occur (normally a <a href="#spool-datasource-ref">[spool-datasource-ref]</a>)
+</p>
+</li>
+<li>
+<p>
+<strong>poolsize</strong>: The size of the connection pool (10 connections per default)
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p><strong>Return codes</strong></p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>OK</strong>: Insert succeeded
+</p>
+</li>
+<li>
+<p>
+<strong>FAIL</strong>: Insert failed for some reason
+</p>
+</li>
+<li>
+<p>
+<strong>SPOOL</strong>: No working connection available, written to spool datasource
+</p>
+</li>
+</ul></div>
+<div class="paragraph" id="spool-datasource-ref"><div class="title">Spool Datasource <strong>(type:spool)</strong></div><p>A datasource that buffers queries when a connection is not available. Can write to file or reside queries in memory.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">This datasource can only be used as the spool property of a datasource, not directly in chains</td>
+</tr></table>
+</div>
+<div class="paragraph"><p><strong>Example</strong></p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [spooler]
+        class:  datasource
+        type:   spool
+        buffer_size: 100
+        spool_dir: /tmp/spool.edbc</pre>
+</div></div>
+<div class="paragraph"><p><strong>Parameters</strong></p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>spool_filename</strong>: The file name to use for the spool file (not the path, default edbc.spool)
+</p>
+</li>
+<li>
+<p>
+<strong>spool_dir</strong>: If given, the spool buffer will be flushed to a file when exceeding buffer_size. Also other datasources using spooling can read the spool file on startup
+</p>
+</li>
+<li>
+<p>
+<strong>buffer_size</strong>: How many events should reside in memory when being spooled. If you don&#8217;t shutdown edbc correctly (like killing it without the -QUIT or -INT signal) these events will be lost. When no spool dir is given, the first events in the spool will be thrown away if more events than buffer size are written. Otherwise, the buffer is written to the spool file
+</p>
+</li>
+</ul></div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_edbc_matcher_syntax">8. EDBC Matcher syntax</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_syntax_definition">8.1. Syntax definition</h3>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+The syntax for matchers can be
+</dt>
+<dd>
+</dd>
+</dl></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>MATCHER: MATCHER_STMT | MATCHER CONJUNCTION MATCHER_STMT  | (MATCHER)
+
+MATCHER_STMT: STRING_MATCHER | NUMERIC_MATCHER | SET_MATCHER | IP_MATCHER
+STRING_MATCHER: #field STRING_OPERATOR STRING
+NUMERIC_MATCHER: #field NUMERIC_OPERATOR #NUMBER
+SET_MATCHER: #field SET_OPERATOR (SET)
+IP_MATCHER: #field IP_OPERATOR_DEFINITION
+
+STRING_OPERATOR: ['IS NOT','CONTAINS','REGEXP','DOES NOT CONTAIN','STARTS WITH','ENDS WITH','IS']
+SET_OPERATOR:    ['NOT IN','IN']
+NUMERIC_OPERATOR:['&gt;=','&lt;=','&gt;','!=','&lt;','=']
+
+IP_OPERATOR_DEFINITION: IN IP RANGE '#ip "-" #ip' | NOT IN IP RANGE '#ip "-" #ip' | IN NETWORK '#submask_or_cidr'| NOT IN NETWORK '#submask_or_cidr'
+SET = #value | SET, #value
+CONJUNCTION: ["OR","AND", CONJUNCTION " NOT" ]</pre>
+</div></div>
+</div>
+<div class="sect2">
+<h3 id="_examples">8.2. Examples</h3>
+<div class="olist arabic"><ol class="arabic">
+<li>
+<p>
+<strong>Simple message check</strong>::
+</p>
+<div class="literalblock">
+<div class="content monospaced">
+<pre>message IS 'message to check'</pre>
+</div></div>
+</li>
+<li>
+<p>
+<strong>Simple message check with priority</strong>::
+</p>
+<div class="literalblock">
+<div class="content monospaced">
+<pre>message IS 'message to check' AND priority &gt;= 4</pre>
+</div></div>
+</li>
+<li>
+<p>
+<strong>REGEXP check</strong>::
+</p>
+<div class="literalblock">
+<div class="content monospaced">
+<pre>message REGEXP 'srv-[A-Za-z]\d+'</pre>
+</div></div>
+</li>
+<li>
+<p>
+<strong>Limit to network</strong>::
+</p>
+<div class="literalblock">
+<div class="content monospaced">
+<pre>host_address IN NETWORK "192.168.0.0/24"</pre>
+</div></div>
+</li>
+<li>
+<p>
+<strong>Limit to ip range</strong>::
+</p>
+<div class="literalblock">
+<div class="content monospaced">
+<pre>host_address IN IP RANGE "192.168.4.4-192.168.5.2"</pre>
+</div></div>
+</li>
+</ol></div>
+</div>
+<div class="sect2">
+<h3 id="_pitfalls">8.3. Pitfalls</h3>
+<div class="ulist"><ul>
+<li>
+<p>
+Operators and conjunctions <strong>must</strong> be uppercase in matchers
+</p>
+</li>
+<li>
+<p>
+Regexp and String matchers are case insensitive
+</p>
+</li>
+<li>
+<p>
+The only string operators supported on host_address are =, use the ip operators for advanced checks here
+</p>
+</li>
+</ul></div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_eventdb_events">9. EventDB Events</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Events in the eventdb have the following properties that will be persisted in the database and can be set by <a href="#transformer-ref">[transformer-ref]</a> or <a href="#processor-ref">[processor-ref]</a>:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+message : The message displayed for standalone events
+</p>
+</li>
+<li>
+<p>
+host: The name of the host the event is associated with as a string
+</p>
+</li>
+<li>
+<p>
+host_address: The IP address of the event (IPv4 or IPv6)
+</p>
+</li>
+<li>
+<p>
+facility: The facility of the event as a number (see `RFC 5424 <a href="http://tools.ietf.org/html/rfc5424#section-6.2.1">http://tools.ietf.org/html/rfc5424#section-6.2.1</a>`_)
+</p>
+</li>
+<li>
+<p>
+priority: The priority of the event as a number
+</p>
+</li>
+<li>
+<p>
+program: The program that triggered the event
+</p>
+</li>
+<li>
+<p>
+type: The type of the event (default: syslog or snmp)
+</p>
+</li>
+<li>
+<p>
+ack: 0 if the event is not acknowledged, else 1
+</p>
+</li>
+<li>
+<p>
+created: The date of the events creation
+</p>
+</li>
+<li>
+<p>
+modified: The date of the last event modification (which is, for example, that a new event was added to an aggregation group)
+</p>
+</li>
+</ul></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_developing_edbc">10. Developing EDBC</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_running_the_testcases">10.1. Running the testcases</h3>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+In order to run the testcases, you have to create an empty database and a testuser
+</dt>
+<dd>
+<p>
+    CREATE USER <a href="mailto:testcases@localhost">testcases@localhost</a> IDENTIFIED BY <em>testcases</em>;
+    CREATE DATABASE test_eventdb;
+    GRANT ALL PRIVILEGES ON test_eventdb.* TO <a href="mailto:testcases@localhost">testcases@localhost</a>;
+</p>
+</dd>
+<dt class="hdlist1">
+You can now run the tests either by calling ./runtests.py underneath the lib folder or by using nosetest
+</dt>
+<dd>
+<p>
+    cd {YOUR BUILD PATH}/lib
+    nosetests --with-xunit
+</p>
+</dd>
+</dl></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">If you want to use other settings, adjust the SETUP_DB and SETUP_DB_FLUSHING dictionaries underneath tests/mysql_datasource_test.py</td>
+</tr></table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_writing_processors">10.2. Writing processors</h3>
+<div class="paragraph"><p>Processors can be easily written and  added to edbc, here is a short guide:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+add a new processor file to the lib/processor package and give it the name %type%_processor.py (where type is the name of your processor). define a class called %type%Processor (where type starts with a capital letter). You can use the NullProcessor as an template here.
+</p>
+</li>
+<li>
+<p>
+Setup your class:
+</p>
+<div class="ulist"><ul>
+<li>
+<p>
+Define a setup(self,id,config={}) method. <em>id</em> will be the id defined in the component configuration (the one in the brackets) and config will be a dict of the key=value definitions that are set in the compontents configuration. You&#8217;re free to setup your processor here
+</p>
+</li>
+<li>
+<p>
+Define a process(self,event) method. This will be called with the event when the chain containing your custom processor is executed. You can do anything you want with the event.
+</p>
+</li>
+<li>
+<p>
+Add your file to the <em>init</em>.py of the processor package
+</p>
+</li>
+</ul></div>
+</li>
+</ul></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">If you&#8217;re writing a lot to the database, use the execute_after_flush method of the datasource. This delays the actual query write for a few ms and executes all queries that
+          were submitted during this time in one transaction.</td>
+</tr></table>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footnotes"><hr></div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2013-04-02 14:40:58 CEST
+</div>
+</div>
+</body>
+</html>

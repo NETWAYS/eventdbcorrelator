@@ -50,6 +50,7 @@ class Controller:
             if receptor.config["format"] != None:
                 receptor.config["transformer"] = receptor.config["format"]
             receptor.start()
+
             self.threads.append(receptor)
 
     def __read_chain_definitions(self):
@@ -59,6 +60,7 @@ class Controller:
 
         self.chainFactory = ChainFactory()
         self.chainFactory.read_config_file(self.config["chain_dir"],self.instances)
+
 
     def __start_and_wait(self):
         """ starts the receptors and waits for thread termination
@@ -74,7 +76,8 @@ class Controller:
                 logging.warn("Unmatched dependencies found : %s",self.instances.deferred)
             while True:
                 for thread in self.threads:
-                    thread.join(5)        
+                    thread.join(5)
+
         except Exception, e:
             logging.debug(e)
         else:
