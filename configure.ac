@@ -91,6 +91,7 @@ AC_CONFIG_FILES([
     etc/conf.d/syslog.cfg
     etc/edbc.cfg
     bin/edbc
+    bin/edbc.rc.sh
 ])
 
 AC_OUTPUT
