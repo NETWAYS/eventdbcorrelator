@@ -101,16 +101,18 @@ class SnmpTransformer(object):
         else:
             self.domains = []
 
-        if "persist_unknown" in config:
-            self.persist_unknown = True
+        if "process_unknown" in config:
+            self.process_unknown = True
             if "unknown_priority" in config:
-                self.unknown_priority = config.unknown_priority
+                self.unknown_priority = config["unknown_priority"]
             else:
-                self.unknown_priority = 6
+                self.unknown_priority = 7
             if "unknown_format" in config:
-                self.unknown_format = config.unknown_format
+                self.unknown_format = config["unknown_format"]
             else:
-                self.unknown_format  = "Unknown Trap: $+*"
+                self.unknown_format  = "Unknown Trap: $_*"
+        else:
+            self.process_unknown = False
 
         self.mib_dir = config["mib_dir"]
         self.ip_regexp = re.compile(r"\[(.*?)\]")
@@ -274,8 +276,8 @@ class SnmpTransformer(object):
 
         mib = self.get_mib_for(meta["oid"])
         if not mib:
-            if not self.persist_unknown:
-                logging.debug("No mib found for %s and persist_unknown is false", meta["oid"])
+            if not self.process_unknown:
+                logging.debug("No mib found for %s and process_unknown is false", meta["oid"])
                 return None
             mib = {
                 "priority"  : self.unknown_priority,
@@ -313,8 +315,8 @@ class SnmpTransformer(object):
         """
         mibformat = mibformat.replace("$#", str(int(len(variables))))
         mibformat = mibformat.replace("$*", " ".join(map(lambda x : x[1], variables)))
-        mibformat = mibformat.replace("$+*", " ".join(map(lambda x : "%s:%s" % x, variables)))
-        mibformat = mibformat.replace("$_*", " ".join(map(lambda x : "\n%s:%s" % x, variables)))
+        mibformat = mibformat.replace("$+*", " ".join(map(lambda x : "\t%s:%s\t" % x, variables)))
+        mibformat = mibformat.replace("$_*", " ".join(map(lambda x : "\n\t%s:%s\t" % x, variables)))
 
         for i in range(1, len(variables)+1):
             mibformat = mibformat.replace("$%i" % i, variables[i-1][1])

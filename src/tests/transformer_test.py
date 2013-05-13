@@ -281,6 +281,23 @@ class SNMPTransformerTest(unittest.TestCase):
         assert event["host_name"] == "testhost.localdomain"
         assert event["message"] == "Service testservice generated error 55"
 
+    def test_unknown_traps(self):
+        transformer = SnmpTransformer()
+        transformer.setup("test", {
+            "mib_dir" : "/dev/null",
+            "process_unknown" : True,
+            "unknown_format" : "!! $* !!",
+            "unknown_priority" : 1
+        })
+        str = 'HOST:testhost.localdomain;IP:UDP: [192.168.2.15]:42992->[192.168.2.15];VARS:.1.3.6.1.2.1.1.3.0 = 2:22:16:27.46 ; .1.3.6.1.6.3.1.1.4.1.0 = .1.3.6.1.4.1.2021.13.990.0.17 ; .1.3.6.1.2.1.1.6.0 = The system has logged exception error 55 for the service testservice ; .1.3.6.1.6.3.18.1.3.0 = 127.0.0.1 ; .1.3.6.1.6.3.18.1.4.0 = "public" ; .1.3.6.1.6.3.1.1.4.3.0 = .1.3.6.1.4.1.2021.13.990'
+        event = transformer.transform(str)
+
+        assert event["host_address"] == "192.168.2.15"
+        assert event["host_name"] == "testhost.localdomain"
+        assert event["priority"] == 1
+        assert event["message"] == "!! The system has logged exception error 55 for the service testservice !!"
+
+
 class SplitTransformerTest(unittest.TestCase):
     """ Splittransformers just split the input by a specified character
 
