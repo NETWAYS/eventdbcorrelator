@@ -15,8 +15,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
+<^^
 """
+
 import MySQLdb
 import MySQLdb.cursors
 import Queue
@@ -183,6 +184,7 @@ class MysqlDatasource(object):
         self.exec_buffer = []
         self.check_spool = True
         self.flush_pending = False
+        self.spool = None
         self.flush_lock = threading.Lock()
 
     def setup(self, _id, config):
@@ -239,7 +241,7 @@ class MysqlDatasource(object):
             self.fetch_last_id()
         except Exception, exc:
             logging.warn("DB setup failed: %s "+
-                "(maybe the database is not set up correctly ?)" % exc) 
+                "(maybe the database is not set up correctly ?)", exc)
 
     def connect(self):
         """ Refill the connection list with new database connections if necessary
@@ -416,7 +418,7 @@ class MysqlDatasource(object):
                 "WHERE id = "+str(event["id"])
         self.execute(query, self.out.transform(event), no_result=True)
         
-    def execute(self, query, args = (), no_result=False, cursor=None):
+    def execute(self, query, args = (), no_result=False, cursor=None, retry=0):
         """ Performs an arbitary sql query on this mysql datasource
     
         If no_result is given, no fetch operation is executed after the query.
@@ -436,13 +438,26 @@ class MysqlDatasource(object):
                     self.check_spool = True
                 
             except MySQLdb.OperationalError, e:
+                logging.warn("Query failed: %s (%s try of %s)",e, retry, MAX_INSERT_TRIES)
+
                 if conn == self.spool:
                     raise
+                if retry < MAX_INSERT_TRIES:
+                    self.release_connection(conn)
+                    logging.warn("Reconnecting to mysql")
+                    self.close(True)
+                    self.connect()
+                    logging.warn("Retry query")
+                    useCursor = None
+                    if cursor_given:
+                        useCursor = cursor
+                    return self.execute(query, args, no_result, useCursor, retry+1)
+
                 self.check_spool = True
                 if self.spool:
+                    logging.warn("Max tries reached, adding %s (%s) to spool",query, args)
                     self.spool.execute(query, args)
-                
-                logging.warn("Query failed: %s" % e)
+
                 return ()
             
             if not no_result:
@@ -655,7 +670,7 @@ class MysqlDatasource(object):
         """ Returns a database connection to the database connection pool
 
         """
-        if not conn.open:
+        if conn == None or not conn.open:
             conn = self.get_new_connection()
         self.connections.put(conn)
     

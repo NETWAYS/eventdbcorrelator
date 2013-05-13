@@ -47,6 +47,25 @@ class DBTransformerMock(object):
         }
     
 
+class FailCursor(MySQLdb.cursors.Cursor):
+    """ Cursor mock that inserts after the third try
+
+    """
+    tries = 0
+
+    def __init__(self, conn):
+        super(FailCursor,self).__init__(conn)
+        self.executed = []
+
+
+    def execute(self, query, args):
+        if FailCursor.tries > 0:
+            err = MySQLdb.OperationalError()
+            FailCursor.tries -= 1
+            raise err
+
+        return super(FailCursor,self).execute(query,args)
+
 #
 # Your database requires read, write, create amd drop permissions for the user given here.
 # 
@@ -271,7 +290,6 @@ class MysqlDatasourceTest(unittest.TestCase):
             ev = Event(message="test", additional = {
                 "host_address": ip_address.IPAddress("192.168.178.56"),
                 "program" : "test_program",
-
                 "priority" : 0,
                 "facility" : 0,
                 "active" : 1,
@@ -299,3 +317,30 @@ class MysqlDatasourceTest(unittest.TestCase):
         except:
             pass
         pass
+
+    def test_mysql_gone_bug_2053(self):
+        """
+        Tests Create, Read, Update and Delete operations on this datasource.
+        Not really an atomic test, but should do the job
+        """
+
+        try:
+            self.source.test_setup_db()
+            self.source.cursor_class = FailCursor
+            test_event = Event(message = "testmessage", additional = {
+                "host_address" : ip_address.IPAddress("192.168.178.56"),
+                "program" : "test_program"
+            })
+            # Create
+            assert self.source.insert(test_event) == "OK"
+            assert test_event["id"]
+
+            # Read
+            ev_from_db = self.source.get_event_by_id(test_event["id"])
+            assert ev_from_db.message == "testmessage"
+            assert ev_from_db["host_address"] == ip_address.IPAddress("192.168.178.56")
+            assert ev_from_db["id"] == test_event["id"]
+
+        finally:
+            self.source.test_teardown_db()
+
