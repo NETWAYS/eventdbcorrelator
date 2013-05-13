@@ -688,6 +688,7 @@ String transformers take raw string input and convert them events using a regula
 ----------------------------------------------------------------
 
 **Parameters**
+
 	* **defaultmessage**: If no message is defined, this message (normally 'No message given') is used
 	* **dateformat**: The format to use for the date string
 	* **format**: A regular expression extracting the important event properties of an event with named matching groups. You can define any property you want, but persisted properties are per default:
