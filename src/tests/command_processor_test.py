@@ -18,8 +18,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
 import unittest
+import pwd
 import os
-import sys
 from processors import CommandProcessor
 import logging
 
@@ -136,7 +136,7 @@ class CommandProcessorTest(unittest.TestCase):
 
             proc.process(event1)
             assert proc.remote_address == "localhost"
-            assert proc.remote_user == os.getlogin()
+            assert proc.remote_user == pwd.getpwuid(os.getuid())[0]
             assert proc.remote_port == "22"
 
         finally:

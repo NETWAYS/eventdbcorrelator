@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import threading
 import time
 import os
+import pwd
 import logging
 import re
 import subprocess
@@ -74,7 +75,7 @@ class CommandProcessor(object):
             else:
                 self.remote_address = config["remote_address"]
                 if not "remote_user" in config:
-                    self.remote_user = os.getlogin()
+                    self.remote_user = pwd.getpwuid(os.getuid())[0]
                     logging.warn("remote_user directive not set, using %s as default", self.remote_user)
                 else:
                     self.remote_user = config["remote_user"]
