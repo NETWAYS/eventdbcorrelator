@@ -61,17 +61,6 @@ class Controller:
         self.chainFactory = ChainFactory()
         self.chainFactory.read_config_file(self.config["chain_dir"],self.instances)
 
-    def __restart(self,thread):
-        thread.stop()
-        logging.warn("Thread %s died, going to restart it" % thread)
-        self.instances.register(thread.id, thread.base_config)
-        receptor = self.instances["receptor"][thread.id]
-        if receptor.config["format"] != None:
-            receptor.config["transformer"] = receptor.config["format"]
-        receptor.start()
-        self.threads.remove(thread)
-        self.threads.append(receptor)
-
 
     def __start_and_wait(self):
         """ starts the receptors and waits for thread termination
@@ -87,9 +76,6 @@ class Controller:
                 logging.warn("Unmatched dependencies found : %s",self.instances.deferred)
             while True:
                 for thread in self.threads:
-                    if not thread.is_alive():
-                        self.__restart(thread)
-
                     thread.join(5)
 
         except Exception, e:
