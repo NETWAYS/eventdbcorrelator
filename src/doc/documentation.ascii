@@ -129,6 +129,21 @@ Setting up the database connection
 If you need to change the database connection (although it can be defined in the ./configure flags) go to the etc/conf.d/database.cfg
 file. The values should be self-explanatory, but are discussed in detail in <<datasource-ref>>.
 
+Setting up Syslog
+~~~~~~~~~~~~~~~~~
+
+When edbc is installed, a running syslog agent is enabled which creates a pipe at ./edbc/var/edbc-syslog.pipe. You now need
+to configure two files:
+- Your syslog config, so messages are forwarded to this pipe
+- The syslog transformer underneath edbc/etc/conf.d/syslog.cfg
+
+There are two transformer types that can typically be used: <<string-transformer-ref, string>> or <<split-transformer-ref,split>>.
+While the split transformer expects a character seperated message (per default tab seperated), the string transformer allows you to
+define a (python flavour) regular expression that extracts the parts from the message. Also, date formats differ from system to
+system, so make sure you configure the dateformat parameter correctly. Take a look at the syslog.conf for a few examples or
+dive into the <<transformer-ref, transformer reference>>!
+
+
 Setting up SNMP
 ~~~~~~~~~~~~~~~~
 
