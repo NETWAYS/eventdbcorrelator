@@ -42,9 +42,9 @@ class Edbc(object):
             print >> sys.stderr, 'WARNING: Your python version does not have IPv6 support enabled!'
 
         self.config = DaemonConfiguration()
-        self.__setup_logging()
         if self.config["foreground"] == False:
             self.__daemonize()
+        self.__setup_logging()
 
         self.instances = InstanceFactory(self.config)
         controller.Controller(self.config, self.instances)
