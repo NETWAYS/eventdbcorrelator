@@ -92,8 +92,10 @@ class MySQLDataSourceSpoolTest(unittest.TestCase):
             ds.setup("testspool", {
             })
             self.source.spool = ds
+            self.source.cursor_class = HistoryCursor
+
             # NoOpCursorMock always crashes on execute, so the next queries are 
-            # hopefully written to spool 
+            # hopefully written to spool (although they will be written to the db in the next execute)
             cursor = NoOpCursorMock()
             self.source.execute("SELECT %s FROM DUAL", (1), cursor=cursor)
             self.source.execute("SELECT %s FROM DUAL", (2), cursor=cursor)
@@ -105,12 +107,12 @@ class MySQLDataSourceSpoolTest(unittest.TestCase):
             assert self.source.check_spool == True
             
             # Now use a working cursor
-            self.source.cursor_class = HistoryCursor
             self.source.execute("SELECT * FROM %s " % self.source.table)
 
             # Check if the spool is empty and if there are 5 entries in the DB history
             assert self.source.check_spool == False
             assert len(self.source.spool.buffer) == 0
+            print CURSOR_STATIC_HISTORY
             assert len(CURSOR_STATIC_HISTORY) == 5
             
         finally:
@@ -143,8 +145,7 @@ class MySQLDataSourceSpoolTest(unittest.TestCase):
                 "spool_filename" : SPOOL_NAME
             })
             self.source.spool = ds
-            
-
+            self.source.cursor_class = HistoryCursor
             
             cursor = NoOpCursorMock()
             self.source.execute("SELECT %s FROM DUAL", (5), cursor=cursor)
@@ -155,8 +156,7 @@ class MySQLDataSourceSpoolTest(unittest.TestCase):
             assert len(ds.buffer) == 0
             assert self.source.check_spool == True
             
-            self.source.cursor_class = HistoryCursor
-            self.source.execute("SELECT * FROM %s " % self.source.table)            
+            self.source.execute("SELECT * FROM %s " % self.source.table)
             assert self.source.check_spool == False
             assert len(self.source.spool.buffer) == 0
             assert len(CURSOR_STATIC_HISTORY) == 5
