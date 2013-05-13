@@ -1037,7 +1037,11 @@ This processor writes a "[TIME] MESSAGE" string into a defined pipe and can be u
 	* **matcher**: A <<matcher-syn>> that determines if the processor is called 
 	* **format** : The format of the message to fire, ($NAME is replaced with matcher tokens, #NAME with event fields)
 	* **pipe**   : The pipe to write the message to. If seperated by ';', multiple pipes can be defined
-
+    * **use_ssh** : Allows to send commands to the pipe on a different host via ssh. You need to setup key authentication to use this feature
+    * **remote_host** : The host to use for ssh authentication (required)
+    * **remote_port** : The port to use for ssh authentication (default: 22)
+    * **remote_user** : The user to use for authenticating at the remote endpoint. If none given, the current login name of the user running the edbc process is used
+    * **ssh_bin**   : The ssh binary to use (default: 'ssh')
 **Return codes**
 	
 	* **PASS** : The matcher didn't match the event or there was a setup error (no format or pipe)
