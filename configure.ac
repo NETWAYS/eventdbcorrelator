@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT('EDBC', 0.1.0beta, 'jannis.mosshammer@netways.de')
+AC_INIT("EDBC", 0.1.0, "jannis.mosshammer@netways.de")
 AC_PREFIX_DEFAULT(/usr/local/edbc)
 
 
@@ -25,15 +25,6 @@ AC_PROG_MAKE_SET
 # Checks for typedefs, structures, and compiler characteristics.
 
 # Checks for library functions.
-
-
-AC_SUBST(db_host)
-AC_SUBST(db_port)
-AC_SUBST(db_name)
-AC_SUBST(db_user)
-AC_SUBST(db_pass)
-AC_SUBST(bin_user)
-AC_SUBST(bin_group)
 
 
 AC_ARG_WITH([bin_user],
@@ -78,6 +69,38 @@ AC_ARG_WITH([db_pass],
     db_pass=eventdb
 )
 
+AC_ARG_WITH([lock_dir],
+    AS_HELP_STRING([--with-lock-dir=DIR], [Directory to use for storing the lockfile when using as a system daemon (default: $prefix/var)]),
+    lock_dir=$withval,
+    lock_dir=`readlink -m $prefix/var/`
+)
+
+AC_ARG_WITH([pid_dir],
+    AS_HELP_STRING([--with-pid-dir=DIR], [Directory to use for storing the pidfile when using as a system daemon (default: /var/run/)]),
+    pid_dir=$withval,
+    pid_dir=/var/run
+)
+
+AC_ARG_WITH([log_file],
+    AS_HELP_STRING([--with-log-file=FILE], [Filename to use for logging when running as a system daemon (default: $prefix/var/edbc.log)]),
+    log_dir=$withval,
+    log_dir=`readlink -m $prefix/var/run/`
+)
+
+AC_SUBST(db_host)
+AC_SUBST(db_port)
+AC_SUBST(db_name)
+AC_SUBST(db_user)
+AC_SUBST(db_pass)
+AC_SUBST(bin_user)
+AC_SUBST(bin_group)
+AC_SUBST(lock_dir)
+AC_SUBST(pid_dir)
+AC_SUBST(log_file)
+
+
+
+
 
 AC_CONFIG_FILES([
     Makefile
@@ -91,6 +114,7 @@ AC_CONFIG_FILES([
     etc/conf.d/syslog.cfg
     etc/edbc.cfg
     bin/edbc
+    bin/edbc.rc
 ])
 
 AC_OUTPUT

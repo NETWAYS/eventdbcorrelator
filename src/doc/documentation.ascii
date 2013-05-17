@@ -688,6 +688,7 @@ String transformers take raw string input and convert them events using a regula
 ----------------------------------------------------------------
 
 **Parameters**
+
 	* **defaultmessage**: If no message is defined, this message (normally 'No message given') is used
 	* **dateformat**: The format to use for the date string
 	* **format**: A regular expression extracting the important event properties of an event with named matching groups. You can define any property you want, but persisted properties are per default:
@@ -771,11 +772,14 @@ Additionally, the "$_*" operator was added to FORMAT, which prepends a newline t
 
  
 	* **fixed**: A comma seperated key=value list defining which properties are set as constants
-
+    * **process_unknown**: When set to 'True', traps without a mib definition will be processed true. The default is set to False, therefore ignoring uknown traps
+    * **unknown_format**: The format to use when process_unknown is set to true (default: $_*)
+    * **unknown_priority**: The priority to use when process_unknown is set to true (default: 7)
 NOTE: The oids of the trap can be accessed in the matcher via snmp_var_.x.y.z... and the trap oid can be accessed via trap_oid, so an aggregator could use
 for example 'trap_oid IS "0.1.2.3.4.5.6.7.8" and snmp_var_.6.4.23.6.3.7.8. CONTAINS "switch" '.
 
 [[mail-transformer-ref]]
+
 
 .MailTransformer *(type: mail)*
 
@@ -1034,7 +1038,11 @@ This processor writes a "[TIME] MESSAGE" string into a defined pipe and can be u
 	* **matcher**: A <<matcher-syn>> that determines if the processor is called 
 	* **format** : The format of the message to fire, ($NAME is replaced with matcher tokens, #NAME with event fields)
 	* **pipe**   : The pipe to write the message to. If seperated by ';', multiple pipes can be defined
-
+    * **use_ssh** : Allows to send commands to the pipe on a different host via ssh. You need to setup key authentication to use this feature
+    * **remote_host** : The host to use for ssh authentication (required)
+    * **remote_port** : The port to use for ssh authentication (default: 22)
+    * **remote_user** : The user to use for authenticating at the remote endpoint. If none given, the current login name of the user running the edbc process is used
+    * **ssh_bin**   : The ssh binary to use (default: 'ssh')
 **Return codes**
 	
 	* **PASS** : The matcher didn't match the event or there was a setup error (no format or pipe)

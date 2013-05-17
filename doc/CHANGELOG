@@ -1,2 +1,8 @@
 0.1.0:
+    - Added unknown trap handling
+    - Fixed issue in mysql reconnection
+    - New edbc.rc script (thx david mikulski)
+    - SSH support for SSH Processor
+    - A few smaller bugfixes, see git log for full changelog 
+0.1.0beta:
     - Initial Release Candidate

@@ -18,8 +18,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
 import unittest
+import pwd
 import os
 from processors import CommandProcessor
+import logging
 
 PIPE_LOCATION = "/tmp/test.pipe"
 
@@ -109,5 +111,33 @@ class CommandProcessorTest(unittest.TestCase):
             f.seek(0)
             line = f.readline()
             assert line.endswith("1 : 5 - TEST123\n")
+        finally:
+            self.remove_temporary_file()
+
+    def test_ssh_command_submit_default_user(self):
+        try:
+            f = open(PIPE_LOCATION,"w+")
+            proc = CommandProcessor()
+            proc.setup("test",{
+                "pipe": PIPE_LOCATION,
+                "matcher" : "message REGEXP 'Testmessage from host (?P<HOST>\w+) received'",
+                "format" : "#priority : #anotherfield - $HOST",
+                "uppercasetokens": True,
+                "use_ssh" : True,
+                "ssh_bin" : "echo",
+                "remote_address" : 'localhost'
+            })
+
+            event1 = {
+                "message" : 'Testmessage from host test123 received',
+                "priority" : 1,
+                'anotherfield' : 5
+            }
+
+            proc.process(event1)
+            assert proc.remote_address == "localhost"
+            assert proc.remote_user == pwd.getpwuid(os.getuid())[0]
+            assert proc.remote_port == "22"
+
         finally:
             self.remove_temporary_file()
