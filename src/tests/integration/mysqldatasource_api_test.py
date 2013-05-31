@@ -4,7 +4,7 @@ import pickle
 import os
 import time
 
-from api.check_api import CheckApi
+from receptors.checkapi_receptor import CheckapiReceptor
 from datasource import MysqlDatasource
 from event import Event
 from network import ip_address
@@ -23,11 +23,11 @@ class MySQLDatasourceApiTest(unittest.TestCase):
         self.source = MysqlDatasource()
         dbsetup = SETUP_DB
         dbsetup["transform"] = DBTransformerMock()
-        self.api = CheckApi()
+        self.api = CheckapiReceptor()
         self.api.setup("testapi",{
-            "pass" : "mypass123",
-            "path" : SOCK_LOCATION,
-            "db"   : self.source
+            "pass"        : "mypass123",
+            "path"        : SOCK_LOCATION,
+            "datasource"  : self.source
         })
         self.source.setup("test", dbsetup)
 

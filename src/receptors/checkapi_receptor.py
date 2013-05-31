@@ -2,7 +2,6 @@ from _socket import SOCK_DGRAM
 import logging
 from api.check_api_command_handler import CheckApiCommandHandler
 from api.check_command import CheckCommand
-from receptors.pipe_receptor import PipeReceptor
 import select
 import pickle
 import socket
@@ -36,7 +35,7 @@ class RequestHandler(threading.Thread):
 
 
 
-class CheckApi(threading.Thread):
+class CheckapiReceptor(threading.Thread):
 
     def setup(self, _id, config):
         """ Default setup method as called by the InstanceFactroy, sets up the pipe
@@ -55,14 +54,15 @@ class CheckApi(threading.Thread):
             "commandCls" : CheckCommand
         }
 
-        if not "db" in config:
+        if not "datasource" in config:
+            logging.error("Non operational api, as no datasource is given. This will crash.")
             return
-        self.config["db"] = config["db"]
+        self.config["datasource"] = config["datasource"]
 
         if "commandHandler" in config:
-            self.config["commandHandler"] = config["commandHandler"](config["db"])
+            self.config["commandHandler"] = config["commandHandler"](config["datasource"])
         else:
-            self.config["commandHandler"] = CheckApiCommandHandler(config["db"])
+            self.config["commandHandler"] = CheckApiCommandHandler(config["datasource"])
 
         self.run_flags = os.O_RDONLY|os.O_NONBLOCK
         for key in config.keys():
@@ -105,7 +105,7 @@ class CheckApi(threading.Thread):
         if "noThread" in self.config: # this is only for testing
             #logging.debug("Threading disabled for PipeReceptor")
             return self.run()
-        return super(CheckApi, self).start()
+        return super(CheckapiReceptor, self).start()
 
     def run(self):
         self.running = True
