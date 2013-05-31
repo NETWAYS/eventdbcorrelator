@@ -20,3 +20,4 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from pipe_receptor import *
 from snmp_receptor import *
 from mail_receptor import *
+from checkapi_receptor import *

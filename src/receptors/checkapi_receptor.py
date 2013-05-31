@@ -19,20 +19,23 @@ class RequestHandler(threading.Thread):
     def run(self):
 
         msg = self.client.recv(self.config["bufferSize"])
-        if not msg == "":
-            cmd = self.config["commandCls"](msg)
-            if cmd.valid:
-                result = self.config["commandHandler"].handle(cmd)
-                self.client.send(pickle.dumps({
-                    "total" : result[0][0],
-                    "last_id" : result[0][1],
-                    "nr_of_warnings" : result[0][2],
-                    "nr_of_criticals" : result[0][3]
-                }))
+        try:
+            if not msg == "":
+                cmd = self.config["commandCls"](msg)
+                if cmd.valid:
+                    result = self.config["commandHandler"].handle(cmd)
+                    self.client.send(pickle.dumps(result))
+                else:
+                    self.client.send(pickle.dumps({
+                        "error" : "Invalid request send"
+                    }))
+        except Exception, e:
+            logging.error(e)
+            self.client.send(pickle.dumps({
+                "error" : e
+            }))
+
         self.client.close()
-
-
-
 
 
 class CheckapiReceptor(threading.Thread):

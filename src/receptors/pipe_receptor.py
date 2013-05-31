@@ -129,7 +129,11 @@ class PipeReceptor(AbstractReceptor):
         buffersize = self.config["bufferSize"]
         self.last_part = ""
         while self.running:
-            inPipes, pout, pex = select.select([self.pipe], [], [], 3)
+            try:
+                inPipes, pout, pex = select.select([self.pipe], [], [], 3)
+            except Exception, exc:
+                if self.running:
+                    raise exc
 
             if len(inPipes) > 0:
                 pipe = inPipes[0]

@@ -25,7 +25,6 @@ class MySQLDatasourceApiTest(unittest.TestCase):
         dbsetup["transform"] = DBTransformerMock()
         self.api = CheckapiReceptor()
         self.api.setup("testapi",{
-            "pass"        : "mypass123",
             "path"        : SOCK_LOCATION,
             "datasource"  : self.source
         })

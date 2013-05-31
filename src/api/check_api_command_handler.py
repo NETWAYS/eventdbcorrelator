@@ -12,7 +12,20 @@ class CheckApiCommandHandler(object):
     def handle(self, command):
         query, params = self.build_query(command)
         logging.warn("Query: %s with %s ",query, params)
-        return self.db.execute(query,params)
+        try:
+            result =  self.db.execute(query,params)
+        except Exception, e:
+            return {
+                "error" : e
+            }
+        if len(result) < 1:
+            result = ((0,0,0,0))
+        return {
+            "total" : result[0][0],
+            "last_id" : result[0][1],
+            "nr_of_warnings" : result[0][2],
+            "nr_of_criticals" : result[0][3]
+        }
 
 
     def build_query(self, cmd):
@@ -35,7 +48,7 @@ class CheckApiCommandHandler(object):
             params += cmd["facility"]
 
         if cmd["logtype"] is not None:
-            query += " AND logtype IN (%s)" % self.get_in_placeholder_for(cmd["logtype"])
+            query += " AND type IN (%s)" % self.get_in_placeholder_for(cmd["logtype"])
             params += cmd["logtype"]
 
         if cmd["maxage"] is not None:

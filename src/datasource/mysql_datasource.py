@@ -27,9 +27,9 @@ from event import Event
 import logging
 from datasource import db_transformer
 import time
-
-LOCATION_SETUP_SCHEME = "../../database/mysql_create.sql"
-LOCATION_TEARDOWN_SCHEME = "../../database/mysql_teardown.sql"
+import os
+LOCATION_SETUP_SCHEME = os.path.dirname(__file__)+"/../database/mysql_create.sql"
+LOCATION_TEARDOWN_SCHEME = os.path.dirname(__file__)+"/../database/mysql_teardown.sql"
 MAX_INSERT_TRIES = 5
 
 class MysqlGroupCache(object):
