@@ -11,7 +11,9 @@ class CheckCommand(object):
     """
 
     def __init__(self, string):
-        self.command_definition = {}
+        self.command_definition = {
+            "startfrom" : 0
+        }
         self.valid = True
         self.parse_message(string)
 
@@ -30,6 +32,11 @@ class CheckCommand(object):
         if priority == "" or re.match("^(\d+,{0,1})+$", priority) is None:
             return None
         return map(int, priority.split(','))
+
+    def parse_field_startfrom(self, startfrom):
+        if startfrom == "":
+            return 0
+        return int(startfrom)
 
     def parse_field_maxage(self, maxage):
         if maxage == "":

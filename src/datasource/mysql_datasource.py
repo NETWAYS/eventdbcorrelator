@@ -28,8 +28,8 @@ import logging
 from datasource import db_transformer
 import time
 
-LOCATION_SETUP_SCHEME = "./database/mysql_create.sql"
-LOCATION_TEARDOWN_SCHEME = "./database/mysql_teardown.sql"
+LOCATION_SETUP_SCHEME = "../../database/mysql_create.sql"
+LOCATION_TEARDOWN_SCHEME = "../../database/mysql_teardown.sql"
 MAX_INSERT_TRIES = 5
 
 class MysqlGroupCache(object):
@@ -185,6 +185,7 @@ class MysqlDatasource(object):
         self.check_spool = True
         self.flush_pending = False
         self.spool = None
+        self.is_torn_down = False
         self.flush_lock = threading.Lock()
 
     def setup(self, _id, config):
@@ -234,11 +235,13 @@ class MysqlDatasource(object):
             self.out = config["transform"]
         else:
             self.out = db_transformer.DBTransformer()
-         
+
+
         self.connect()
         try:
             self._fetch_active_groups()
             self.fetch_last_id()
+
         except Exception, exc:
             logging.warn("DB setup failed: %s "+
                 "(maybe the database is not set up correctly ?)", exc)
@@ -302,7 +305,7 @@ class MysqlDatasource(object):
         for line in sql_file:
             setup_sql += "%s" % line
         self.execute(setup_sql)        
-
+        self.is_torn_down = True
     
     def test_clear_db(self):
         """ Test method that sets up a clean database
@@ -438,7 +441,7 @@ class MysqlDatasource(object):
                     self.check_spool = True
                 
             except MySQLdb.OperationalError, e:
-                logging.warn("Query failed: %s (%s try of %s)",e, retry, MAX_INSERT_TRIES)
+                logging.warn("Query failed: %s (%s try of %s)", e, retry, MAX_INSERT_TRIES)
 
                 if conn == self.spool:
                     raise
@@ -647,9 +650,16 @@ class MysqlDatasource(object):
         try: 
             self.group_cache.flush_to_db(conn, self.table)
             self.flush_exec_queue(conn)
-        finally:
-            self.release_connection(conn)
-            self.flush_pending = False
+        except MySQLdb.ProgrammingError, err:
+            if self.is_torn_down:
+                pass
+            else:
+                logging.error("Error during flush: %s ", err)
+        except Exception, exc:
+            logging.error("Error during flush: %s ", exc)
+
+        self.release_connection(conn)
+        self.flush_pending = False
 
     def flush(self):
         """ Triggers a flush after flush_interval seconds

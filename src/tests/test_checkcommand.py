@@ -93,6 +93,17 @@ class CheckCommandTest(unittest.TestCase):
         self.assertEquals([1,2,3,6], command["prio_warning"])
         self.assertEquals([4,5,6], command["prio_critical"])
 
+    def test_ip_address(self):
+        ''' Not a real unit test, as it depends on IPAddress...
+        '''
+        command = CheckCommand("ipaddress=127.0.0.1")
+        self.assertNotEquals(None, command["ipaddress"])
+        self.assertEquals(
+            '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01',
+            command["ipaddress"]
+        )
+
+
     def test_ack_parsing(self):
         command = CheckCommand("ack=1")
         self.assertEquals(1, command["ack"])
