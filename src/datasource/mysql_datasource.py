@@ -222,10 +222,9 @@ class MysqlDatasource(object):
             self.spool = None
         
         if "poolsize" in config:
-            self.poolsize = config["poolsize"]
-       
-        #TODO: Pooling causes deadlocks at this time, so always ignore it
-        self.poolsize = 1
+            self.poolsize = int(config["poolsize"])
+        else:
+            self.poolsize = 1
             
         if "table" in config:
             self.table = config["table"]
@@ -258,6 +257,12 @@ class MysqlDatasource(object):
             if c :
                 self.connections.put(c)
                 self.available_connections.append(c)
+            else :
+                logging.error("Could not acquire mysql connection, waiting for 3 seconds")
+                i -= 1
+                time.sleep(3)
+                logging.error("Retrying to connect")
+
 
 
     def _fetch_active_groups(self):
@@ -460,6 +465,8 @@ class MysqlDatasource(object):
                 if self.spool:
                     logging.warn("Max tries reached, adding %s (%s) to spool",query, args)
                     self.spool.execute(query, args)
+                else:
+                    logging.warn("Max tries reached, giving up")
 
                 return ()
             
@@ -583,7 +590,7 @@ class MysqlDatasource(object):
             )
             return conn
         except MySQLdb.OperationalError, oexc:
-            logging.error(oexc)
+            logging.error("Fetching new connection failed: %s", oexc)
             return
     
     def fetch_last_id(self, cursor = None, step=0):
@@ -680,10 +687,16 @@ class MysqlDatasource(object):
         """ Returns a database connection to the database connection pool
 
         """
-        if conn == None or not conn.open:
-            conn = self.get_new_connection()
-        self.connections.put(conn)
-    
+        while True:
+            if conn == None or not conn.open:
+                conn = self.get_new_connection()
+            if conn is None:
+                logging.error("Could not acquire mysql, connection waiting for 3 seconds")
+                time.sleep(3)
+                logging.error("Retrying to connect")
+            else:
+                self.connections.put(conn)
+                break
     def process(self, event):
         """ Standard chain element process method - triggers insert()
 
