@@ -11,7 +11,6 @@ class CheckApiCommandHandler(object):
 
     def handle(self, command):
         query, params = self.build_query(command)
-        logging.warn("Query: %s with %s ",query, params)
         try:
             result =  self.db.execute(query,params)
         except Exception, e:
@@ -20,12 +19,21 @@ class CheckApiCommandHandler(object):
             }
         if len(result) < 1:
             result = ((0,0,0,0))
-        return {
+        db_result = {
             "total" : result[0][0],
             "last_id" : result[0][1],
             "nr_of_warnings" : result[0][2],
-            "nr_of_criticals" : result[0][3]
+            "nr_of_criticals" : result[0][3],
+            "message" : None
         }
+        if not db_result["last_id"] is None:
+            message = self.db.execute(
+                "SELECT message FROM "+self.db.table+" WHERE id = %s",
+                [db_result["last_id"]]
+            )
+            if len(message) > 0:
+                db_result["message"] = message[0][0]
+        return db_result
 
 
     def build_query(self, cmd):

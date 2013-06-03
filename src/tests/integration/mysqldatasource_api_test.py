@@ -78,7 +78,7 @@ class MySQLDatasourceApiTest(unittest.TestCase):
             self.assertEquals(6, result["last_id"])
             self.assertEquals(6, result["nr_of_warnings"])
             self.assertEquals(6, result["nr_of_criticals"])
-
+            self.assertEquals("testmessage4", result["message"])
         finally:
             self.shutdown()
 
@@ -94,6 +94,7 @@ class MySQLDatasourceApiTest(unittest.TestCase):
             self.assertEquals(6, result["last_id"])
             self.assertEquals(3, result["nr_of_warnings"])
             self.assertEquals(3, result["nr_of_criticals"])
+            self.assertEquals("testmessage4", result["message"])
         finally:
             self.shutdown()
 
@@ -109,6 +110,7 @@ class MySQLDatasourceApiTest(unittest.TestCase):
             self.assertEquals(4, result["last_id"])
             self.assertEquals(4, result["nr_of_warnings"])
             self.assertEquals(4, result["nr_of_criticals"])
+            self.assertEquals("testmessage6", result["message"])
         finally:
             self.shutdown()
 
@@ -124,6 +126,7 @@ class MySQLDatasourceApiTest(unittest.TestCase):
             self.assertEquals(4, result["last_id"])
             self.assertEquals(4, result["nr_of_warnings"])
             self.assertEquals(4, result["nr_of_criticals"])
+            self.assertEquals("testmessage6", result["message"])
         finally:
             self.shutdown()
 
@@ -139,6 +142,7 @@ class MySQLDatasourceApiTest(unittest.TestCase):
             self.assertEquals(6, result["last_id"])
             self.assertEquals(3, result["nr_of_warnings"])
             self.assertEquals(1, result["nr_of_criticals"])
+            self.assertEquals("testmessage4", result["message"])
         finally:
             self.shutdown()
 
@@ -154,6 +158,7 @@ class MySQLDatasourceApiTest(unittest.TestCase):
             self.assertEquals(6, result["last_id"])
             self.assertEquals(3, result["nr_of_warnings"])
             self.assertEquals(3, result["nr_of_criticals"])
+            self.assertEquals("testmessage4", result["message"])
         finally:
             self.shutdown()
 
@@ -169,6 +174,7 @@ class MySQLDatasourceApiTest(unittest.TestCase):
             self.assertEquals(6, result["last_id"])
             self.assertEquals(3, result["nr_of_warnings"])
             self.assertEquals(3, result["nr_of_criticals"])
+            self.assertEquals("testmessage4", result["message"])
         finally:
             self.shutdown()
 
@@ -184,6 +190,7 @@ class MySQLDatasourceApiTest(unittest.TestCase):
             self.assertEquals(6, result["last_id"])
             self.assertEquals(6, result["nr_of_warnings"])
             self.assertEquals(6, result["nr_of_criticals"])
+            self.assertEquals("testmessage4", result["message"])
             conn.close()
 
             conn = self.get_api_connection();
@@ -194,8 +201,7 @@ class MySQLDatasourceApiTest(unittest.TestCase):
             self.assertEquals(None, result["last_id"])
             self.assertEquals(0, result["nr_of_warnings"])
             self.assertEquals(0, result["nr_of_criticals"])
-
-
+            self.assertEquals(None, result["message"])
         finally:
             self.shutdown()
 
@@ -210,6 +216,7 @@ class MySQLDatasourceApiTest(unittest.TestCase):
             self.assertEquals(4, result["last_id"])
             self.assertEquals(4, result["nr_of_warnings"])
             self.assertEquals(4, result["nr_of_criticals"])
+            self.assertEquals("testmessage6", result["message"])
 
             conn = self.get_api_connection();
             conn.send("startfrom=0&ipaddress=192.168.178.59")
@@ -219,8 +226,7 @@ class MySQLDatasourceApiTest(unittest.TestCase):
             self.assertEquals(6, result["last_id"])
             self.assertEquals(2, result["nr_of_warnings"])
             self.assertEquals(2, result["nr_of_criticals"])
-
-
+            self.assertEquals("testmessage4", result["message"])
         finally:
             self.shutdown()
 
@@ -235,6 +241,7 @@ class MySQLDatasourceApiTest(unittest.TestCase):
             self.assertEquals(2, result["last_id"])
             self.assertEquals(2, result["nr_of_warnings"])
             self.assertEquals(2, result["nr_of_criticals"])
+            self.assertEquals("testmessage2", result["message"])
 
             conn = self.get_api_connection();
             conn.send("startfrom=0&program=test_program2")
@@ -245,6 +252,7 @@ class MySQLDatasourceApiTest(unittest.TestCase):
             self.assertEquals(6, result["last_id"])
             self.assertEquals(4, result["nr_of_warnings"])
             self.assertEquals(4, result["nr_of_criticals"])
+            self.assertEquals("testmessage4", result["message"])
 
             conn = self.get_api_connection();
             conn.send("startfrom=0&program=test_program2,test_program")
@@ -255,6 +263,7 @@ class MySQLDatasourceApiTest(unittest.TestCase):
             self.assertEquals(6, result["last_id"])
             self.assertEquals(6, result["nr_of_warnings"])
             self.assertEquals(6, result["nr_of_criticals"])
+            self.assertEquals("testmessage4", result["message"])
 
         finally:
             self.shutdown()

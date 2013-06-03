@@ -22,7 +22,9 @@ import re
 import sys
 import urllib
 from optparse import OptionParser
+import select
 
+MAX_EXEC_TIME = 3
 
 class CheckFilter(object):
 
@@ -216,15 +218,27 @@ class EventDBPlugin(object):
 
 
     def query_edbc(self):
-        #try:
-        socket = self.connect_to_edbc()
-        query = self.__checkFilter.to_query()
-        socket.send(query)
-        print pickle.loads(socket.recv(2048))
-        #except Exception, e:
-        #    self.__pluginExit('UNKNOWN', "",e)
+        try:
+            socket = self.connect_to_edbc()
+            query = self.__checkFilter.to_query()
+            socket.send(query)
+            avail_sockets = select.select([socket], [], [], MAX_EXEC_TIME)
+            if len(avail_sockets[0]) == 0:
+                raise Exception("Read timeout occured")
 
+            result = pickle.loads(socket.recv(4096))
+            if "error" in result:
+                raise Exception(result["error"])
+            self.__checkResult(
+                result["nr_of_warnings"],
+                result["nr_of_criticals"],
+                result["total"],
+                result["last_id"],
+                result["message"]
+            )
 
+        except Exception, e:
+            self.__pluginExit('UNKNOWN', "",e)
 
 
     def __checkResult(self,warnings,criticals,count, last,msg = ""):
