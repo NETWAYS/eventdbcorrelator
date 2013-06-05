@@ -28,4 +28,15 @@ class AbstractReceptor(threading.Thread):
         """ config contains the configuration from the cfg file defining your
             receptor
         """
+        self.id = id
+        self.config = config
+        pass
+
+    def register_queue(self, queue):
+        pass
+
+    def unregister_queue(self, queue):
+        pass
+
+    def stop(self):
         pass

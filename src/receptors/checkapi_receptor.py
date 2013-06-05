@@ -8,9 +8,10 @@ import socket
 import threading
 import pwd
 import os
+from receptors.abstract_receptor import AbstractReceptor
 
 
-class RequestHandler(threading.Thread):
+class RequestHandler(AbstractReceptor):
 
     def setup(self, client, config):
         self.client = client

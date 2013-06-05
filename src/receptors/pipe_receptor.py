@@ -134,6 +134,8 @@ class PipeReceptor(AbstractReceptor):
             except Exception, exc:
                 if self.running:
                     raise exc
+                else:
+                    return
 
             if len(inPipes) > 0:
                 pipe = inPipes[0]
@@ -145,6 +147,8 @@ class PipeReceptor(AbstractReceptor):
                     if e.errno == 11:
                         continue
                     else:
+                        if not self.running:
+                            return
                         raise e
                 if len(data_packet) == 0:
                     self.__reopen_pipe()
@@ -211,7 +215,8 @@ class PipeReceptor(AbstractReceptor):
         """ Closes and removes the pipe
 
         """
-        try: 
+        try:
+            self.running = False
             os.close(self.pipe)
         except:
             pass
@@ -228,6 +233,7 @@ class PipeReceptor(AbstractReceptor):
                 if os.path.exists(self.config["path"]):
                     fd = os.open(self.config["path"], os.O_WRONLY)
                     os.write(fd,"_")
+                    self.running = False
                     os.close(fd)
                     
                 self.__clean()

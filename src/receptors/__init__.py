@@ -21,3 +21,4 @@ from pipe_receptor import *
 from snmp_receptor import *
 from mail_receptor import *
 from checkapi_receptor import *
+from dummy_receptor import *
