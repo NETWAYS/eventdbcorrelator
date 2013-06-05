@@ -24,6 +24,7 @@ import urllib
 from optparse import OptionParser
 import select
 
+# Timeout after MAX_EXEC_TIME seconds
 MAX_EXEC_TIME = 3
 
 class CheckFilter(object):
@@ -100,6 +101,7 @@ class CheckFilter(object):
                 continue;
             queryParts.append("%s=%s" % (part, urllib.quote(str(self.__getattribute__(part)))))
         print queryParts
+
         return "&".join(queryParts)
 
 '''
