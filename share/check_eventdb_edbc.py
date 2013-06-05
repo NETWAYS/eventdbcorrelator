@@ -251,26 +251,26 @@ class EventDBPlugin(object):
             if(self.__options.resetregex and re.search(self.__options.resetregex,msg)):
                 return self.__pluginExit(
                     'OK',
-                    "%d critical and %d warning matches found\nMatches found already reseted." % (criticals,warnings),
+                    "%d critical and %d warning matches found, Matches found already reseted." % (criticals,warnings),
                     'matches=%d count=%dc' % (count or 0,last or 0)
                 )
             else:
                 return self.__pluginExit(
                     'CRITICAL',
-                    ("%d critical and %d warning matches found\n,") % (criticals,warnings) + msg,
+                    ("%d critical and %d warning matches found, ") % (criticals,warnings) + msg,
                     'matches=%d count=%dc' % (count or 0,last or 0)
                 )
         elif(warnings >= self.__options.warning):
             if(self.__options.resetregex  and re.search(self.__options.resetregex,msg)):
                 return self.__pluginExit(
                     'OK',
-                    "%d critical and %d warning matches found\nMatches found already reseted."% (criticals,warnings),
+                    "%d critical and %d warning matches found, Matches found already reseted."% (criticals,warnings),
                     'matches=%d count=%dc' % (count or 0,last or 0)
                 )
             else:
                 return self.__pluginExit(
                     'WARNING',
-                    ('%d critical and %d warning matches found \n,') % (criticals,warnings) + msg,
+                    ('%d critical and %d warning matches found, ') % (criticals,warnings) + msg,
                     'matches=%d count=%dc' % (count or 0,last or 0)
                 )
         else:
