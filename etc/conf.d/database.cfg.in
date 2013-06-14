@@ -7,4 +7,6 @@ table: 		event
 database:       @db_name@	
 user:		@db_user@
 password: 	@db_pass@
-
+# Uncomment for profiling
+#profiling:    True
+#profile_target: /tmp/edbc_profile.log

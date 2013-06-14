@@ -31,6 +31,7 @@ import os
 LOCATION_SETUP_SCHEME = os.path.dirname(__file__)+"/../database/mysql_create.sql"
 LOCATION_TEARDOWN_SCHEME = os.path.dirname(__file__)+"/../database/mysql_teardown.sql"
 MAX_INSERT_TRIES = 5
+PROFILE_TIMEFRAME = 2
 
 class MysqlGroupCache(object):
     """ Internal helper class for caching grouped event states
@@ -235,6 +236,21 @@ class MysqlDatasource(object):
         else:
             self.out = db_transformer.DBTransformer()
 
+        self.profile = False
+        try:
+            if "profile_target" in config:
+                self.profile_target = config["profile_target"]
+            else:
+                self.profile_target = "/tmp/edbc_db_profile.txt"
+
+            if "profiling" in config:
+                self.profile = True
+                self.profile_last_write = time.clock();
+                self.profile_current_values = {}
+                self.profile_file = open(self.profile_target, "w+")
+
+        except Exception, exc:
+            logging.warn("Could not setup profiling: %s", exc)
 
         self.connect()
         try:
@@ -254,15 +270,40 @@ class MysqlDatasource(object):
         
         for i in range(0, self.poolsize):
             c = self.get_new_connection()
+            if self.profile:
+                self.log_profile("Open connection")
             if c :
                 self.connections.put(c)
                 self.available_connections.append(c)
             else :
+                if self.profile:
+                    self.log_profile("Connection error")
                 logging.error("Could not acquire mysql connection, waiting for 3 seconds")
                 i -= 1
                 time.sleep(3)
                 logging.error("Retrying to connect")
 
+    def log_profile(self, mesg):
+        try:
+            if not mesg in self.profile_current_values:
+                self.profile_current_values[mesg] = 0
+            self.profile_current_values[mesg] += 1
+            lines = []
+            curtime = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime())
+            if time.clock() - self.profile_last_write > PROFILE_TIMEFRAME:
+                self.lock.acquire()
+                for msg in self.profile_current_values.keys():
+                    lines.append("%s\t%s\t%s\n" % (curtime, msg, self.profile_current_values[msg]))
+
+                self.profile_file.writelines(lines)
+                self.profile_file.flush()
+                self.profile_last_write = time.clock()
+                self.profile_current_values = {}
+
+                self.lock.release()
+        except Exception, e:
+            logging.error("Could not write to profile log: %s " % e)
+            self.lock.release()
 
 
     def _fetch_active_groups(self):
@@ -346,6 +387,8 @@ class MysqlDatasource(object):
                             "%(group_autoclear)s,%(group_leader)s);"
                         self.execute(query, self.get_event_params(event),
                                             no_result=True, cursor=cursor)
+                        if self.profile:
+                            self.log_profile("insert")
                         break
                     except MySQLdb.IntegrityError, exc:
                         # maybe another process wrote to the db and now
@@ -353,6 +396,9 @@ class MysqlDatasource(object):
                         # Refreshing the id from the db should fix that
                         #
                         # self.fetch_last_id(cursor=cursor, step=i*MAX_INSERT_TRIES)
+
+                        self.log_profile("insert error")
+
                         if i >= MAX_INSERT_TRIES-1:
                             raise exc
                         continue
@@ -439,13 +485,18 @@ class MysqlDatasource(object):
         try:
             if not cursor:
                 conn = self.acquire_connection()
+
                 cursor = self.cursor_class(conn)
             try:
                 cursor.execute(query, args)
+                if self.profile:
+                    self.log_profile("execute %s "  % (" ".split(query.strip())[0].upper().strip()))
                 if self.spool and conn == self.spool:
                     self.check_spool = True
                 
             except MySQLdb.OperationalError, e:
+                if self.profile:
+                    self.log_profile("exec error %s "  % (" ".split(query.strip())[0].upper().strip()))
                 logging.warn("Query failed: %s (%s try of %s)", e, retry, MAX_INSERT_TRIES)
 
                 if conn == self.spool:
@@ -622,6 +673,8 @@ class MysqlDatasource(object):
         """ 
         try:
             conn = self.connections.get(True, 3)
+            if self.profile:
+                self.log_profile("Acquire connnection")
             if not conn.open:
                 conn = self.get_new_connection()
             
@@ -693,8 +746,12 @@ class MysqlDatasource(object):
             if conn is None:
                 logging.error("Could not acquire mysql, connection waiting for 3 seconds")
                 time.sleep(3)
+                if self.profile:
+                    self.log_profile("reconnect connection")
                 logging.error("Retrying to connect")
             else:
+                if self.profile:
+                    self.log_profile("reclaim connection")
                 self.connections.put(conn)
                 break
     def process(self, event):
