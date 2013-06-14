@@ -90,7 +90,7 @@ class CheckapiReceptor(threading.Thread):
         if os.path.exists(self.config["path"]):
             os.unlink(self.config["path"])
         self.socket.bind(self.config["path"])
-        self.socket.listen(5)
+        self.socket.listen(30)
 
     def start(self, queue=[], cb=None):
         """ Starts the receptor in a new thread
