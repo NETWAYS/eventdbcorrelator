@@ -71,7 +71,7 @@ class CheckApiCommandHandler(object):
             query += " AND host_address = %s"
             params.append(cmd["ipaddress"])
 
-        if cmd["ack"] is not None:
+        if cmd["ack"] is None:
             query += " AND ack = 0"
         return query, params
 
