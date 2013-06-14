@@ -8,8 +8,17 @@
 .*
 Makefile
 **/Makefile
+config.log
+config.status
 etc/edbc.cfg
 etc/conf.d/database.cfg
+etc/conf.d/mail.cfg
+etc/conf.d/snmp.cfg
+etc/conf.d/syslog.cfg
 src/config/config.py
 src/receptors/snmp_receptor.py
 bin/edbc.py
+bin/edbc
+bin/edbc.rc
+
+

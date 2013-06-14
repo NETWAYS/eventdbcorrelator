@@ -64,19 +64,22 @@ class CheckApiCommandHandler(object):
 
 
         if cmd["program"] is not None:
-            query += " AND program IN (%s)" % self.get_in_placeholder_for(cmd["program"])
+            query += " AND (%s)" % self.get_like_in_placeholder_for("program",cmd["program"])
             params += cmd["program"]
 
         if cmd["ipaddress"] is not None:
             query += " AND host_address = %s"
             params.append(cmd["ipaddress"])
 
-        if cmd["ack"] is not None:
+        if cmd["ack"] is None:
             query += " AND ack = 0"
         return query, params
 
     def get_in_placeholder_for(self,ids):
         return ','.join(['%s'] * len(ids))
+
+    def get_like_in_placeholder_for(self,field,ids):
+        return ' OR '.join([field+' LIKE %s'] * len(ids))
 
     def get_count_field(self, values, field):
         if values is None:

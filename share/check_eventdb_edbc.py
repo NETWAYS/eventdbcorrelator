@@ -21,11 +21,11 @@ import time
 import re
 import sys
 import urllib
-from optparse import OptionParser
+from optparse import OptionParser, SUPPRESS_HELP
 import select
 
 # Timeout after MAX_EXEC_TIME seconds
-MAX_EXEC_TIME = 3
+MAX_EXEC_TIME = 15
 
 class CheckFilter(object):
 
@@ -64,9 +64,9 @@ class CheckFilter(object):
             return
         curTime = time.time()
         matches = re.match(r"(\d*?)(d|h|m)",maxage)
-        matchGroups = matches.groups()
-        if(len(matchGroups) != 2):
+        if(matches is None):
             raise Exception("Invalid maxage format")
+        matchGroups = matches.groups()
 
         timeOffset = int(matchGroups[0])
         # modify timestamp to represent the maximum age
@@ -77,8 +77,8 @@ class CheckFilter(object):
         elif(matchGroups[1] == 'm'):
             curTime = curTime-timeOffset*60
 
-        self.startTimestamp = curTime
-        self.maxage = curTime
+        self.startTimestamp = int(curTime)
+        self.maxage = int(curTime)
 
     def setPerfdata(self,perfdata):
         if perfdata == None:
@@ -89,11 +89,11 @@ class CheckFilter(object):
 
     def to_query(self):
         query = ""
-        queryAttributes = {
-            "logtype","facility","priority", "startfrom", "maxage", "message",
+        queryAttributes = [
+            "logtype", "facility","priority", "startfrom", "maxage", "message",
             "startTimestamp", "prio_critical", "prio_warning", "program", "ipaddress",
             "host"
-        }
+        ]
         queryParts = []
         for part in queryAttributes:
             if self.__getattribute__(part) is None \
@@ -127,28 +127,30 @@ class EventDBPlugin(object):
 
 
     def __prepareArguments(self):
-        self.__handleArguments()
         if(self.__options.print_cv):
             print self.__getCVFilter()
             return
         try:
+            self.__handleArguments()
             self.__validateArguments()
 
-
         except Exception, e:
-            self.__pluginExit("UNKNOWN","Invalid Arguments",e)
+            self.__pluginExit("UNKNOWN","Invalid Arguments: %s" % e, "")
 
 
     def __runCheck(self):
         options = self.__options
 
-        #try:
-        result = self.query_edbc()
-        if(result):
-            self.__checkResult(result[2],result[3],result[0],result[1],result[4])
+        try:
+            result = self.query_edbc()
+            if(result):
+                self.__checkResult(result[2],result[3],result[0],result[1],result[4])
 
-        #except Exception, e:
-         #   self.__pluginExit("UNKNOWN","An error occured",e)
+        # explicitly raise a system exit over this catch
+        except SystemExit:
+            raise
+        except Exception, e:
+            self.__pluginExit("UNKNOWN","An error occured: %s" % e,"")
 
 
     def __handleArguments(self):
@@ -231,15 +233,18 @@ class EventDBPlugin(object):
             if "error" in result:
                 raise Exception(result["error"])
             self.__checkResult(
-                result["nr_of_warnings"],
-                result["nr_of_criticals"],
-                result["total"],
-                result["last_id"],
+                result["nr_of_warnings"] or 0,
+                result["nr_of_criticals"] or 0,
+                result["total"] or 0,
+                result["last_id"] or 0,
                 result["message"]
             )
 
+        # explicitly raise a system exit over this catch
+        except SystemExit:
+            raise
         except Exception, e:
-            self.__pluginExit('UNKNOWN', "",e)
+            self.__pluginExit("UNKNOWN","An error occured while trying to query EDBC: %s" % e,"")
 
 
     def __checkResult(self,warnings,criticals,count, last,msg = ""):
@@ -252,26 +257,26 @@ class EventDBPlugin(object):
                 return self.__pluginExit(
                     'OK',
                     "%d critical and %d warning matches found, Matches found already reseted." % (criticals,warnings),
-                    'matches=%d count=%dc' % (count or 0,last or 0)
+                    'matches=%d count=%dc' % (count,last)
                 )
             else:
                 return self.__pluginExit(
                     'CRITICAL',
                     ("%d critical and %d warning matches found, ") % (criticals,warnings) + msg,
-                    'matches=%d count=%dc' % (count or 0,last or 0)
+                    'matches=%d count=%dc' % (count,last)
                 )
         elif(warnings >= self.__options.warning):
             if(self.__options.resetregex  and re.search(self.__options.resetregex,msg)):
                 return self.__pluginExit(
                     'OK',
                     "%d critical and %d warning matches found, Matches found already reseted."% (criticals,warnings),
-                    'matches=%d count=%dc' % (count or 0,last or 0)
+                    'matches=%d count=%dc' % (count,last)
                 )
             else:
                 return self.__pluginExit(
                     'WARNING',
                     ('%d critical and %d warning matches found, ') % (criticals,warnings) + msg,
-                    'matches=%d count=%dc' % (count or 0,last or 0)
+                    'matches=%d count=%dc' % (count,last)
                 )
         else:
             return self.__pluginExit(
@@ -293,9 +298,12 @@ class EventDBPlugin(object):
             text = text.replace('\n', ' ')
         except Exception:
             pass
-        out += "%s %s %s" % (status,self.__options.label,text)
+        out += "%s " % status
+        if self.__options.label:
+            out += "%s " % self.__options.label
+        out += text
 
-        out += '|%s' % perfdata
+        out += ' | %s' % perfdata
         out += "\nmessage filter: %s" % self.__options.message
         out += "\nreset regexp: %s" % self.__options.resetregex
 
@@ -338,6 +346,9 @@ class EventDBPlugin(object):
         parser.add_option("--cventry",dest="print_cv", default=False,action="store_true",
                         help="returns the custom variable entry for this call (needed in order to use icinga-web cronk integration)")
 
+        # hidden option for backwards compatibility
+        parser.add_option("--ci",dest="messageci",action="store_true",help=SUPPRESS_HELP)
+
         (options, args) = parser.parse_args()
         return options;
 
@@ -366,3 +377,5 @@ if __name__ == "__main__":
 #         command_line            $USER1$/contrib/check_eventdb.pl --dbuser eventdbrw --dbpassword eventdbrw --url "/nagios/eventdb/index.php" -w $ARG1$ -c $ARG2$ -m "$ARG3$" "$ARG4$"
 # }
 
+
+# vi: expandtab ts=4 sw=4 :

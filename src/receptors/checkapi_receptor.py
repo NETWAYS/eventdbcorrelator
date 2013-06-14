@@ -113,7 +113,6 @@ class CheckapiReceptor(threading.Thread):
 
     def run(self):
         self.running = True
-        self.thread = threading.current_thread()
         while self.running:
             try:
                 client = RequestHandler()

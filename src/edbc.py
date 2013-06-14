@@ -46,6 +46,8 @@ class Edbc(object):
             self.__daemonize()
         self.__setup_logging()
 
+        logging.info("Starting daemon...")
+
         self.instances = InstanceFactory(self.config)
         controller.Controller(self.config, self.instances)
 
@@ -80,10 +82,11 @@ class Edbc(object):
         if self.config["verbose"]:
             loglevel = logging.DEBUG
 
+        FORMAT = '[%(asctime)s %(filename)s:%(lineno)s %(levelname)s] %(message)s'
         if self.config["log"]:
-            logging.basicConfig(level=loglevel, filename=self.config["log"])
+            logging.basicConfig(format=FORMAT, level=loglevel, filename=self.config["log"])
         else:
-            logging.basicConfig(level=loglevel)
+            logging.basicConfig(format=FORMAT, level=loglevel)
 
             
 if __name__ == "__main__":
