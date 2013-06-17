@@ -55,6 +55,10 @@ class Event(object):
         if name == "alternative_message":
             self.alternative_message = value
             return
+        if name == "syslog_pri":
+            self.data["facility"] = int(int(value)/8)
+            self.data["priority"] = int(value)-self.data["facility"]*8
+            return
         if name == "date":
             self.date = value
             return

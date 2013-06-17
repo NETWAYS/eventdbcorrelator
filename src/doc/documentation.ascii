@@ -698,6 +698,7 @@ String transformers take raw string input and convert them events using a regula
 		** PRIORITY
 		** FACILITY
 		** PROGRAM
+	    ** SYSLOG_PRI (The combined priority/facility field of syslog-ng, will populate Priority and facility)
 		** CREATED
 		** MODIFIED
 	* **fixed**: A comma seperated key=value list defining which properties are set as constants
@@ -730,6 +731,7 @@ Split transformers take a string and separate them by a delimiter string:
 		** PRIORITY
 		** FACILITY
 		** PROGRAM
+		** SYSLOG_PRI (The combined priority/facility field of syslog-ng, will populate Priority and facility)
 		** CREATED
 		** MODIFIED
 	* **fixed**: A comma seperated key=value list defining which properties are set as constants

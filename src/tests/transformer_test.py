@@ -319,7 +319,23 @@ class SplitTransformerTest(unittest.TestCase):
         assert event["priority"] == "5"
         assert event["facility"] == "4"
         assert event["message"] == "Testmessage"
-        
+
+    def test_syslog_ng_priofield_bug_2132(self):
+        """ Test the default setting, split by tab
+        """
+        transformer = SplitTransformer()
+        transformer.setup("test", {
+            "dateformat" : "%Y-%m-%d %H:%M:%S",
+            "group_order" : "HOST_NAME HOST_ADDRESS SYSLOG_PRI TIME DATE MESSAGE"
+        })
+        teststring = "test_host\t42.2.53.52\t191\t11:00:24\t2012-12-10\tTestmessage"
+        event = transformer.transform(teststring)
+        assert event != None
+        assert event["host_name"] == "test_host"
+        assert event["host_address"] == IPAddress("42.2.53.52")
+        assert event["priority"] == 7
+        assert event["facility"] == 23
+        assert event["message"] == "Testmessage"
 
     def test_explicit_delimiter_specification(self):
         """ Test whether own delimiters are correctly recognized, also if they are multi character
