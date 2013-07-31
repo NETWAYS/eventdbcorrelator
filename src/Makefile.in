@@ -11,10 +11,10 @@ install: installdirs
 	for file in $$files; do \
 		$(INSTALL) -m 644 $(INSTALL_OPTS) "$$file" $(prefix)/lib/"$$file";\
 	done
-	$(INSTALL) -m 755 $(INSTALL_OPTS) "$$file" $(prefix)/lib/edbc.py;\
+	$(INSTALL) -m 755 $(INSTALL_OPTS) "edbc.py" $(prefix)/lib/edbc.py;\
 
 installdirs:
 	@dirs=`find . -type d`; \
 	for dir in $$dirs; do \
 		$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/lib/"$$dir";\
-	done	
+	done
