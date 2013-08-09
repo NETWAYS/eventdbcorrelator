@@ -8,6 +8,7 @@ import socket
 import threading
 import pwd
 import os
+import time
 from receptors.abstract_receptor import AbstractReceptor
 
 
@@ -18,24 +19,44 @@ class RequestHandler(AbstractReceptor):
         self.config = config
 
     def run(self):
-
-        msg = self.client.recv(self.config["bufferSize"])
+        msg = None
         try:
-            if not msg == "":
-                cmd = self.config["commandCls"](msg)
-                if cmd.valid:
-                    result = self.config["commandHandler"].handle(cmd)
-                    self.client.send(pickle.dumps(result))
-                else:
-                    self.client.send(pickle.dumps({
-                        "error" : "Invalid request send"
-                    }))
+            msg = self.client.recv(self.config["bufferSize"])
         except Exception, e:
-            logging.error(e)
-            self.client.send(pickle.dumps({
-                "error" : e
-            }))
+            logging.error("Error while reading: %s" % e)
 
+        if msg is None or msg == "":
+            self.client.close()
+            return
+
+        logging.debug(self.getName() + ": got request: %s" % msg)
+
+        reply = None
+        try:
+            cmd = self.config["commandCls"](msg)
+            if cmd.valid:
+                result = self.config["commandHandler"].handle(cmd)
+                reply = pickle.dumps(result)
+            else:
+                reply = pickle.dumps({
+                    "error" : "Invalid request send"
+                })
+        except Exception, e:
+            logging.error("Error while processing command: %s" % e)
+            reply = pickle.dumps({
+                "error" : e
+            })
+
+        try:
+            if reply is not None:
+                logging.debug(self.getName() + ": sending reply")
+                self.client.send(pickle.dumps(result))
+        except Exception, e:
+            logging.error("Error while sending reply: %s" % e)
+
+        logging.debug(self.getName() + ": finished.")
+
+        # make sure to close connection
         self.client.close()
 
 
@@ -58,6 +79,8 @@ class CheckapiReceptor(threading.Thread):
             "commandCls" : CheckCommand
         }
 
+        self.threads = []
+
         if not "datasource" in config:
             logging.error("Non operational api, as no datasource is given. This will crash.")
             return
@@ -68,7 +91,6 @@ class CheckapiReceptor(threading.Thread):
         else:
             self.config["commandHandler"] = CheckApiCommandHandler(config["datasource"])
 
-        self.run_flags = os.O_RDONLY|os.O_NONBLOCK
         for key in config.keys():
             if key == 'owner':
                 config[key] = pwd.getpwnam(config[key]).pw_uid
@@ -86,6 +108,8 @@ class CheckapiReceptor(threading.Thread):
         return self.config["commandCls"](message)
 
     def setup_socket(self):
+        logging.debug("Setting up socket %s" % self.config["path"])
+
         self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM, 0)
         if os.path.exists(self.config["path"]):
             os.unlink(self.config["path"])
@@ -113,17 +137,38 @@ class CheckapiReceptor(threading.Thread):
 
     def run(self):
         self.running = True
+
         while self.running:
             try:
                 client = RequestHandler()
-                conn, addr = self.socket.accept()
-                client.setup(conn, self.config)
-                client.start()
-            except socket.error, err:
-                if err.errno == 11:
-                    continue
-                else:
-                    raise err
+                # try to accept connection
+                conn = None
+                addr = None
+                try:
+                    logging.debug("wait for connect: %s" % self.getName())
+                    self.socket.settimeout(0.500)
+                    conn, addr = self.socket.accept()
+                except socket.timeout:
+                    time.sleep(1) # wait until next try to accept
+                    logging.debug("retry accept: %s" % self.getName())
+
+                if conn is not None:
+                    client.setup(conn, self.config)
+                    logging.debug("start thread: " + client.getName())
+                    client.start()
+                    self.threads.append(client)
+
+            except Exception, e:
+                logging.error("Error while processing request: %s" % e)
+
+            for thread in self.threads:
+                if not thread.isAlive():
+                    logging.debug("removing thread: %s" % thread.getName())
+                    self.threads.remove(thread)
+                    thread.join()
+
+            logging.debug("running threads: %d" % len(self.threads))
+
         try:
             self.socket.close()
         except:
@@ -131,6 +176,7 @@ class CheckapiReceptor(threading.Thread):
 
     def stop(self):
         self.running = False
+
         try:
             killsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM, 0)
             killsocket.connect(self.config["path"])
@@ -140,50 +186,12 @@ class CheckapiReceptor(threading.Thread):
             if not err.errno == 32: # broken pipe is fine her
                 logging.info("Exception during shutdown (harmless): %s ", err)
 
-        self.socket.close()
+        for thread in self.threads:
+            thread.join(1.0)
+
+        try:
+            self.socket.close()
+        except:
+            pass
 
 
-    def _read(self):
-        """ Reads from the pipe and transforms raw event strings to Api Commands
-
-        """
-        buffersize = self.config["bufferSize"]
-        self.last_part = ""
-        while self.running:
-            inPipes, pout, pex = select.select([self.pipe], [], [], 3)
-
-            if len(inPipes) > 0:
-                pipe = inPipes[0]
-                try:
-                    data_packet = os.read(pipe, buffersize)
-                except OSError, e:
-                    # EAGAIN means the pipe would block
-                    # on reading, so try again later
-                    if e.errno == 11:
-                        continue
-                    else:
-                        raise e
-                if len(data_packet) == 0:
-                    self.__reopen_pipe()
-                    continue
-                messages = self._get_messages_from_raw_stream(data_packet)
-
-                for message in messages:
-                    if message == "":
-                        continue
-                    transformed = self.create_command(message)
-
-                    if self.queues and transformed:
-                        if isinstance(transformed, CheckCommand):
-                            transformed["source"] = self.source
-                        for queue in self.queues:
-                            queue.put(transformed)
-                    if self.callback != None:
-                        self.callback(self, transformed)
-
-            else:
-                if self.callback != None:
-                    self.callback(self)
-                continue
-            if "noThread" in self.config:
-                return
