@@ -41,6 +41,7 @@ class PipeReceptor(AbstractReceptor):
         self.id = _id
         self.running = False
         self.callback = None
+        self.iowait = 3
         self.config = {
             "mod" : 0666,
             "owner" : os.getuid(),
@@ -130,7 +131,7 @@ class PipeReceptor(AbstractReceptor):
         self.last_part = ""
         while self.running:
             try:
-                inPipes, pout, pex = select.select([self.pipe], [], [], 3)
+                inPipes, pout, pex = select.select([self.pipe], [], [], self.iowait)
             except Exception, exc:
                 if self.running:
                     raise exc
@@ -145,13 +146,15 @@ class PipeReceptor(AbstractReceptor):
                     # EAGAIN means the pipe would block
                     # on reading, so try again later
                     if e.errno == 11:
+                        logging.warning("would block on pipe read: %s" % self.id)
                         continue
                     else:
                         if not self.running:
                             return
                         raise e
                 if len(data_packet) == 0:
-                    self.__reopen_pipe()
+                    # retry read in a bit
+                    select.select([], [], [], self.iowait)
                     continue
                 messages = self._get_messages_from_raw_stream(data_packet)
 
@@ -181,6 +184,7 @@ class PipeReceptor(AbstractReceptor):
         """
         try :
             if self.pipe != None:
+                logging.warning("reopening pipe: %s" % self.id)
                 os.close(self.pipe) 
         except OSError, e:
             pass
