@@ -146,7 +146,7 @@ class SnmpTransformer(object):
         self.registered_mibs = []
         for mibdir in os.walk(self.mib_dir):
             for mibfile in mibdir[2]:
-                if not mibfile.endswith("conf"):
+                if not mibfile.endswith("txt"):
                     continue
                 else:
                     self.load_mib(os.path.join(mibdir[0],mibfile))
