@@ -23,12 +23,12 @@
 # forward snmp traps to edbc
 #############################################################
 #[snmp-receptor]
-#class:      receptor
-#type:       snmp
-#handler:    @prefix@/var/edbc_snmp_handler
-#path:       @prefix@/var/snmp.pipe
-#template:   @prefix@/libexec/snmp_handler_template
-#format:     @snmp-transformer
+#class:         receptor
+#type:          snmp
+#handler:       @prefix@/var/edbc_snmp_handler
+#path:          @prefix@/var/snmp.pipe
+#handler_tpl:   @prefix@/libexec/snmp_handler_template
+#format:        @snmp-transformer
 
 
 
