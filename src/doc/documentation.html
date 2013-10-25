@@ -862,6 +862,12 @@ mysql -u root -p eventdb &lt; mysql_create.sql</pre>
 <td class="content">If you change your database credentials afterwards, you can modify the etc/conf.d/database.cfg in your installation path.</td>
 </tr></table>
 </div>
+<div class="listingblock">
+<div class="title">Setting up the daemon script:</div>
+<div class="content monospaced">
+<pre>        cp ./bin/edbc.rc /etc/init.d/edbc
+        chmod +x /etc/init.d/edbc</pre>
+</div></div>
 </div>
 </div>
 <div class="sect1">
@@ -943,7 +949,19 @@ In a default setup, <strong>etc/conf.d/database.cfg</strong> contains the databa
 file. The values should be self-explanatory, but are discussed in detail in <a href="#datasource-ref">[datasource-ref]</a>.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_setting_up_snmp">5.2. Setting up SNMP</h3>
+<h3 id="_setting_up_syslog">5.2. Setting up Syslog</h3>
+<div class="paragraph"><p>When edbc is installed, a running syslog agent is enabled which creates a pipe at ./edbc/var/edbc-syslog.pipe. You now need
+to configure two files:
+- Your syslog config, so messages are forwarded to this pipe
+- The syslog transformer underneath edbc/etc/conf.d/syslog.cfg</p></div>
+<div class="paragraph"><p>There are two transformer types that can typically be used: <a href="#string-transformer-ref">string</a> or <a href="#split-transformer-ref">split</a>.
+While the split transformer expects a character seperated message (per default tab seperated), the string transformer allows you to
+define a (python flavour) regular expression that extracts the parts from the message. Also, date formats differ from system to
+system, so make sure you configure the dateformat parameter correctly. Take a look at the syslog.conf for a few examples or
+dive into the <a href="#transformer-ref">transformer reference</a>!</p></div>
+</div>
+<div class="sect2">
+<h3 id="_setting_up_snmp">5.3. Setting up SNMP</h3>
 <div class="paragraph"><p>In order to write SNMP Traps into the eventdb you first need to following tools installed:</p></div>
 <div class="ulist"><ul>
 <li>
@@ -1001,7 +1019,7 @@ Restart the eventdb correlator
 </ul></div>
 </div>
 <div class="sect2">
-<h3 id="_setting_up_mail_experimental">5.3. Setting up mail (experimental)</h3>
+<h3 id="_setting_up_mail_experimental">5.4. Setting up mail (experimental)</h3>
 <div class="paragraph"><p>Mail reception is currently experimental.</p></div>
 <div class="ulist"><ul>
 <li>
@@ -1687,19 +1705,76 @@ You can then remve the example-acknowledger definition and cut down your chain t
         format:^(?P&lt;CREATED&gt;[a-zA-Z]{2,3} \d\d \d\d:\d\d:\d\d) (?P&lt;HOST&gt;[^ ]+)( (?P&lt;PROGRAM&gt;[^:]+):)? (?P&lt;MESSAGE&gt;.*)$
         fixed: Priority=1,Facility=1</pre>
 </div></div>
-<div class="paragraph"><p><strong>Parameters</strong>
-        * <strong>defaultmessage</strong>: If no message is defined, this message (normally <em>No message given</em>) is used
-        * <strong>dateformat</strong>: The format to use for the date string
-        * <strong>format</strong>: A regular expression extracting the important event properties of an event with named matching groups. You can define any property you want, but persisted properties are per default:
-                <strong> MESSAGE
-                </strong> HOST
-                <strong> HOST_ADDRESS
-                </strong> PRIORITY
-                <strong> FACILITY
-                </strong> PROGRAM
-                <strong> CREATED
-                </strong> MODIFIED
-        * <strong>fixed</strong>: A comma seperated key=value list defining which properties are set as constants</p></div>
+<div class="paragraph"><p><strong>Parameters</strong></p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>defaultmessage</strong>: If no message is defined, this message (normally <em>No message given</em>) is used
+</p>
+</li>
+<li>
+<p>
+<strong>dateformat</strong>: The format to use for the date string
+</p>
+</li>
+<li>
+<p>
+<strong>format</strong>: A regular expression extracting the important event properties of an event with named matching groups. You can define any property you want, but persisted properties are per default:
+</p>
+<div class="ulist"><ul>
+<li>
+<p>
+MESSAGE
+</p>
+</li>
+<li>
+<p>
+HOST
+</p>
+</li>
+<li>
+<p>
+HOST_ADDRESS
+</p>
+</li>
+<li>
+<p>
+PRIORITY
+</p>
+</li>
+<li>
+<p>
+FACILITY
+</p>
+</li>
+<li>
+<p>
+PROGRAM
+</p>
+</li>
+<li>
+<p>
+SYSLOG_PRI (The combined priority/facility field of syslog-ng, will populate Priority and facility)
+</p>
+</li>
+<li>
+<p>
+CREATED
+</p>
+</li>
+<li>
+<p>
+MODIFIED
+</p>
+</li>
+</ul></div>
+</li>
+<li>
+<p>
+<strong>fixed</strong>: A comma seperated key=value list defining which properties are set as constants
+</p>
+</li>
+</ul></div>
 <div class="paragraph" id="split-transformer-ref"><div class="title">SplitTransformer <strong>(type: split)</strong></div><p>Split transformers take a string and separate them by a delimiter string:</p></div>
 <div class="paragraph"><p><strong>Example</strong></p></div>
 <div class="listingblock">
@@ -1764,6 +1839,11 @@ PROGRAM
 </li>
 <li>
 <p>
+SYSLOG_PRI (The combined priority/facility field of syslog-ng, will populate Priority and facility)
+</p>
+</li>
+<li>
+<p>
 CREATED
 </p>
 </li>
@@ -1780,7 +1860,8 @@ MODIFIED
 </p>
 </li>
 </ul></div>
-<div class="paragraph" id="snmp-transformer-ref"><div class="title">SNMPTransformer <strong>(type: snmp)</strong></div><p>SNMP Transformer are able to read MIB files produced by `snmpttconvertmib <a href="http://snmptt.sourceforge.net/docs/snmpttconvertmib.shtml">http://snmptt.sourceforge.net/docs/snmpttconvertmib.shtml</a>`_ and parse their EVENT, FORMAT and REGEXP directives. It expects snmptraps to be received with numerical OIDs.</p></div>
+<div class="paragraph" id="snmp-transformer-ref"><div class="title">SNMPTransformer <strong>(type: snmp)</strong></div><p>SNMP Transformer are able to read MIB files produced by `snmpttconvertmib <a href="http://snmptt.sourceforge.net/docs/snmpttconvertmib.shtml">http://snmptt.sourceforge.net/docs/snmpttconvertmib.shtml</a>`_ and parse their EVENT, FORMAT and REGEXP directives. It expects snmptraps to be received with numerical OIDs.
+Additionally, the "$_*" operator was added to FORMAT, which prepends a newline to each key=value pair.</p></div>
 <div class="paragraph"><p><strong>Example</strong></p></div>
 <div class="listingblock">
 <div class="content monospaced">
@@ -1872,6 +1953,23 @@ debu = 7
 <li>
 <p>
 <strong>fixed</strong>: A comma seperated key=value list defining which properties are set as constants
+</p>
+</li>
+<li>
+<p>
+<strong>process_unknown</strong>: When set to <em>True</em>, traps without a mib definition will be processed true. The default is set to False, therefore ignoring uknown traps
+</p>
+</li>
+<li>
+<p>
+<strong>unknown_format</strong>: The format to use when process_unknown is set to true (default: $_*)
+</p>
+</li>
+<li>
+<p>
+<strong>unknown_priority</strong>: The priority to use when process_unknown is set to true (default: 7)
+NOTE: The oids of the trap can be accessed in the matcher via snmp_var_.x.y.z&#8230; and the trap oid can be accessed via trap_oid, so an aggregator could use
+for example 'trap_oid IS "0.1.2.3.4.5.6.7.8" and snmp_var_.6.4.23.6.3.7.8. CONTAINS "switch" '.
 </p>
 </li>
 </ul></div>
@@ -2270,20 +2368,15 @@ Event rule files consist of entries in the following format
 <pre>A rule can have the 'match', 'clear' and aggregateMessage directives. The clear expression must match *additionally* to the match expression</pre>
 </div></div>
 <div class="paragraph" id="commandprocessor-ref"><div class="title">Command Processor <strong>(type:command)</strong></div><p>This processor writes a "[TIME] MESSAGE" string into a defined pipe and can be used e.g. to trigger external commands in your monitoring environment.</p></div>
-<div class="dlist"><dl>
-<dt class="hdlist1">
-<strong>Example</strong>
-</dt>
-<dd>
-<p>
-        [example-command]
+<div class="paragraph"><p><strong>Example</strong></p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [example-command]
         class: processor
         type: command
         format: SCHEDULE_FORCED_HOST_CHECK;#HOST;#CREATED
-        pipe: /usr/local/icinga-web/var/rw/icinga.cmd
-</p>
-</dd>
-</dl></div>
+        pipe: /usr/local/icinga-web/var/rw/icinga.cmd</pre>
+</div></div>
 <div class="paragraph"><p><strong>Parameters</strong></p></div>
 <div class="ulist"><ul>
 <li>
@@ -2301,9 +2394,32 @@ Event rule files consist of entries in the following format
 <strong>pipe</strong>   : The pipe to write the message to. If seperated by <em>;</em>, multiple pipes can be defined
 </p>
 </li>
-</ul></div>
-<div class="paragraph"><p><strong>Return codes</strong></p></div>
-<div class="ulist"><ul>
+<li>
+<p>
+<strong>use_ssh</strong> : Allows to send commands to the pipe on a different host via ssh. You need to setup key authentication to use this feature
+</p>
+</li>
+<li>
+<p>
+<strong>remote_host</strong> : The host to use for ssh authentication (required)
+</p>
+</li>
+<li>
+<p>
+<strong>remote_port</strong> : The port to use for ssh authentication (default: 22)
+</p>
+</li>
+<li>
+<p>
+<strong>remote_user</strong> : The user to use for authenticating at the remote endpoint. If none given, the current login name of the user running the edbc process is used
+</p>
+</li>
+<li>
+<p>
+<strong>ssh_bin</strong>   : The ssh binary to use (default: <em>ssh</em>)
+<strong>Return codes</strong>
+</p>
+</li>
 <li>
 <p>
 <strong>PASS</strong> : The matcher didn&#8217;t match the event or there was a setup error (no format or pipe)
@@ -2741,11 +2857,257 @@ Add your file to the <em>init</em>.py of the processor package
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_recipes">11. Recipes</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_set_up_the_syslog_agent">11.1. Set up the syslog agent</h3>
+<div class="ulist"><ul>
+<li>
+<p>
+Go to the edbc installation path::
+</p>
+<div class="literalblock">
+<div class="content monospaced">
+<pre># cd /usr/local/edbc</pre>
+</div></div>
+</li>
+<li>
+<p>
+Open to configuration file for syslog::
+</p>
+<div class="literalblock">
+<div class="content monospaced">
+<pre># vim ./etc/conf.d/syslog.cfg</pre>
+</div></div>
+</li>
+<li>
+<p>
+There’s a syslog and a rsyslog transformer defined, but the syslog receptor (which creates the pipe) has @syslog as the default, change this to rsyslog::
+</p>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [rsyslog-3164]
+        class:          transformer
+        type:           string
+        dateformat:     %b %d %H:%M:%S
+        format:         ^\&lt;(?P&lt;SYSLOG_PRI&gt;\d+)\&gt;(?P&lt;DATE&gt;\w+ \d+ \d+:\d+:\d+) (?P&lt;HOST_NAME&gt;[^ ]+) (?P&lt;PROGRAM&gt;[^:]+):(?P&lt;MESSAGE&gt;.*)$
+
+
+        [syslog-receptor]
+        class:          receptor
+        type:           pipe
+        path:           /usr/local/edbc/var/edbc-syslog.pipe
+        format:         @rsyslog-3164</pre>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+In the rsyslog.conf (or underneath rsyslog.d), define the template (here it’s a template in the form of RFC-3164) and route syslog messages to the edbc pipe::
+</p>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        $template EDBCfmt,"&lt;%PRI%&gt;%TIMESTAMP:::date-rfc3164% %HOSTNAME% %syslogtag%%msg%\n"
+
+        *.info;mail.none;authpriv.none;cron.none                /usr/local/edbc/var/edbc-syslog.pipe;EDBCfmt</pre>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Enable the syslog chain by uncommenting the lines::
+</p>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        # vi /usr/local/edbc/etc/chains/base.chain
+
+        [syslog-chain]
+        in:     @syslog-receptor
+        to_1:   @syslog-aggregator
+        to_2:   @mysql</pre>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Restart edbc and rsyslog::
+</p>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        # service edbc restart
+        # service rsyslog restart</pre>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+To see if it works go to the eventdb interface or type
+</p>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        # mysql
+        mysql&gt; USE eventdb;
+        mysql&gt; select COUNT(*) from event;</pre>
+</div></div>
+</div>
+<div class="sect2">
+<h3 id="_set_up_the_mail_agent_q_amp_d">11.2. Set up the mail agent (Q&amp;D)</h3>
+<div class="ulist"><ul>
+<li>
+<p>
+Uncomment the mail chain in your etc/chains/base.chain::
+</p>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [mail-chain]
+        in:    @mail-receptor
+        to_1:  @mail-aggregator
+        to_2:  @mysql</pre>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+In your etc/conf.d/mail.conf set the path for the pipe you want to use::
+</p>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [mail-receptor]
+        class:receptor
+        type:mail
+        path:/usr/local/edbc/var/edbc-mail.pipe
+        format:@mail-default</pre>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Extend the etc/mail/default.filter so it matches your needs. An example for mails send by the localhost::
+</p>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [localhost]
+        matcher: FROM contains '@localhost'
+        priority: 1
+        facility: 1
+        host_name: #FROM
+        message: #MESSAGE
+        host_address: 127.0.0.1</pre>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Fields with $ denote a REGEXP group, Fields starting with # are mail headers. In the matcher you can use all headers sent by the email::
+</p>
+</li>
+<li>
+<p>
+Add the following line to your /etc/ailases file so mails to <a href="mailto:edbc@yourhost">edbc@yourhost</a> are written to the edbc::
+</p>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        edbc:           |cat &gt; /usr/local/edbc/var/edbc-mail.pipe</pre>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Restart the edbc::
+</p>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        service edbc restart</pre>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Test the configuration by sending a mail to your edbc user
+</p>
+</li>
+</ul></div>
+</div>
+<div class="sect2">
+<h3 id="_set_up_an_snmp_agent">11.3. Set up an SNMP agent</h3>
+<div class="ulist"><ul>
+<li>
+<p>
+In etc/conf.d/snmp.conf uncomment the receptor and transformer and set the mib_dir attribute to match the location of your mibs (see later):
+</p>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        [snmp-transformer]
+        class:      transformer
+        type:       snmp
+        mib_dir:    /usr/share/snmptt/mibs
+        fixed:      Priority=3,Facility=5,program=snmp
+
+
+        [snmp-receptor]
+        class:         receptor
+        type:          snmp
+        handler:       /usr/local/edbc/var/edbc_snmp_handler
+        path:          /usr/local/edbc/var/snmp.pipe
+        handler_tpl:   /usr/local/edbc/libexec/snmp_handler_template
+        format:        @snmp-transformer</pre>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Convert your mibs using snmpttconvertmib and put them into the mib_dir folder (here /usr/share/snmptt/mibs)
+</p>
+</li>
+<li>
+<p>
+Set edbc as a default traphandler in your /etc/snmp/snmptrapd.conf::
+</p>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        traphandle default      /usr/local/edbc/var/edbc_snmp_handler</pre>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Restart the snmptrapd::
+</p>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>        snmptrapd -On -C -c /etc/snmptrapd.conf</pre>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Traps should now appear in your event log
+</p>
+</li>
+</ul></div>
+</div>
+</div>
+</div>
 </div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2013-04-02 14:40:58 CEST
+Last updated 2013-10-25 15:20:40 CEST
 </div>
 </div>
 </body>
