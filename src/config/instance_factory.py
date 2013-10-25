@@ -187,6 +187,10 @@ class InstanceFactory(object):
         getter.__name__ = "getAll"+classname.capitalize()+"Instances"
         setattr(self, getter.__name__, getter)
 
+    def getAllChainInstances(self):
+        if "chain" in self.instances:
+            return self.instances["chain"]
+        return []
 
     def __getitem__(self, instance_id):
         """

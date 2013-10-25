@@ -32,17 +32,31 @@ class DBTransformerMock(object):
     def transform(self, event):
         """ Transforms the event, using only the address, program and message
         """
-
+        host_name = "test"
+        facility = 1
+        priority = 1
+        ack = 0
+        created = None
+        if event["host_name"]:
+            host_name = event["host_name"]
+        if event["facility"]:
+            facility = event["facility"]
+        if event["priority"]:
+            priority = event["priority"]
+        if event["ack"]:
+            ack = event["ack"]
+        if event["created"]:
+            created = event["created"]
         return {
-            "host_name" : "test",
+            "host_name" : host_name,
             "host_address" : event["host_address"].bytes,
             "type" : 1,
-            "facility" : 1,
-            "priority" : 1,
+            "facility" : facility,
+            "priority" : priority,
             "program" : event["program"],
             "message" : event["message"],
-            "ack"     : 0,
-            "created" : None,
+            "ack"     : ack,
+            "created" : created,
             "modified": None
         }
     

@@ -76,9 +76,18 @@ cd etc/schema/mysql
 mysql -u root -p eventdb < mysql_create.sql
 
 ----------------------------------------------------------------------------
+
 Your password should be the one defined in your configure call (see <<configure-label,the configure call>>).
 
 NOTE: If you change your database credentials afterwards, you can modify the etc/conf.d/database.cfg in your installation path.
+
+.Setting up the daemon script:
+
+-------------------------------------
+	cp ./bin/edbc.rc /etc/init.d/edbc
+	chmod +x /etc/init.d/edbc
+
+-------------------------------------
 
 Overview
 --------
@@ -698,6 +707,7 @@ String transformers take raw string input and convert them events using a regula
 		** PRIORITY
 		** FACILITY
 		** PROGRAM
+	    ** SYSLOG_PRI (The combined priority/facility field of syslog-ng, will populate Priority and facility)
 		** CREATED
 		** MODIFIED
 	* **fixed**: A comma seperated key=value list defining which properties are set as constants
@@ -730,6 +740,7 @@ Split transformers take a string and separate them by a delimiter string:
 		** PRIORITY
 		** FACILITY
 		** PROGRAM
+		** SYSLOG_PRI (The combined priority/facility field of syslog-ng, will populate Priority and facility)
 		** CREATED
 		** MODIFIED
 	* **fixed**: A comma seperated key=value list defining which properties are set as constants
@@ -774,6 +785,7 @@ Additionally, the "$_*" operator was added to FORMAT, which prepends a newline t
 	* **fixed**: A comma seperated key=value list defining which properties are set as constants
     * **process_unknown**: When set to 'True', traps without a mib definition will be processed true. The default is set to False, therefore ignoring uknown traps
     * **unknown_format**: The format to use when process_unknown is set to true (default: $_*)
+    * **strip_domain**: A comma separated list of domains to strip when parsing traps
     * **unknown_priority**: The priority to use when process_unknown is set to true (default: 7)
 NOTE: The oids of the trap can be accessed in the matcher via snmp_var_.x.y.z... and the trap oid can be accessed via trap_oid, so an aggregator could use
 for example 'trap_oid IS "0.1.2.3.4.5.6.7.8" and snmp_var_.6.4.23.6.3.7.8. CONTAINS "switch" '.
@@ -1259,4 +1271,160 @@ Processors can be easily written and  added to edbc, here is a short guide:
 NOTE: If you're writing a lot to the database, use the execute_after_flush method of the datasource. This delays the actual query write for a few ms and executes all queries that
           were submitted during this time in one transaction.
 
+
+Recipes
+-------
+
+Set up the syslog agent
+~~~~~~~~~~~~~~~~~~~~~~~
+
+* Go to the edbc installation path::
+
+	# cd /usr/local/edbc
+
+* Open to configuration file for syslog::
+
+	# vim ./etc/conf.d/syslog.cfg
+
+*  There’s a syslog and a rsyslog transformer defined, but the syslog receptor (which creates the pipe) has @syslog as the default, change this to rsyslog::
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+	[rsyslog-3164]
+	class:          transformer
+	type:           string
+	dateformat:     %b %d %H:%M:%S
+	format:         ^\<(?P<SYSLOG_PRI>\d+)\>(?P<DATE>\w+ \d+ \d+:\d+:\d+) (?P<HOST_NAME>[^ ]+) (?P<PROGRAM>[^:]+):(?P<MESSAGE>.*)$
+
+
+	[syslog-receptor]
+	class:          receptor
+	type:           pipe
+	path:           /usr/local/edbc/var/edbc-syslog.pipe
+	format:         @rsyslog-3164
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+* In the rsyslog.conf (or underneath rsyslog.d), define the template (here it’s a template in the form of RFC-3164) and route syslog messages to the edbc pipe::
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+	$template EDBCfmt,"<%PRI%>%TIMESTAMP:::date-rfc3164% %HOSTNAME% %syslogtag%%msg%\n"
+
+	*.info;mail.none;authpriv.none;cron.none                /usr/local/edbc/var/edbc-syslog.pipe;EDBCfmt
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+* Enable the syslog chain by uncommenting the lines::
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+	# vi /usr/local/edbc/etc/chains/base.chain
+
+	[syslog-chain]
+	in:     @syslog-receptor
+	to_1:   @syslog-aggregator
+	to_2:   @mysql
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+* Restart edbc and rsyslog::
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+	# service edbc restart
+	# service rsyslog restart
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+* To see if it works go to the eventdb interface or type
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+	# mysql
+	mysql> USE eventdb;
+	mysql> select COUNT(*) from event;
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Set up the mail agent (Q&D)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Uncomment the mail chain in your etc/chains/base.chain::
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+	[mail-chain]
+	in:    @mail-receptor
+	to_1:  @mail-aggregator
+	to_2:  @mysql
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+* In your etc/conf.d/mail.conf set the path for the pipe you want to use::
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+	[mail-receptor]
+	class:receptor
+	type:mail
+	path:/usr/local/edbc/var/edbc-mail.pipe
+	format:@mail-default
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+* Extend the etc/mail/default.filter so it matches your needs. An example for mails send by the localhost::
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+	[localhost]
+	matcher: FROM contains '@localhost'
+	priority: 1
+	facility: 1
+	host_name: #FROM
+	message: #MESSAGE
+	host_address: 127.0.0.1
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+* Fields with $ denote a REGEXP group, Fields starting with # are mail headers. In the matcher you can use all headers sent by the email::
+
+* Add the following line to your /etc/ailases file so mails to edbc@yourhost are written to the edbc::
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+	edbc:           |cat > /usr/local/edbc/var/edbc-mail.pipe
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+* Restart the edbc::
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+	service edbc restart
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+* Test the configuration by sending a mail to your edbc user
+
+Set up an SNMP agent
+~~~~~~~~~~~~~~~~~~~~~
+
+* In etc/conf.d/snmp.conf uncomment the receptor and transformer and set the mib_dir attribute to match the location of your mibs (see later):
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+	[snmp-transformer]
+	class:      transformer
+	type:       snmp
+	mib_dir:    /usr/share/snmptt/mibs
+	fixed:      Priority=3,Facility=5,program=snmp
+
+
+	[snmp-receptor]
+	class:         receptor
+	type:          snmp
+	handler:       /usr/local/edbc/var/edbc_snmp_handler
+	path:          /usr/local/edbc/var/snmp.pipe
+	handler_tpl:   /usr/local/edbc/libexec/snmp_handler_template
+	format:        @snmp-transformer
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+* Convert your mibs using snmpttconvertmib and put them into the mib_dir folder (here /usr/share/snmptt/mibs)
+
+* Set edbc as a default traphandler in your /etc/snmp/snmptrapd.conf::
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+	traphandle default      /usr/local/edbc/var/edbc_snmp_handler
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+* Restart the snmptrapd::
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+	snmptrapd -On -C -c /etc/snmptrapd.conf
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+* Traps should now appear in your event log
 

@@ -1,3 +1,9 @@
+0.2.0:
+    - Documentation fixes and enhancements
+    - SNMP default configuration error fixes
+    - SNMP handler fixes
+    - CheckApi for eventdb plugin
+    - Threading and memory footprint enhancements
 0.1.0:
     - Added unknown trap handling
     - Fixed issue in mysql reconnection

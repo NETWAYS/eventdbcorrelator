@@ -47,8 +47,10 @@ class Controller:
         logging.debug("Receptors registered: %s", self.instances["receptor"])
         for id in self.instances["receptor"]:
             receptor = self.instances["receptor"][id]
-            if receptor.config["format"] != None:
+
+            if receptor.config["format"] !=  None:
                 receptor.config["transformer"] = receptor.config["format"]
+
             receptor.start()
 
             self.threads.append(receptor)

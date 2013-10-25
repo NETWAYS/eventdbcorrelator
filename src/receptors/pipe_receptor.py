@@ -41,6 +41,7 @@ class PipeReceptor(AbstractReceptor):
         self.id = _id
         self.running = False
         self.callback = None
+        self.iowait = 3
         self.config = {
             "mod" : 0666,
             "owner" : os.getuid(),
@@ -129,7 +130,13 @@ class PipeReceptor(AbstractReceptor):
         buffersize = self.config["bufferSize"]
         self.last_part = ""
         while self.running:
-            inPipes, pout, pex = select.select([self.pipe], [], [], 3)
+            try:
+                inPipes, pout, pex = select.select([self.pipe], [], [], self.iowait)
+            except Exception, exc:
+                if self.running:
+                    raise exc
+                else:
+                    return
 
             if len(inPipes) > 0:
                 pipe = inPipes[0]
@@ -139,11 +146,15 @@ class PipeReceptor(AbstractReceptor):
                     # EAGAIN means the pipe would block
                     # on reading, so try again later
                     if e.errno == 11:
+                        logging.warning("would block on pipe read: %s" % self.id)
                         continue
                     else:
+                        if not self.running:
+                            return
                         raise e
                 if len(data_packet) == 0:
-                    self.__reopen_pipe()
+                    # retry read in a bit
+                    select.select([], [], [], self.iowait)
                     continue
                 messages = self._get_messages_from_raw_stream(data_packet)
 
@@ -173,6 +184,7 @@ class PipeReceptor(AbstractReceptor):
         """
         try :
             if self.pipe != None:
+                logging.warning("reopening pipe: %s" % self.id)
                 os.close(self.pipe) 
         except OSError, e:
             pass
@@ -207,7 +219,8 @@ class PipeReceptor(AbstractReceptor):
         """ Closes and removes the pipe
 
         """
-        try: 
+        try:
+            self.running = False
             os.close(self.pipe)
         except:
             pass
@@ -224,6 +237,7 @@ class PipeReceptor(AbstractReceptor):
                 if os.path.exists(self.config["path"]):
                     fd = os.open(self.config["path"], os.O_WRONLY)
                     os.write(fd,"_")
+                    self.running = False
                     os.close(fd)
                     
                 self.__clean()

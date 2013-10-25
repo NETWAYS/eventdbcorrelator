@@ -146,7 +146,7 @@ class SnmpTransformer(object):
         self.registered_mibs = []
         for mibdir in os.walk(self.mib_dir):
             for mibfile in mibdir[2]:
-                if not mibfile.endswith("conf"):
+                if not mibfile.endswith("txt"):
                     continue
                 else:
                     self.load_mib(os.path.join(mibdir[0],mibfile))
@@ -262,7 +262,7 @@ class SnmpTransformer(object):
         variables = []
         
         for var in mib_vars:
-            (oid,value) = var.split(" = ")
+            (oid,value) = var.split(" = ", 1)
             event["snmp_var_"+oid] = value
             if expected:
                 varname = expected.pop(0)

@@ -5,6 +5,9 @@ BIN_GROUP=@bin_group@
 INSTALL=@INSTALL@
 INSTALL_OPTS=-o $(BIN_USER) -g $(BIN_GROUP)
 
+all:
+	@echo "No build required at the moment."
+
 install: installdirs
 	cd ./src && make install; 
 	$(INSTALL) -m 644 $(INSTALL_OPTS) ./share/snmp_handler_template $(prefix)/libexec/snmp_handler_template
@@ -46,3 +49,6 @@ test:
 	
 dist-package:
 	tar cvf edbc-`git rev-parse --short HEAD`.tar.gz lib/ src/ Makefile.in configure.ac install-sh configure doc/ etc/ bin/ 
+
+
+# vi: noexpandtab ts=4 sw=4 :

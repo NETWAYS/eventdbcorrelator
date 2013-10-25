@@ -27,10 +27,11 @@ from event import Event
 import logging
 from datasource import db_transformer
 import time
-
-LOCATION_SETUP_SCHEME = "./database/mysql_create.sql"
-LOCATION_TEARDOWN_SCHEME = "./database/mysql_teardown.sql"
+import os
+LOCATION_SETUP_SCHEME = os.path.dirname(__file__)+"/../database/mysql_create.sql"
+LOCATION_TEARDOWN_SCHEME = os.path.dirname(__file__)+"/../database/mysql_teardown.sql"
 MAX_INSERT_TRIES = 5
+PROFILE_TIMEFRAME = 2
 
 class MysqlGroupCache(object):
     """ Internal helper class for caching grouped event states
@@ -185,6 +186,7 @@ class MysqlDatasource(object):
         self.check_spool = True
         self.flush_pending = False
         self.spool = None
+        self.is_torn_down = False
         self.flush_lock = threading.Lock()
 
     def setup(self, _id, config):
@@ -221,10 +223,9 @@ class MysqlDatasource(object):
             self.spool = None
         
         if "poolsize" in config:
-            self.poolsize = config["poolsize"]
-       
-        #TODO: Pooling causes deadlocks at this time, so always ignore it
-        self.poolsize = 1
+            self.poolsize = int(config["poolsize"])
+        else:
+            self.poolsize = 1
             
         if "table" in config:
             self.table = config["table"]
@@ -234,11 +235,28 @@ class MysqlDatasource(object):
             self.out = config["transform"]
         else:
             self.out = db_transformer.DBTransformer()
-         
+
+        self.profile = False
+        try:
+            if "profile_target" in config:
+                self.profile_target = config["profile_target"]
+            else:
+                self.profile_target = "/tmp/edbc_db_profile.txt"
+
+            if "profiling" in config:
+                self.profile = True
+                self.profile_last_write = time.clock();
+                self.profile_current_values = {}
+                self.profile_file = open(self.profile_target, "w+")
+
+        except Exception, exc:
+            logging.warn("Could not setup profiling: %s", exc)
+
         self.connect()
         try:
             self._fetch_active_groups()
             self.fetch_last_id()
+
         except Exception, exc:
             logging.warn("DB setup failed: %s "+
                 "(maybe the database is not set up correctly ?)", exc)
@@ -252,9 +270,40 @@ class MysqlDatasource(object):
         
         for i in range(0, self.poolsize):
             c = self.get_new_connection()
+            if self.profile:
+                self.log_profile("Open connection")
             if c :
                 self.connections.put(c)
                 self.available_connections.append(c)
+            else :
+                if self.profile:
+                    self.log_profile("Connection error")
+                logging.error("Could not acquire mysql connection, waiting for 3 seconds")
+                i -= 1
+                time.sleep(3)
+                logging.error("Retrying to connect")
+
+    def log_profile(self, mesg):
+        try:
+            if not mesg in self.profile_current_values:
+                self.profile_current_values[mesg] = 0
+            self.profile_current_values[mesg] += 1
+            lines = []
+            curtime = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime())
+            if time.clock() - self.profile_last_write > PROFILE_TIMEFRAME:
+                self.lock.acquire()
+                for msg in self.profile_current_values.keys():
+                    lines.append("%s\t%s\t%s\n" % (curtime, msg, self.profile_current_values[msg]))
+
+                self.profile_file.writelines(lines)
+                self.profile_file.flush()
+                self.profile_last_write = time.clock()
+                self.profile_current_values = {}
+
+                self.lock.release()
+        except Exception, e:
+            logging.error("Could not write to profile log: %s " % e)
+            self.lock.release()
 
 
     def _fetch_active_groups(self):
@@ -302,7 +351,7 @@ class MysqlDatasource(object):
         for line in sql_file:
             setup_sql += "%s" % line
         self.execute(setup_sql)        
-
+        self.is_torn_down = True
     
     def test_clear_db(self):
         """ Test method that sets up a clean database
@@ -338,6 +387,8 @@ class MysqlDatasource(object):
                             "%(group_autoclear)s,%(group_leader)s);"
                         self.execute(query, self.get_event_params(event),
                                             no_result=True, cursor=cursor)
+                        if self.profile:
+                            self.log_profile("insert")
                         break
                     except MySQLdb.IntegrityError, exc:
                         # maybe another process wrote to the db and now
@@ -345,6 +396,9 @@ class MysqlDatasource(object):
                         # Refreshing the id from the db should fix that
                         #
                         # self.fetch_last_id(cursor=cursor, step=i*MAX_INSERT_TRIES)
+
+                        self.log_profile("insert error")
+
                         if i >= MAX_INSERT_TRIES-1:
                             raise exc
                         continue
@@ -431,14 +485,19 @@ class MysqlDatasource(object):
         try:
             if not cursor:
                 conn = self.acquire_connection()
+
                 cursor = self.cursor_class(conn)
             try:
                 cursor.execute(query, args)
+                if self.profile:
+                    self.log_profile("execute %s "  % (" ".split(query.strip())[0].upper().strip()))
                 if self.spool and conn == self.spool:
                     self.check_spool = True
                 
             except MySQLdb.OperationalError, e:
-                logging.warn("Query failed: %s (%s try of %s)",e, retry, MAX_INSERT_TRIES)
+                if self.profile:
+                    self.log_profile("exec error %s "  % (" ".split(query.strip())[0].upper().strip()))
+                logging.warn("Query failed: %s (%s try of %s)", e, retry, MAX_INSERT_TRIES)
 
                 if conn == self.spool:
                     raise
@@ -457,6 +516,8 @@ class MysqlDatasource(object):
                 if self.spool:
                     logging.warn("Max tries reached, adding %s (%s) to spool",query, args)
                     self.spool.execute(query, args)
+                else:
+                    logging.warn("Max tries reached, giving up")
 
                 return ()
             
@@ -580,7 +641,7 @@ class MysqlDatasource(object):
             )
             return conn
         except MySQLdb.OperationalError, oexc:
-            logging.error(oexc)
+            logging.error("Fetching new connection failed: %s", oexc)
             return
     
     def fetch_last_id(self, cursor = None, step=0):
@@ -612,6 +673,8 @@ class MysqlDatasource(object):
         """ 
         try:
             conn = self.connections.get(True, 3)
+            if self.profile:
+                self.log_profile("Acquire connnection")
             if not conn.open:
                 conn = self.get_new_connection()
             
@@ -647,9 +710,16 @@ class MysqlDatasource(object):
         try: 
             self.group_cache.flush_to_db(conn, self.table)
             self.flush_exec_queue(conn)
-        finally:
-            self.release_connection(conn)
-            self.flush_pending = False
+        except MySQLdb.ProgrammingError, err:
+            if self.is_torn_down:
+                pass
+            else:
+                logging.error("Error during flush: %s ", err)
+        except Exception, exc:
+            logging.error("Error during flush: %s ", exc)
+
+        self.release_connection(conn)
+        self.flush_pending = False
 
     def flush(self):
         """ Triggers a flush after flush_interval seconds
@@ -670,10 +740,20 @@ class MysqlDatasource(object):
         """ Returns a database connection to the database connection pool
 
         """
-        if conn == None or not conn.open:
-            conn = self.get_new_connection()
-        self.connections.put(conn)
-    
+        while True:
+            if conn == None or not conn.open:
+                conn = self.get_new_connection()
+            if conn is None:
+                logging.error("Could not acquire mysql, connection waiting for 3 seconds")
+                time.sleep(3)
+                if self.profile:
+                    self.log_profile("reconnect connection")
+                logging.error("Retrying to connect")
+            else:
+                if self.profile:
+                    self.log_profile("reclaim connection")
+                self.connections.put(conn)
+                break
     def process(self, event):
         """ Standard chain element process method - triggers insert()
 

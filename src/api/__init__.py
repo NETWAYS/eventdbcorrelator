@@ -17,26 +17,4 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-import threading
 
-
-class AbstractReceptor(threading.Thread):
-    """ Receptor interface
-
-    """
-    def setup(self,_id, config):
-        """ config contains the configuration from the cfg file defining your
-            receptor
-        """
-        self.id = id
-        self.config = config
-        pass
-
-    def register_queue(self, queue):
-        pass
-
-    def unregister_queue(self, queue):
-        pass
-
-    def stop(self):
-        pass
