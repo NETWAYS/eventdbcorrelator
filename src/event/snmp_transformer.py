@@ -262,7 +262,7 @@ class SnmpTransformer(object):
         variables = []
         
         for var in mib_vars:
-            (oid,value) = var.split(" = ")
+            (oid,value) = var.split(" = ", 1)
             event["snmp_var_"+oid] = value
             if expected:
                 varname = expected.pop(0)
