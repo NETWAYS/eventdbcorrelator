@@ -1,5 +1,7 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
+CFGDIR=@sysconfdir@
+
 BIN_USER=@bin_user@
 BIN_GROUP=@bin_group@
 INSTALL=@INSTALL@
@@ -10,42 +12,42 @@ all:
 
 install: installdirs
 	cd ./src && make install; 
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./share/snmp_handler_template $(prefix)/libexec/snmp_handler_template
-	$(INSTALL) -m 755 $(INSTALL_OPTS) ./bin/edbc $(prefix)/bin/edbc
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./share/snmp_handler_template $(DESTDIR)$(prefix)/libexec/snmp_handler_template
+	$(INSTALL) -m 755 $(INSTALL_OPTS) ./bin/edbc $(DESTDIR)$(prefix)/bin/edbc
 	make install-base-config
 
 update: 
 	cd ./src && make install; 	
  
 installdirs: 
-	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)
-	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/lib
-	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/bin
-	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/var
-	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/etc
-	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/libexec
-	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/etc/chains
-	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/etc/rules
-	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/etc/mail
-	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/etc/conf.d
-	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/etc/conf.d/base
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(prefix)
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(prefix)/lib
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(prefix)/bin
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(prefix)/var
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)${CFGDIR}
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(prefix)/libexec
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)${CFGDIR}/chains
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)${CFGDIR}/rules
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)${CFGDIR}/mail
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)${CFGDIR}/conf.d
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)${CFGDIR}/conf.d/base
 
 install-base-config:
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/edbc.cfg $(prefix)/etc/edbc.cfg
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/database.cfg $(prefix)/etc/conf.d/database.cfg
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/base/base_processors.cfg $(prefix)/etc/conf.d/base/base_processors.cfg
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/mail.cfg $(prefix)/etc/conf.d/mail.cfg
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/snmp.cfg $(prefix)/etc/conf.d/snmp.cfg
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/syslog.cfg $(prefix)/etc/conf.d/syslog.cfg
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/mail/default.filter $(prefix)/etc/mail/default.filter
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/rules/mail.rules $(prefix)/etc/rules/mail.rules
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/rules/snmp.rules $(prefix)/etc/rules/snmp.rules
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/rules/syslog.rules $(prefix)/etc/rules/syslog.rules
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/chains/example.chain $(prefix)/etc/chains/example.chain
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/chains/base.chain $(prefix)/etc/chains/base.chain
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/edbc.cfg $(DESTDIR)${CFGDIR}/edbc.cfg
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/database.cfg $(DESTDIR)${CFGDIR}/conf.d/database.cfg
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/base/base_processors.cfg $(DESTDIR)${CFGDIR}/conf.d/base/base_processors.cfg
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/mail.cfg $(DESTDIR)${CFGDIR}/conf.d/mail.cfg
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/snmp.cfg $(DESTDIR)${CFGDIR}/conf.d/snmp.cfg
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/syslog.cfg $(DESTDIR)${CFGDIR}/conf.d/syslog.cfg
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/mail/default.filter $(DESTDIR)${CFGDIR}/mail/default.filter
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/rules/mail.rules $(DESTDIR)${CFGDIR}/rules/mail.rules
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/rules/snmp.rules $(DESTDIR)${CFGDIR}/rules/snmp.rules
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/rules/syslog.rules $(DESTDIR)${CFGDIR}/rules/syslog.rules
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/chains/example.chain $(DESTDIR)${CFGDIR}/chains/example.chain
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/chains/base.chain $(DESTDIR)${CFGDIR}/chains/base.chain
 
 test:
-	cd $(prefix)/lib && python ./runtests.py
+	cd $(DESTDIR)$(prefix)/lib && python ./runtests.py
 	
 dist-package:
 	tar cvf edbc-`git rev-parse --short HEAD`.tar.gz lib/ src/ Makefile.in configure.ac install-sh configure doc/ etc/ bin/ 

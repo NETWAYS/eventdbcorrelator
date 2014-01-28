@@ -49,5 +49,5 @@ format:         @syslog
 [syslog-aggregator]
 class:          processor
 type:           multiaggregation
-ruleset:        @prefix@/etc/rules/syslog.rules
+ruleset:        @sysconfdir@/rules/syslog.rules
 datasource:     @mysql

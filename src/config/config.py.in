@@ -21,5 +21,5 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 # Default constants
 #
 
-DEFAULT_CONFIG_PATH="@prefix@/etc/edbc.cfg"
-DEFAULT_CHAIN_PATH="@prefix@/etc/chains/"
+DEFAULT_CONFIG_PATH="@sysconfdir@/edbc.cfg"
+DEFAULT_CHAIN_PATH="@sysconfdir@/chains/"

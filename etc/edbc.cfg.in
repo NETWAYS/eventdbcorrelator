@@ -1,9 +1,9 @@
 
 [global]    
-base_path=@prefix@
+base_path=@sysconfig@
 
 # Additional configurations can be found in this dir
-config_dir=%(base_path)s/etc/conf.d
+config_dir=%(base_path)s/conf.d
 
 # Define where the *.chain files can be found
-chain_dir=%(base_path)s/etc/chains
+chain_dir=%(base_path)s/chains
