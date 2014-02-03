@@ -23,7 +23,7 @@ rules: @sysconfdir@/mail/default.filter
 [mail-receptor]
 class:receptor
 type:mail
-path:/var/lib/edbc-mail.pipe
+path:@localstatedir@/edbc-mail.pipe
 format:@mail-default
 
 ##############################################################
