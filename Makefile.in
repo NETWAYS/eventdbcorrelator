@@ -1,6 +1,8 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 CFGDIR=@sysconfdir@
+LIBDIR=@libdir@
+BINDIR=@bindir@
 
 BIN_USER=@bin_user@
 BIN_GROUP=@bin_group@
@@ -13,7 +15,7 @@ all:
 install: installdirs
 	cd ./src && make install; 
 	$(INSTALL) -m 644 $(INSTALL_OPTS) ./share/snmp_handler_template $(DESTDIR)$(prefix)/libexec/snmp_handler_template
-	$(INSTALL) -m 755 $(INSTALL_OPTS) ./bin/edbc $(DESTDIR)$(prefix)/bin/edbc
+	$(INSTALL) -m 755 $(INSTALL_OPTS) ./bin/edbc $(DESTDIR)$(BINDIR)/edbc
 	make install-base-config
 
 update: 
@@ -22,29 +24,29 @@ update:
 installdirs: 
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(prefix)
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(LIBDIR)
-	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(prefix)/bin
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(BINDIR)
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(prefix)/var
-	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)${CFGDIR}
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(CFGDIR)
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(prefix)/libexec
-	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)${CFGDIR}/chains
-	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)${CFGDIR}/rules
-	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)${CFGDIR}/mail
-	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)${CFGDIR}/conf.d
-	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)${CFGDIR}/conf.d/base
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(CFGDIR)/chains
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(CFGDIR)/rules
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(CFGDIR)/mail
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(CFGDIR)/conf.d
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(CFGDIR)/conf.d/base
 
 install-base-config:
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/edbc.cfg $(DESTDIR)${CFGDIR}/edbc.cfg
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/database.cfg $(DESTDIR)${CFGDIR}/conf.d/database.cfg
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/base/base_processors.cfg $(DESTDIR)${CFGDIR}/conf.d/base/base_processors.cfg
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/mail.cfg $(DESTDIR)${CFGDIR}/conf.d/mail.cfg
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/snmp.cfg $(DESTDIR)${CFGDIR}/conf.d/snmp.cfg
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/syslog.cfg $(DESTDIR)${CFGDIR}/conf.d/syslog.cfg
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/mail/default.filter $(DESTDIR)${CFGDIR}/mail/default.filter
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/rules/mail.rules $(DESTDIR)${CFGDIR}/rules/mail.rules
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/rules/snmp.rules $(DESTDIR)${CFGDIR}/rules/snmp.rules
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/rules/syslog.rules $(DESTDIR)${CFGDIR}/rules/syslog.rules
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/chains/example.chain $(DESTDIR)${CFGDIR}/chains/example.chain
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/chains/base.chain $(DESTDIR)${CFGDIR}/chains/base.chain
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/edbc.cfg $(DESTDIR)$(CFGDIR)/edbc.cfg
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/database.cfg $(DESTDIR)$(CFGDIR)/conf.d/database.cfg
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/base/base_processors.cfg $(DESTDIR)$(CFGDIR)/conf.d/base/base_processors.cfg
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/mail.cfg $(DESTDIR)$(CFGDIR)/conf.d/mail.cfg
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/snmp.cfg $(DESTDIR)$(CFGDIR)/conf.d/snmp.cfg
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/conf.d/syslog.cfg $(DESTDIR)$(CFGDIR)/conf.d/syslog.cfg
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/mail/default.filter $(DESTDIR)$(CFGDIR)/mail/default.filter
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/rules/mail.rules $(DESTDIR)$(CFGDIR)/rules/mail.rules
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/rules/snmp.rules $(DESTDIR)$(CFGDIR)/rules/snmp.rules
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/rules/syslog.rules $(DESTDIR)$(CFGDIR)/rules/syslog.rules
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/chains/example.chain $(DESTDIR)$(CFGDIR)/chains/example.chain
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/chains/base.chain $(DESTDIR)$(CFGDIR)/chains/base.chain
 
 test:
 	cd $(DESTDIR)$(LIBDIR) && python ./runtests.py

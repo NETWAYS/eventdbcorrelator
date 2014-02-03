@@ -53,7 +53,8 @@ make install DESTDIR=%{buildroot} \
 %config(noreplace) %{_sysconfdir}/%{name}/conf.d/base/*.cfg
 %config(noreplace) %{_sysconfdir}/%{name}/mail/*.filter
 %config(noreplace) %{_sysconfdir}/%{name}/rules/*.rules
-
+%{_libdir}/%{name}
+%{_bindir}/edbc
 
 
 
