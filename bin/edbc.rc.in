@@ -29,7 +29,7 @@ RETVAL=0
 LOCKFILE=@lock_dir@/edbc.lock
 LOGFILE="@log_file@"
 PROG="edbc"
-BINARY=@prefix@/lib/edbc.py
+BINARY=@libdir@/edbc.py
 PIDFILE=@pid_dir@/edbc.pid
 
 start() {

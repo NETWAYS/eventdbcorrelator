@@ -27,7 +27,9 @@ EDBC offers a lot of features that are required to cover advanced monitoring use
 
 
 %build
-%configure --sysconfdir=%{_sysconfdir}/%{name}
+%configure \
+  --sysconfdir="%{_sysconfdir}/%{name}" \
+  --libdir="%{_libdir}/%{name}"
 #make %{?_smp_mflags}
 
 

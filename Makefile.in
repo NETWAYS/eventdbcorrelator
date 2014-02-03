@@ -21,7 +21,7 @@ update:
  
 installdirs: 
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(prefix)
-	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(prefix)/lib
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(LIBDIR)
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(prefix)/bin
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(prefix)/var
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)${CFGDIR}
@@ -47,7 +47,7 @@ install-base-config:
 	$(INSTALL) -m 644 $(INSTALL_OPTS) ./etc/chains/base.chain $(DESTDIR)${CFGDIR}/chains/base.chain
 
 test:
-	cd $(DESTDIR)$(prefix)/lib && python ./runtests.py
+	cd $(DESTDIR)$(LIBDIR) && python ./runtests.py
 	
 dist-package:
 	tar cvf edbc-`git rev-parse --short HEAD`.tar.gz lib/ src/ Makefile.in configure.ac install-sh configure doc/ etc/ bin/ 
