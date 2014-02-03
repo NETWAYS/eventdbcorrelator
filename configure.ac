@@ -108,6 +108,7 @@ AC_CONFIG_FILES([
     src/doc/Makefile
     src/config/config.py
     src/receptors/snmp_receptor.py
+    src/receptors/pipe_receptor.py
     etc/conf.d/database.cfg
     etc/conf.d/mail.cfg
     etc/conf.d/snmp.cfg

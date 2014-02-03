@@ -43,7 +43,7 @@ class SnmpReceptor(PipeReceptor):
             "group": os.getgid(),
             "handler" : "@localstatedir@/edbc_traphandler",
             "path" : "@localstatedir@/edbc_traphandler.pipe",
-            "handler_tpl" : "@libexec@/snmp_handler_template",
+            "handler_tpl" : "@libexecdir@/snmp_handler_template",
             "bufferSize" : 2048,
             "format" : None
         }

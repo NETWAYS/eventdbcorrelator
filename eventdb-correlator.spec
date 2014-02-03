@@ -77,6 +77,6 @@ make install DESTDIR=%{buildroot} \
 
 
 %changelog
-* Mon 03 Feb 2014 Dirk Goetz <dirk.goetz@netways.de> - 0.2.0-1
+* Mon Feb 03 2014 Dirk Goetz <dirk.goetz@netways.de> - 0.2.0-1
 - initial creation
 

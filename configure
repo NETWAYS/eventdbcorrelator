@@ -1996,7 +1996,7 @@ fi
 
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile src/doc/Makefile src/config/config.py src/receptors/snmp_receptor.py etc/conf.d/database.cfg etc/conf.d/mail.cfg etc/conf.d/snmp.cfg etc/conf.d/syslog.cfg etc/edbc.cfg bin/edbc bin/edbc.rc"
+ac_config_files="$ac_config_files Makefile src/Makefile src/doc/Makefile src/config/config.py src/receptors/snmp_receptor.py src/receptors/pipe_receptor.py etc/conf.d/database.cfg etc/conf.d/mail.cfg etc/conf.d/snmp.cfg etc/conf.d/syslog.cfg etc/edbc.cfg bin/edbc bin/edbc.rc"
 
 
 cat >confcache <<\_ACEOF
@@ -2710,6 +2710,7 @@ do
     "src/doc/Makefile") CONFIG_FILES="$CONFIG_FILES src/doc/Makefile" ;;
     "src/config/config.py") CONFIG_FILES="$CONFIG_FILES src/config/config.py" ;;
     "src/receptors/snmp_receptor.py") CONFIG_FILES="$CONFIG_FILES src/receptors/snmp_receptor.py" ;;
+    "src/receptors/pipe_receptor.py") CONFIG_FILES="$CONFIG_FILES src/receptors/pipe_receptor.py" ;;
     "etc/conf.d/database.cfg") CONFIG_FILES="$CONFIG_FILES etc/conf.d/database.cfg" ;;
     "etc/conf.d/mail.cfg") CONFIG_FILES="$CONFIG_FILES etc/conf.d/mail.cfg" ;;
     "etc/conf.d/snmp.cfg") CONFIG_FILES="$CONFIG_FILES etc/conf.d/snmp.cfg" ;;
