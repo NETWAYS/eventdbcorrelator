@@ -8,8 +8,14 @@ License:	GPL v2 or later
 URL:		https://www.netways.org/projects/edbc
 Source0:	https://www.netways.org/attachments/download/980/eventdbcorrelator-0.2.0.tar.gz
 
-#BuildRequires:	
-#Requires:	
+%if "%{_vendor}" == "redhat"
+Requires:       MySQL-python
+%endif
+%if "%{_vendor}" == "suse"
+Requires:       python-mysql
+%endif
+
+%define         progname edbc
 
 %description
 EDBC (EventDB Correlator) is an agent for EventDB, our tool for integrating passive monitoring 
@@ -30,18 +36,25 @@ EDBC offers a lot of features that are required to cover advanced monitoring use
 %configure \
   --sysconfdir="%{_sysconfdir}/%{name}" \
   --libdir="%{_libdir}/%{name}" \
-  --libexecdir="%{_libexecdir}/%{name}"
-#make %{?_smp_mflags}
+  --libexecdir="%{_libexecdir}/%{name}" \
+  --localstatedir="%{_localstatedir}/cache/%{name}" \
+  --with-log-file="%{_localstatedir}/log/%{name}/%{progname}.log" \
+  --with-lock-dir="%{_localstatedir}/lock/subsys"
 
 
 %install
 make install DESTDIR=%{buildroot} \
   INSTALL_OPTS="" 
+%{__mkdir_p} %{buildroot}/%{_defaultdocdir}/%{name}-%{version}
+%{__mv} %{buildroot}/%{_libdir}/%{name}/doc/* %{buildroot}/%{_defaultdocdir}/%{name}-%{version}
+%{__mkdir_p} %{buildroot}/%{_sysconfdir}/init.d
+%{__install} -m 755 ./bin/edbc.rc %{buildroot}/%{_sysconfdir}/init.d/%{progname}
+%{__mkdir_p} %{buildroot}/%{_localstatedir}/log/%{name}
 
 
 %files
 %defattr(-,root,root)
-%doc
+%doc %{_defaultdocdir}/%{name}-%{version}
 %dir %{_sysconfdir}/%{name}
 %dir %{_sysconfdir}/%{name}/chains
 %dir %{_sysconfdir}/%{name}/conf.d
@@ -56,9 +69,14 @@ make install DESTDIR=%{buildroot} \
 %config(noreplace) %{_sysconfdir}/%{name}/rules/*.rules
 %{_libdir}/%{name}
 %{_libexecdir}/%{name}
-%{_bindir}/edbc
+%{_localstatedir}/cache/%{name}
+%{_bindir}/%{progname}
+%{_sysconfdir}/init.d/%{progname}
+%{_localstatedir}/log/%{name}
 
 
 
 %changelog
+* Mon 03 Feb 2014 Dirk Goetz <dirk.goetz@netways.de> - 0.2.0-1
+- initial creation
 
