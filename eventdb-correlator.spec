@@ -7,6 +7,7 @@ Group:		Applications/System
 License:	GPL v2 or later
 URL:		https://www.netways.org/projects/edbc
 Source0:	https://www.netways.org/attachments/download/980/eventdbcorrelator-0.2.0.tar.gz
+BuildRoot: 	%{_tmppath}/%{name}-%{version}-%{release}
 
 %if "%{_vendor}" == "redhat"
 Requires:       MySQL-python
