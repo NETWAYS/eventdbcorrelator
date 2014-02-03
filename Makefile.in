@@ -3,6 +3,8 @@ exec_prefix=@exec_prefix@
 CFGDIR=@sysconfdir@
 LIBDIR=@libdir@
 BINDIR=@bindir@
+LIBEXECDIR=@libexecdir@
+LOCALSTATEDIR=@localstatedir@
 
 BIN_USER=@bin_user@
 BIN_GROUP=@bin_group@
@@ -14,7 +16,7 @@ all:
 
 install: installdirs
 	cd ./src && make install; 
-	$(INSTALL) -m 644 $(INSTALL_OPTS) ./share/snmp_handler_template $(DESTDIR)$(prefix)/libexec/snmp_handler_template
+	$(INSTALL) -m 644 $(INSTALL_OPTS) ./share/snmp_handler_template $(DESTDIR)$(LIBEXECDIR)/snmp_handler_template
 	$(INSTALL) -m 755 $(INSTALL_OPTS) ./bin/edbc $(DESTDIR)$(BINDIR)/edbc
 	make install-base-config
 
@@ -25,9 +27,9 @@ installdirs:
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(prefix)
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(LIBDIR)
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(BINDIR)
-	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(prefix)/var
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(LOCALSTATEDIR)
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(CFGDIR)
-	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(prefix)/libexec
+	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(LIBEXECDIR)
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(CFGDIR)/chains
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(CFGDIR)/rules
 	$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(CFGDIR)/mail

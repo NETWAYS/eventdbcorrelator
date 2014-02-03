@@ -29,7 +29,8 @@ EDBC offers a lot of features that are required to cover advanced monitoring use
 %build
 %configure \
   --sysconfdir="%{_sysconfdir}/%{name}" \
-  --libdir="%{_libdir}/%{name}"
+  --libdir="%{_libdir}/%{name}" \
+  --libexecdir="%{_libexecdir}/%{name}"
 #make %{?_smp_mflags}
 
 
@@ -54,6 +55,7 @@ make install DESTDIR=%{buildroot} \
 %config(noreplace) %{_sysconfdir}/%{name}/mail/*.filter
 %config(noreplace) %{_sysconfdir}/%{name}/rules/*.rules
 %{_libdir}/%{name}
+%{_libexecdir}/%{name}
 %{_bindir}/edbc
 
 
