@@ -15,6 +15,7 @@ Requires:       MySQL-python
 %if "%{_vendor}" == "suse"
 Requires:       python-mysql
 %endif
+Requires(pre):	shadow-utils
 
 %define         progname edbc
 
@@ -32,6 +33,8 @@ EDBC offers a lot of features that are required to cover advanced monitoring use
 %prep
 %setup -qn eventdbcorrelator-%{version}
 
+%clean
+rm -rf %{buildroot}
 
 %build
 %configure \
@@ -42,6 +45,11 @@ EDBC offers a lot of features that are required to cover advanced monitoring use
   --with-log-file="%{_localstatedir}/log/%{name}/%{progname}.log" \
   --with-lock-dir="%{_localstatedir}/lock/subsys"
 
+%if 0%{?el5} || 0%{?rhel} == 5 || "%{?dist}" == ".el5"
+# disable email modules because of missing support in older python version
+sed -i 'sX^from mail_X#\0X' src/receptors/__init__.py
+sed -i 'sX^from mail_X#\0X' src/event/__init__.py
+%endif
 
 %install
 make install DESTDIR=%{buildroot} \
@@ -52,6 +60,12 @@ make install DESTDIR=%{buildroot} \
 %{__install} -m 755 ./bin/edbc.rc %{buildroot}/%{_sysconfdir}/init.d/%{progname}
 %{__mkdir_p} %{buildroot}/%{_localstatedir}/log/%{name}
 
+%pre
+getent group edbc >/dev/null || groupadd -r edbc
+getent passwd edbc >/dev/null || \
+    useradd -r -g edbc -d %{_libexecdir}/%{name} -s /sbin/nologin \
+    -c "Eventdb Correlator" ebdc
+exit 0
 
 %files
 %defattr(-,root,root)
@@ -70,10 +84,11 @@ make install DESTDIR=%{buildroot} \
 %config(noreplace) %{_sysconfdir}/%{name}/rules/*.rules
 %{_libdir}/%{name}
 %{_libexecdir}/%{name}
-%{_localstatedir}/cache/%{name}
 %{_bindir}/%{progname}
 %{_sysconfdir}/init.d/%{progname}
+%defattr(-,edbc,edbc)
 %{_localstatedir}/log/%{name}
+%{_localstatedir}/cache/%{name}
 
 
 

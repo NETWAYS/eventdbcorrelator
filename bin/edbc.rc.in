@@ -31,6 +31,7 @@ LOGFILE="@log_file@"
 PROG="edbc"
 BINARY=@libdir@/edbc.py
 PIDFILE=@pid_dir@/edbc.pid
+DAEMON_USER=edbc
 
 start() {
         [ -x $BINARY ] || exit 5 
@@ -39,7 +40,7 @@ start() {
         warning
         echo $"$PROG (pid $pid) already running:";
     else
-            "$BINARY" --log="$LOGFILE"
+        daemon --user $DAEMON_USER "$BINARY" --log="$LOGFILE"
         RETVAL=$?
         if [ $RETVAL -ne 0 ]; then
         failure 
