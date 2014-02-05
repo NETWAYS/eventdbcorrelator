@@ -61,10 +61,10 @@ make install DESTDIR=%{buildroot} \
 %{__mkdir_p} %{buildroot}/%{_localstatedir}/log/%{name}
 
 %pre
-getent group edbc >/dev/null || groupadd -r edbc
-getent passwd edbc >/dev/null || \
-    useradd -r -g edbc -d %{_libexecdir}/%{name} -s /sbin/nologin \
-    -c "Eventdb Correlator" ebdc
+getent group %{progname} >/dev/null || groupadd -r %{progname}
+getent passwd %{progname} >/dev/null || \
+    useradd -r -g %{progname} -d %{_libexecdir}/%{name} -s /sbin/nologin \
+    -c "Eventdb Correlator" %{progname}
 exit 0
 
 %files
@@ -86,7 +86,7 @@ exit 0
 %{_libexecdir}/%{name}
 %{_bindir}/%{progname}
 %{_sysconfdir}/init.d/%{progname}
-%defattr(-,edbc,edbc)
+%defattr(-,%{progname},%{progname})
 %{_localstatedir}/log/%{name}
 %{_localstatedir}/cache/%{name}
 
