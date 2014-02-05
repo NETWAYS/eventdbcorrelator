@@ -7,17 +7,19 @@ Group:		Applications/System
 License:	GPL v2 or later
 URL:		https://www.netways.org/projects/edbc
 Source0:	https://www.netways.org/attachments/download/980/eventdbcorrelator-0.2.0.tar.gz
-BuildRoot: 	%{_tmppath}/%{name}-%{version}-%{release}
+BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}
 
 %if "%{_vendor}" == "redhat"
-Requires:       MySQL-python
+Requires:	MySQL-python
 %endif
 %if "%{_vendor}" == "suse"
-Requires:       python-mysql
+Requires:	python-mysql
 %endif
 Requires(pre):	shadow-utils
+Requires(post):	chkconfig
+Requires(preun):	chkconfig
 
-%define         progname edbc
+%define	progname edbc
 
 %description
 EDBC (EventDB Correlator) is an agent for EventDB, our tool for integrating passive monitoring 
@@ -54,11 +56,14 @@ sed -i 'sX^from mail_X#\0X' src/event/__init__.py
 %install
 make install DESTDIR=%{buildroot} \
   INSTALL_OPTS="" 
-%{__mkdir_p} %{buildroot}/%{_defaultdocdir}/%{name}-%{version}
-%{__mv} %{buildroot}/%{_libdir}/%{name}/doc/* %{buildroot}/%{_defaultdocdir}/%{name}-%{version}
-%{__mkdir_p} %{buildroot}/%{_sysconfdir}/init.d
-%{__install} -m 755 ./bin/edbc.rc %{buildroot}/%{_sysconfdir}/init.d/%{progname}
-%{__mkdir_p} %{buildroot}/%{_localstatedir}/log/%{name}
+%{__mkdir_p} %{buildroot}%{_defaultdocdir}/%{name}-%{version}
+%{__mv} %{buildroot}/%{_libdir}/%{name}/doc/* %{buildroot}%{_defaultdocdir}/%{name}-%{version}
+%{__mkdir_p} %{buildroot}%{_sysconfdir}/init.d
+%{__install} -m 755 ./bin/edbc.rc %{buildroot}%{_sysconfdir}/init.d/%{progname}
+%{__mkdir_p} %{buildroot}%{_localstatedir}/log/%{name}
+%{__mkdir_p} %{buildroot}%{_sbindir}
+echo '#!/bin/bash
+%{__rm} %{_localstatedir}/cache/%{name}/*' >  %{buildroot}%{_sbindir}/%{progname}-clearcache
 
 %pre
 getent group %{progname} >/dev/null || groupadd -r %{progname}
@@ -66,6 +71,16 @@ getent passwd %{progname} >/dev/null || \
     useradd -r -g %{progname} -d %{_libexecdir}/%{name} -s /sbin/nologin \
     -c "Eventdb Correlator" %{progname}
 exit 0
+
+%post
+/sbin/chkconfig --add %{progname}
+
+%preun
+if [ $1 -eq 0 ] ; then
+/sbin/service %{progname} stop >/dev/null 2>&1
+%{_sbindir}/%{progname}-clearcache || :
+/sbin/chkconfig --del %{progname}
+fi
 
 %files
 %defattr(-,root,root)
@@ -85,6 +100,7 @@ exit 0
 %{_libdir}/%{name}
 %{_libexecdir}/%{name}
 %{_bindir}/%{progname}
+%attr(0750,root,root) %{_sbindir}/%{progname}-clearcache
 %{_sysconfdir}/init.d/%{progname}
 %defattr(-,%{progname},%{progname})
 %{_localstatedir}/log/%{name}
