@@ -27,7 +27,7 @@
 #type:          snmp
 #handler:       @localstatedir@/edbc_snmp_handler
 #path:          @localstatedir@/snmp.pipe
-#handler_tpl:   @libexec@/snmp_handler_template
+#handler_tpl:   @libexecdir@/snmp_handler_template
 #format:        @snmp-transformer
 
 
