@@ -37,6 +37,7 @@ class SnmpReceptor(PipeReceptor):
         self.id = _id
         self.running = False
         self.callback = None
+        self.iowait = 3
         self.config = {
             "mod": 0774,
             "owner": os.getuid(),
