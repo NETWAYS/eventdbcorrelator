@@ -83,8 +83,8 @@ AC_ARG_WITH([pid_dir],
 
 AC_ARG_WITH([log_file],
     AS_HELP_STRING([--with-log-file=FILE], [Filename to use for logging when running as a system daemon (default: $prefix/var/edbc.log)]),
-    log_dir=$withval,
-    log_dir=`readlink -m $prefix/var/run/`
+    log_file=$withval,
+    log_file=`readlink -m $prefix/var/edbc.log`
 )
 
 AC_SUBST(db_host)
@@ -108,6 +108,7 @@ AC_CONFIG_FILES([
     src/doc/Makefile
     src/config/config.py
     src/receptors/snmp_receptor.py
+    src/receptors/pipe_receptor.py
     etc/conf.d/database.cfg
     etc/conf.d/mail.cfg
     etc/conf.d/snmp.cfg
