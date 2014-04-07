@@ -20,6 +20,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from aggregation_processor import *
 from multiaggregation_processor import *
 from command_processor import *
+from feed_processor import *
 from logging_processor import *
 from modifier_processor import *
-

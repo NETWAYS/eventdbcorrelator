@@ -32,23 +32,29 @@ LOCATION_SETUP_SCHEME = os.path.dirname(__file__)+"/../database/mysql_create.sql
 LOCATION_TEARDOWN_SCHEME = os.path.dirname(__file__)+"/../database/mysql_teardown.sql"
 MAX_INSERT_TRIES = 5
 PROFILE_TIMEFRAME = 2
+INSERT_COLUMNS = ['host_name', 'host_address', 'type', 'facility', 'priority', 'program', 'message',
+                  'alternative_message', 'ack', 'created', 'modified', 'group_active', 'group_id',
+                  'group_autoclear', 'group_leader']
+INSERT_PARAMS = ['%(host_name)s', '%(host_address)s', '%(type)s', '%(facility)s', '%(priority)s', '%(program)s', '%(message)s',
+                 '%(alternative_message)s', '%(ack)s', 'NOW()', 'NOW()', '%(group_active)s', '%(group_id)s',
+                 '%(group_autoclear)s', '%(group_leader)s']
 
 class MysqlGroupCache(object):
     """ Internal helper class for caching grouped event states
-    
-    Internal helper class that manages event group states and allows to 
-    flush multiple group changes (like acknowledgment) in batched 
+
+    Internal helper class that manages event group states and allows to
+    flush multiple group changes (like acknowledgment) in batched
     transactions. This prevents event bursts from crashing the db and
     keeps edbc from using selects to gather the current state (and therefore
     prevents unneccessary mysql cache flushes)
     """
-    
-    
+
+
     def __init__(self):
         self.lock = threading.Lock()
         self.deprecated_groups = []
         self.groups = {}
-        
+
     def add(self, group):
         """ Adds a group to the cache or creates a new one if necessary
 
@@ -63,11 +69,11 @@ class MysqlGroupCache(object):
     def clear(self, group_id):
         """ Clears the cache by removing all events
 
-        """ 
+        """
         try:
             self.lock.acquire()
-            if group_id in self.groups: 
-                del self.groups[group_id] 
+            if group_id in self.groups:
+                del self.groups[group_id]
         finally:
             self.lock.release()
 
@@ -89,11 +95,11 @@ class MysqlGroupCache(object):
             group["dirty"] = True
         finally:
             self.lock.release()
-   
-    def deactivate(self, group_id):
-        """ Deactivates the group with group_id by setting group_active to 0 
 
-        """      
+    def deactivate(self, group_id):
+        """ Deactivates the group with group_id by setting group_active to 0
+
+        """
         self.lock.acquire()
         try:
             if not group_id in self.groups:
@@ -109,26 +115,26 @@ class MysqlGroupCache(object):
             del self.groups[group_id]
         finally:
             self.lock.release()
-        
-    
+
+
     def get(self, group_id):
         """" Returns an active group with the specified group id or None
-  
-        """    
+
+        """
         try:
             self.lock.acquire()
             if group_id in self.groups and \
                     self.groups[group_id]["group_active"] == 1:
                 return self.groups[group_id]
-            
+
             return None
         finally:
             self.lock.release()
-       
+
     def flush_deprecated_to_db(self, cursor, table):
         """ Internal method that flushes inactive groups to the database
-    
-        """ 
+
+        """
         for group in self.deprecated_groups:
             group["modified_ts"] = time.mktime(group["modified"])
             cursor.execute("UPDATE "+table+" SET "+
@@ -138,8 +144,8 @@ class MysqlGroupCache(object):
                     "group_count=%(group_count)s "+
                     "WHERE id=%(group_leader)s OR "+
                     "group_leader=%(group_leader)s", group)
-        self.deprecated_groups = [] 
-        
+        self.deprecated_groups = []
+
     def flush_to_db(self, conn, table):
         """ Flushes the content of this cache to the given table and connection
 
@@ -147,7 +153,7 @@ class MysqlGroupCache(object):
         cursor = conn.cursor()
         try:
             self.lock.acquire()
-            self.flush_deprecated_to_db(cursor, table)  
+            self.flush_deprecated_to_db(cursor, table)
 
             for groupId in self.groups:
                 group = self.groups[groupId]
@@ -167,12 +173,12 @@ class MysqlGroupCache(object):
             conn.commit()
             cursor.close()
             self.lock.release()
-            
-        
+
+
 class MysqlDatasource(object):
     """ Mysql Datasource implementation
-    
-    Writes events to the database, handles group management and caches state 
+
+    Writes events to the database, handles group management and caches state
     information (like the next id or active groups) to allow fast event state
     access.
     """
@@ -221,12 +227,12 @@ class MysqlDatasource(object):
             self.spool = config["spool"]
         else:
             self.spool = None
-        
+
         if "poolsize" in config:
             self.poolsize = int(config["poolsize"])
         else:
             self.poolsize = 1
-            
+
         if "table" in config:
             self.table = config["table"]
         else:
@@ -267,7 +273,7 @@ class MysqlDatasource(object):
         """
         if not self.connections.empty():
             return
-        
+
         for i in range(0, self.poolsize):
             c = self.get_new_connection()
             if self.profile:
@@ -309,7 +315,7 @@ class MysqlDatasource(object):
     def _fetch_active_groups(self):
         """ Updates the internal group cache from the db
 
-        """ 
+        """
         self.group_cache = MysqlGroupCache()
         groups = self.execute("SELECT group_active,id,group_id,group_count,"+
                 "modified,group_autoclear FROM "+self.table+" "+
@@ -331,7 +337,7 @@ class MysqlDatasource(object):
         """ Test method that creates the database from a given db scheme
 
         Only use this to initialize the db for unittests
-        """ 
+        """
         sql_file = open(LOCATION_SETUP_SCHEME,'r')
         setup_sql = ""
         for line in sql_file:
@@ -343,19 +349,19 @@ class MysqlDatasource(object):
 
     def test_teardown_db(self):
         """ Test method that tears down the database from a given db scheme
-    
+
         Only use this to reset the db state after a unittest is complete
         """
         sql_file = open(LOCATION_TEARDOWN_SCHEME,'r')
         setup_sql = ""
         for line in sql_file:
             setup_sql += "%s" % line
-        self.execute(setup_sql)        
+        self.execute(setup_sql)
         self.is_torn_down = True
-    
+
     def test_clear_db(self):
         """ Test method that sets up a clean database
-    
+
         Use this at the beginning of your unittests
         """
         self.test_teardown_db()
@@ -363,30 +369,30 @@ class MysqlDatasource(object):
 
 
     def insert(self, event):
-        """ Inserts an event in the database. 
+        """ Inserts an event in the database.
 
         The actually insert might occur later depending if the datasource
         caches events and flushes them (which is the case, in general)
-        """ 
+        """
         conn = self.acquire_connection()
-        try: 
+        try:
             try: # Python 2.4 doesn't allow try: except: finally: together
                 cursor = self.cursor_class(conn)
-
-                for i in range(0, MAX_INSERT_TRIES):        
-                    try: 
-                        query = "INSERT INTO "+self.table+\
-                            " ( host_name,host_address,type,facility,"+\
-                            "priority,program,message,alternative_message,ack"+\
-                            ",created,modified,group_active,group_id,"+\
-                            "group_autoclear,group_leader) VALUES "+\
-                            "(%(host_name)s,%(host_address)s,%(type)s,"+\
-                            "%(facility)s,%(priority)s,%(program)s,"+\
-                            "%(message)s,%(alternative_message)s,%(ack)s,"+\
-                            "NOW(),NOW(),%(group_active)s,%(group_id)s,"+\
-                            "%(group_autoclear)s,%(group_leader)s);"
-                        self.execute(query, self.get_event_params(event),
-                                            no_result=True, cursor=cursor)
+                insert_columns = INSERT_COLUMNS[:]
+                insert_params = INSERT_PARAMS[:]
+                params = self.get_event_params(event)
+                if 'feed' in event.data:
+                    insert_columns.extend(event['feed'].keys())
+                    insert_params.extend('%%(%s)s' % (column,) for column in event['feed'].iterkeys())
+                    params.update(event['feed'])
+                for i in range(0, MAX_INSERT_TRIES):
+                    try:
+                        query = "INSERT INTO %s (%s) VALUES (%s);" % (
+                            self.table,
+                            ', '.join(insert_columns),
+                            ', '.join(insert_params)
+                        )
+                        self.execute(query, params, no_result=True, cursor=cursor)
                         if self.profile:
                             self.log_profile("insert")
                         break
@@ -402,7 +408,7 @@ class MysqlDatasource(object):
                         if i >= MAX_INSERT_TRIES-1:
                             raise exc
                         continue
-                    
+
                 if event.group_leader and event.group_leader > -1:
                     self.increase_group_count(event.group_id)
                 else:
@@ -414,10 +420,10 @@ class MysqlDatasource(object):
                         "group_autoclear" : event["group_autoclear"]
                     })
                     self.flush()
-                    
+
                 cursor.close()
                 conn.commit()
-                if  conn == self.spool:
+                if conn == self.spool:
                     return "SPOOL"
                 return "OK"
             except Exception:
@@ -425,14 +431,14 @@ class MysqlDatasource(object):
                 return "FAIL"
         finally:
             self.release_connection(conn)
-    
+
 
     def get_event_params(self, event):
         """ Returns the transformed (i.e. database ready) parameters from an event
-    
-        """ 
+
+        """
         event["id"] = self.next_id()
-        
+
         params = self.out.transform(event)
         if not params:
             raise "Invalid event : %s " % event.data
@@ -444,14 +450,14 @@ class MysqlDatasource(object):
         params["group_active"] = int(event.in_active_group())
         params["group_autoclear"] = event["group_autoclear"]
         return params
-    
+
     def increase_group_count(self, group_id):
         """ Informs the cache that a new member is in the the group with group_id)
 
         """
         self.group_cache.add_new_member(group_id)
         self.flush()
-     
+
     def remove(self, event):
         """ Removes an event from the database by setting it to active=0
 
@@ -459,7 +465,7 @@ class MysqlDatasource(object):
         query = "UPDATE %s SET active=0 WHERE id = %i" \
                             % (self.table, event["id"])
         self.execute(query)
-     
+
     def update(self, event):
         """ Updates an existing event
 
@@ -471,14 +477,14 @@ class MysqlDatasource(object):
                 "ack=%(ack)s,created=%(created)s,modified=%(modified)s "+\
                 "WHERE id = "+str(event["id"])
         self.execute(query, self.out.transform(event), no_result=True)
-        
+
     def execute(self, query, args = (), no_result=False, cursor=None, retry=0):
         """ Performs an arbitary sql query on this mysql datasource
-    
+
         If no_result is given, no fetch operation is executed after the query.
         If the execution is part of a bigger execution batch, a cursor can
         be provided, otherwise the method will create one by itself
-        
+
         """
         cursor_given = cursor != None
         conn = None
@@ -493,7 +499,7 @@ class MysqlDatasource(object):
                     self.log_profile("execute %s "  % (" ".split(query.strip())[0].upper().strip()))
                 if self.spool and conn == self.spool:
                     self.check_spool = True
-                
+
             except MySQLdb.OperationalError, e:
                 if self.profile:
                     self.log_profile("exec error %s "  % (" ".split(query.strip())[0].upper().strip()))
@@ -520,23 +526,23 @@ class MysqlDatasource(object):
                     logging.warn("Max tries reached, giving up")
 
                 return ()
-            
+
             if not no_result:
                 result = cursor.fetchall()
                 return result
-            
+
             return ()
         finally:
-            
+
             if cursor != None and not cursor_given:
                 cursor.close()
             if conn:
                 conn.commit()
                 self.release_connection(conn)
-   
+
     def execute_after_flush(self, query, args = ()):
         """Queues an query to be executed at the next flush
-    
+
         """
         try:
             self.flushlock.acquire()
@@ -544,33 +550,33 @@ class MysqlDatasource(object):
         finally:
             self.flushlock.release()
             self.flush()
-       
-    def get_event_by_id(self, event_id):    
+
+    def get_event_by_id(self, event_id):
         """ Returns an event with the given id from the database
 
-        """ 
+        """
         eventfields = ("id", "host_name", "host_address", "type", "facility",
                     "priority","program","message","alternative_message","ack",
                     "created","modified","group_id","group_leader",
                     "group_active")
         event = self.execute("SELECT %s FROM event WHERE id = %i AND active = 1 " \
                         % (",".join(eventfields), int(event_id)))
-    
+
         if len(event) < 1:
             return None
         return Event(record={"data": event[0], "keys": eventfields})
-        
+
     def get_group_leader(self, group_id):
         """ Returns the event that acts as the group leader of the given group id
-    
+
         """
 
         group = self.group_cache.get(group_id)
-        
+
         if not group:
             return (None, None)
         return (group["group_leader"], time.mktime(group["modified"]))
-    
+
     def deactivate_group(self, group_id):
         """ Deactivates the given group_id
 
@@ -581,7 +587,7 @@ class MysqlDatasource(object):
             self.flush()
         finally:
             self.release_connection(conn)
-   
+
     def acknowledge_group(self, group_id, leader):
         """ Acknowledge a complete group in the next flush
 
@@ -589,8 +595,8 @@ class MysqlDatasource(object):
         query = "UPDATE "+self.table+\
                 " SET ack = 1 WHERE (group_id = %s AND group_leader = %s)"+\
                 " OR id=%s "
-        self.execute_after_flush(query, (group_id, leader, leader)) 
-    
+        self.execute_after_flush(query, (group_id, leader, leader))
+
     def close(self, no_flush=False):
         """ Closes all connections and flushes pending queries if no_flush isn't set
 
@@ -599,7 +605,7 @@ class MysqlDatasource(object):
             conn = self.acquire_connection()
             if self.flush_pending:
                 self.timer.cancel()
-                  
+
             if not no_flush:
                 self.group_cache.flush_to_db(conn, self.table)
             if not no_flush and self.spool:
@@ -610,10 +616,10 @@ class MysqlDatasource(object):
     def execute_spooled(self, conn):
         """ Executes queries from the spool provider - if any is given
 
-        """       
+        """
         if not self.spool:
             return
-        
+
         try:
             ctr = 0
             cursor = self.cursor_class(conn)
@@ -625,12 +631,12 @@ class MysqlDatasource(object):
             self.check_spool = False
         except Exception, exc:
             logging.error("Writing spooled entries failed : %s", exc)
-        
-    
+
+
     def get_new_connection(self):
         """ Returns a new connection
 
-        """ 
+        """
         try:
             conn = MySQLdb.Connection(
                 host=self.host,
@@ -643,10 +649,10 @@ class MysqlDatasource(object):
         except MySQLdb.OperationalError, oexc:
             logging.error("Fetching new connection failed: %s", oexc)
             return
-    
+
     def fetch_last_id(self, cursor = None, step=0):
         """ Updates the internal id counter from the db
-    
+
         """
         res = self.execute("SELECT id FROM event ORDER BY id DESC LIMIT 1",
                             cursor=cursor)
@@ -654,30 +660,30 @@ class MysqlDatasource(object):
             self.last_id = 0
             return
         self.last_id = res[0][0]+step
-       
+
     def next_id(self):
         """ Returns the next possible primary key id for event insertion
 
-        """ 
+        """
         try:
             self.lock.acquire()
             self.last_id = self.last_id+1
             return self.last_id
         finally:
             self.lock.release()
-        
+
     def acquire_connection(self, no_spool=False):
         """ Returns a connection from the connection queue
 
         Acquired connections must be freed with release_connection
-        """ 
+        """
         try:
             conn = self.connections.get(True, 3)
             if self.profile:
                 self.log_profile("Acquire connnection")
             if not conn.open:
                 conn = self.get_new_connection()
-            
+
             if self.check_spool and not no_spool:
                 self.execute_spooled(conn)
             return conn
@@ -687,10 +693,10 @@ class MysqlDatasource(object):
                 return self.spool
             else:
                 return self.acquire_connection(no_spool)
-    
+
     def flush_exec_queue(self, conn):
         """ Flushes the query cache and executes queued queries
-    
+
         """
         try:
             self.flushlock.acquire()
@@ -707,7 +713,7 @@ class MysqlDatasource(object):
 
         """
         conn = self.acquire_connection()
-        try: 
+        try:
             self.group_cache.flush_to_db(conn, self.table)
             self.flush_exec_queue(conn)
         except MySQLdb.ProgrammingError, err:
@@ -723,7 +729,7 @@ class MysqlDatasource(object):
 
     def flush(self):
         """ Triggers a flush after flush_interval seconds
-        
+
         """
         if self.no_async_flush or self.flush_pending \
                     or not self.flush_lock.acquire(False):
@@ -732,7 +738,7 @@ class MysqlDatasource(object):
             self.timer = threading.Timer(self.flush_interval/1000, self._flush)
             self.timer.start()
             self.flush_pending = True
-        
+
         finally:
             self.flush_lock.release()
 
