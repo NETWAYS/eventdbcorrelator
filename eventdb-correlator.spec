@@ -11,13 +11,13 @@ BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}
 
 %if "%{_vendor}" == "redhat"
 Requires:	MySQL-python
-Requires(pre):	shadow-utils
-Requires(post):	chkconfig
-Requires(preun):	chkconfig
 %endif
 %if "%{_vendor}" == "suse"
 Requires:	python-mysql
 %endif
+Requires(pre):	shadow-utils
+Requires(post):	chkconfig
+Requires(preun):	chkconfig
 
 %define	progname edbc
 
@@ -59,12 +59,7 @@ make install DESTDIR=%{buildroot} \
 %{__mkdir_p} %{buildroot}%{_defaultdocdir}/%{name}-%{version}
 %{__mv} %{buildroot}/%{_libdir}/%{name}/doc/* %{buildroot}%{_defaultdocdir}/%{name}-%{version}
 %{__mkdir_p} %{buildroot}%{_sysconfdir}/init.d
-%if "%{_vendor}" == "redhat"
 %{__install} -m 755 ./bin/edbc.rc %{buildroot}%{_sysconfdir}/init.d/%{progname}
-%endif
-%if "%{_vendor}" == "suse"
-%{__install} -m 755 ./bin/edbc.rc.suse %{buildroot}%{_sysconfdir}/init.d/%{progname}
-%endif
 %{__mkdir_p} %{buildroot}%{_localstatedir}/log/%{name}
 %{__mkdir_p} %{buildroot}%{_sbindir}
 echo '#!/bin/bash

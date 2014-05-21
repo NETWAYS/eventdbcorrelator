@@ -116,7 +116,6 @@ AC_CONFIG_FILES([
     etc/edbc.cfg
     bin/edbc
     bin/edbc.rc
-    bin/edbc.rc.suse
 ])
 
 AC_OUTPUT
