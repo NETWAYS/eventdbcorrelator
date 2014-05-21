@@ -1,0 +1,93 @@
+#!/bin/bash
+# chkconfig: 345 99 01
+# description: Startup script for edbc daemon
+### BEGIN INIT INFO
+# Provides: edbc
+# Required-Start: $local_fs $network
+# Required-Stop: $local_fs $network
+# Should-Start: snmptrapd mysqld
+# Should-Stop: snmptrapd mysqld
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: EventDB correlator Initscript
+# Description:       EventDB Agent with aggregation and correlation
+### END INIT INFO
+
+. /etc/rc.status
+
+# First reset status of this service
+rc_reset
+
+if [ -e /etc/sysconfig/edbc ]; then
+  . /etc/sysconfig/edbc
+fi
+
+OPTIONS=""
+if [ -e /etc/sysconfig/edbc ]; then
+  . /etc/sysconfig/edbc
+fi
+
+RETVAL=0
+LOCKFILE=@lock_dir@/edbc.lock
+LOGFILE="@log_file@"
+PROG="edbc"
+BINARY=@libdir@/edbc.py
+PIDFILE=@pid_dir@/edbc.pid
+DAEMON_USER=edbc
+
+start() {
+        [ -x $BINARY ] || exit 5 
+        echo -n $"Starting $PROG:"
+        startproc -u $DAEMON_USER "$BINARY" --log="$LOGFILE"
+        rc_status -v
+}
+
+status() {
+	echo -n "Checking for service $PROG"
+	checkproc $BINARY
+        rc_status -v
+}
+
+stop() {
+        echo -n $"Stopping $PROG:"
+	killproc -TERM $BINARY
+	rc_status -v
+}
+
+reload() {
+        stop
+        start
+}
+
+restart(){
+        stop
+        start
+}
+
+case "$1" in
+  start)
+        start
+        RETVAL=$?
+        ;;
+  stop)
+        stop
+        RETVAL=$?
+        ;;
+  restart)
+        restart
+        RETVAL=$?
+        ;;
+  reload|force-reload)
+        reload
+        RETVAL=$?
+        ;;
+  status)
+    status
+    RETVAL=$?
+        ;;
+  *)
+        echo $"Usage: $0 {start|stop|status|restart}"
+        RETVAL=2
+esac
+
+exit $RETVAL
