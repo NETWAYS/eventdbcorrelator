@@ -1,6 +1,5 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
-LIBDIR=@libdir@
 BIN_USER=@bin_user@
 BIN_GROUP=@bin_group@
 
@@ -10,12 +9,12 @@ INSTALL_OPTS=-o $(BIN_USER) -g $(BIN_GROUP)
 install: installdirs
 	@files=`find . -mindepth 1 -type f -name "[^.]*" ! -name "*.in" ! -name "Makefile*" ! -name "edbc.py"`;\
 	for file in $$files; do \
-		$(INSTALL) -m 644 $(INSTALL_OPTS) "$$file" $(DESTDIR)$(LIBDIR)/"$$file";\
+		$(INSTALL) -m 644 $(INSTALL_OPTS) "$$file" $(prefix)/lib/"$$file";\
 	done
-	$(INSTALL) -m 755 $(INSTALL_OPTS) "edbc.py" $(DESTDIR)$(LIBDIR)/edbc.py;\
+	$(INSTALL) -m 755 $(INSTALL_OPTS) "edbc.py" $(prefix)/lib/edbc.py;\
 
 installdirs:
 	@dirs=`find . -type d`; \
 	for dir in $$dirs; do \
-		$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(DESTDIR)$(LIBDIR)/"$$dir";\
+		$(INSTALL) -m 755 $(INSTALL_OPTS) -d $(prefix)/lib/"$$dir";\
 	done

@@ -38,7 +38,7 @@ dateformat:     %Y-%m-%d %H:%M:%S
 [syslog-receptor]
 class:          receptor
 type:           pipe
-path:           @localstatedir@/edbc-syslog.pipe
+path:           @prefix@/var/edbc-syslog.pipe
 format:         @syslog
 
 
@@ -49,5 +49,5 @@ format:         @syslog
 [syslog-aggregator]
 class:          processor
 type:           multiaggregation
-ruleset:        @sysconfdir@/rules/syslog.rules
+ruleset:        @prefix@/etc/rules/syslog.rules
 datasource:     @mysql

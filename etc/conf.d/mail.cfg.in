@@ -13,7 +13,7 @@
 [mail-default]
 class:transformer
 type:mail
-rules: @sysconfdir@/mail/default.filter
+rules: /usr/local/edbc/etc/mail/default.filter
 
 
 ##############################################################
@@ -23,7 +23,7 @@ rules: @sysconfdir@/mail/default.filter
 [mail-receptor]
 class:receptor
 type:mail
-path:@localstatedir@/edbc-mail.pipe
+path:/var/lib/edbc-mail.pipe
 format:@mail-default
 
 ##############################################################
@@ -32,5 +32,5 @@ format:@mail-default
 [mail-aggregator]
 class:processor
 type:multiaggregation
-ruleset: @sysconfdir@/rules/mail.rules
+ruleset: /usr/local/edbc/etc/rules/mail.rules
 datasource: @mysql
