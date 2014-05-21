@@ -1996,7 +1996,7 @@ fi
 
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile src/doc/Makefile src/config/config.py src/receptors/snmp_receptor.py src/receptors/pipe_receptor.py etc/conf.d/database.cfg etc/conf.d/mail.cfg etc/conf.d/snmp.cfg etc/conf.d/syslog.cfg etc/edbc.cfg bin/edbc bin/edbc.rc"
+ac_config_files="$ac_config_files Makefile src/Makefile src/doc/Makefile src/config/config.py src/receptors/snmp_receptor.py src/receptors/pipe_receptor.py etc/conf.d/database.cfg etc/conf.d/mail.cfg etc/conf.d/snmp.cfg etc/conf.d/syslog.cfg etc/edbc.cfg bin/edbc bin/edbc.rc bin/edbc.rc.suse"
 
 
 cat >confcache <<\_ACEOF
@@ -2718,6 +2718,7 @@ do
     "etc/edbc.cfg") CONFIG_FILES="$CONFIG_FILES etc/edbc.cfg" ;;
     "bin/edbc") CONFIG_FILES="$CONFIG_FILES bin/edbc" ;;
     "bin/edbc.rc") CONFIG_FILES="$CONFIG_FILES bin/edbc.rc" ;;
+    "bin/edbc.rc.suse") CONFIG_FILES="$CONFIG_FILES bin/edbc.rc.suse" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
