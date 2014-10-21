@@ -46,7 +46,7 @@ class PipeReceptor(AbstractReceptor):
             "mod" : 0666,
             "owner" : os.getuid(),
             "group" : os.getgid(),
-            "path" : "/usr/local/var/edbc.pipe",
+            "path" : "@localstate_dir@/edbc.pipe",
             "bufferSize" : 2048,
             "format" : None
         }

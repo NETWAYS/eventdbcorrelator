@@ -25,9 +25,9 @@
 #[snmp-receptor]
 #class:         receptor
 #type:          snmp
-#handler:       @prefix@/var/edbc_snmp_handler
-#path:          @prefix@/var/snmp.pipe
-#handler_tpl:   @prefix@/libexec/snmp_handler_template
+#handler:       @localstatedir@/edbc_snmp_handler
+#path:          @localstatedir@/snmp.pipe
+#handler_tpl:   @libexecdir@/snmp_handler_template
 #format:        @snmp-transformer
 
 
@@ -38,5 +38,5 @@
 [snmp-aggregator]
 class:      processor
 type:       multiaggregation
-ruleset:     @prefix@/etc/rules/snmp.rules
+ruleset:     @sysconfdir@/rules/snmp.rules
 datasource: @mysql
