@@ -1,12 +1,12 @@
 Name:		eventdb-correlator
-Version:	0.2.0
+Version:	0.2.2
 Release:	1%{?dist}
 Summary:	EDBC (EventDB Correlator) is an agent for EventDB
 
 Group:		Applications/System
 License:	GPL v2 or later
 URL:		https://www.netways.org/projects/edbc
-Source0:	https://www.netways.org/attachments/download/980/eventdbcorrelator-0.2.0.tar.gz
+Source0:	https://git.netways.org/eventdb/eventdbcorrelator/archive-tarball/v%{version}#/eventdbcorrelator-%{version}.tar.gz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}
 
 %if "%{_vendor}" == "redhat"
