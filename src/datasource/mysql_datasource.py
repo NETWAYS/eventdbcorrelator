@@ -385,6 +385,9 @@ class MysqlDatasource(object):
                             "%(message)s,%(alternative_message)s,%(ack)s,"+\
                             "NOW(),NOW(),%(group_active)s,%(group_id)s,"+\
                             "%(group_autoclear)s,%(group_leader)s);"
+
+                        logging.info("INSERT EVENT %s", event.__dict__)
+
                         self.execute(query, self.get_event_params(event),
                                             no_result=True, cursor=cursor)
                         if self.profile:
@@ -470,6 +473,9 @@ class MysqlDatasource(object):
                 "program=%(program)s,message=%(message)s,"+\
                 "ack=%(ack)s,created=%(created)s,modified=%(modified)s "+\
                 "WHERE id = "+str(event["id"])
+
+        logging.info("UPDATE EVENT %s", event.__dict__)
+
         self.execute(query, self.out.transform(event), no_result=True)
         
     def execute(self, query, args = (), no_result=False, cursor=None, retry=0):
@@ -488,6 +494,7 @@ class MysqlDatasource(object):
 
                 cursor = self.cursor_class(conn)
             try:
+                logging.debug("Executing query: %s\n  %s", query, args)
                 cursor.execute(query, args)
                 if self.profile:
                     self.log_profile("execute %s "  % (" ".split(query.strip())[0].upper().strip()))
@@ -527,7 +534,7 @@ class MysqlDatasource(object):
             
             return ()
         finally:
-            
+
             if cursor != None and not cursor_given:
                 cursor.close()
             if conn:
@@ -575,6 +582,8 @@ class MysqlDatasource(object):
         """ Deactivates the given group_id
 
         """
+        logging.info("Deactivate group %s", {'group_id': group_id})
+
         try:
             conn = self.acquire_connection()
             self.group_cache.deactivate(group_id)
@@ -586,10 +595,12 @@ class MysqlDatasource(object):
         """ Acknowledge a complete group in the next flush
 
         """
+        logging.info("Acknowledging group %s", {'group_id': group_id, 'leader': leader})
+
         query = "UPDATE "+self.table+\
                 " SET ack = 1 WHERE (group_id = %s AND group_leader = %s)"+\
                 " OR id=%s "
-        self.execute_after_flush(query, (group_id, leader, leader)) 
+        self.execute_after_flush(query, (group_id, leader, leader))
     
     def close(self, no_flush=False):
         """ Closes all connections and flushes pending queries if no_flush isn't set
